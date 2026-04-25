@@ -93,6 +93,7 @@ export const ListPanel: React.FC<ListPanelProps> = ({
           <div className="panel-title" style={{ color: list.color, display: 'flex', alignItems: 'center', gap: '8px' }}>
             {list.isProtected && <Lock size={12} opacity={0.6} />}
             {list.country && COUNTRY_FLAGS[list.country]} {list.name}
+            <span style={{ marginLeft: '4px', opacity: 0.6, fontSize: '12px', fontWeight: 400 }}>({list.tickers.length})</span>
           </div>
           <div className="panel-actions">
             <button className="btn" onClick={handleToggleSort} title={`Sort: ${list.sortOrder}`}>
