@@ -11,6 +11,7 @@ import './index.css';
 
 const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 const WATCHLIST_ID = 'permanent-watchlist';
+const API_BASE_URL = 'http://localhost:8000';
 
 const App: React.FC = () => {
   const [lists, setLists] = useState<StockList[]>([]);
@@ -18,6 +19,7 @@ const App: React.FC = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isAddTickerModalOpen, setIsAddTickerModalOpen] = useState(false);
   const [activeListId, setActiveListId] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   const [newListName, setNewListName] = useState('');
   const [newListColor, setNewListColor] = useState(COLORS[0]);
@@ -203,18 +205,125 @@ const App: React.FC = () => {
     setIsAddTickerModalOpen(true);
   };
 
-  const performAddTicker = () => {
+  const performAddTicker = async () => {
     if (!activeListId || !newTickerSymbol.trim()) return;
     
-    const symbols = newTickerSymbol.split(',').map(s => s.trim()).filter(s => s);
+    const symbols = newTickerSymbol.split(',').map(s => s.trim().toUpperCase()).filter(s => s);
     
-    symbols.forEach(symbol => {
-      storage.addTickerToList(activeListId, symbol);
-    });
-
-    setLists(storage.getLists());
-    setNewTickerSymbol('');
     setIsAddTickerModalOpen(false);
+    setNewTickerSymbol('');
+
+    for (const symbol of symbols) {
+      try {
+        const response = await fetch(`${API_BASE_URL}/stock/${symbol}`);
+        if (response.ok) {
+          const data = await response.json();
+          const newTicker = {
+            id: uuidv4(),
+            symbol: data.symbol,
+            name: data.name,
+            stats: {
+              price: data.price.toString(),
+              change: data.change.toString(),
+              changePercent: data.changePercent,
+              volume: data.volume,
+              marketCap: data.marketCap,
+              sector: data.sector,
+              sma20: data.sma20,
+              sma50: data.sma50,
+              sma200: data.sma200,
+              perf1M: data.perf1M,
+              perf3M: data.perf3M,
+              perf1Y: data.perf1Y,
+              lastUpdated: new Date().toISOString()
+            }
+          };
+          
+          setLists(prev => {
+            const updated = prev.map(l => {
+              if (l.id === activeListId) {
+                if (l.tickers.some(t => t.symbol === symbol)) return l;
+                return { ...l, tickers: [...l.tickers, newTicker] };
+              }
+              return l;
+            });
+            storage.saveLists(updated);
+            return updated;
+          });
+        } else {
+          // Fallback to mock if backend is down or symbol not found
+          storage.addTickerToList(activeListId, symbol);
+          setLists(storage.getLists());
+        }
+      } catch (err) {
+        console.error('Fetch failed, using mock data');
+        storage.addTickerToList(activeListId, symbol);
+        setLists(storage.getLists());
+      }
+    }
+  };
+
+  const handleRefreshAll = async () => {
+    const allSymbols = [...new Set(lists.flatMap(l => l.tickers.map(t => t.symbol)))];
+    if (allSymbols.length === 0) return;
+
+    setIsRefreshing(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/batch?symbols=${allSymbols.join(',')}`);
+      if (!response.ok) throw new Error('Backend unavaliable');
+      const data = await response.json();
+      
+      const updatedLists = lists.map(list => ({
+        ...list,
+        tickers: list.tickers.map(ticker => {
+          const freshData = data.find((d: any) => d.symbol === ticker.symbol);
+          if (freshData) {
+            return {
+              ...ticker,
+              name: freshData.name,
+              stats: {
+                ...ticker.stats,
+                price: freshData.price.toString(),
+                change: freshData.change.toString(),
+                changePercent: freshData.changePercent,
+                volume: freshData.volume,
+                marketCap: freshData.marketCap,
+                sector: freshData.sector,
+                sma20: freshData.sma20,
+                sma50: freshData.sma50,
+                sma200: freshData.sma200,
+                perf1M: freshData.perf1M,
+                perf3M: freshData.perf3M,
+                perf1Y: freshData.perf1Y,
+                lastUpdated: new Date().toISOString(),
+                error: undefined
+              }
+            };
+          }
+          return ticker;
+        })
+      }));
+      
+      setLists(updatedLists);
+      storage.saveLists(updatedLists);
+    } catch (error) {
+      console.error('Failed to refresh data:', error);
+      const updatedLists = lists.map(list => ({
+        ...list,
+        tickers: list.tickers.map(ticker => {
+          if (allSymbols.includes(ticker.symbol)) {
+            return {
+              ...ticker,
+              stats: { ...ticker.stats, error: 'Refresh failed' }
+            };
+          }
+          return ticker;
+        })
+      }));
+      setLists(updatedLists);
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   const handleRemoveTicker = (listId: string, tickerId: string) => {
@@ -292,6 +401,8 @@ const App: React.FC = () => {
         <Toolbar 
           onCreateList={() => setIsCreateModalOpen(true)} 
           onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          onRefreshAll={handleRefreshAll}
+          isRefreshing={isRefreshing}
         />
       </main>
 

@@ -8,6 +8,16 @@ export type Ticker = {
     changePercent: string;
     volume: string;
     marketCap: string;
+    // New backend fields
+    sector?: string;
+    sma20?: number;
+    sma50?: number;
+    sma200?: number;
+    perf1M?: number;
+    perf3M?: number;
+    perf1Y?: number;
+    lastUpdated?: string;
+    error?: string;
   };
 };
 

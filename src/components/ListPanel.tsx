@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import Draggable from 'react-draggable';
-import { MoreVertical, X, ChevronDown, ChevronUp, Eye, EyeOff, Plus, Trash2, ArrowUpDown, ArrowUpAZ, ArrowDownAZ, Lock } from 'lucide-react';
+import { MoreVertical, X, ChevronDown, ChevronUp, Eye, EyeOff, Plus, Trash2, ArrowUpDown, ArrowUpAZ, ArrowDownAZ, Lock, AlertCircle } from 'lucide-react';
 import type { StockList, Ticker } from '../types';
 import { COUNTRY_FLAGS } from '../types';
 
@@ -70,6 +70,11 @@ export const ListPanel: React.FC<ListPanelProps> = ({
     return list.sortOrder === 'asc' ? comparison : -comparison;
   });
 
+  const lastUpdatedTimes = list.tickers.map(t => t.stats.lastUpdated ? new Date(t.stats.lastUpdated).getTime() : 0);
+  const maxLastUpdated = Math.max(...lastUpdatedTimes, 0);
+  const isFresh = maxLastUpdated > Date.now() - 24 * 60 * 60 * 1000;
+  const hasData = maxLastUpdated > 0;
+
   return (
     <Draggable
       nodeRef={nodeRef}
@@ -91,6 +96,11 @@ export const ListPanel: React.FC<ListPanelProps> = ({
           cursor: list.isProtected ? 'default' : 'grab'
         }}>
           <div className="panel-title" style={{ color: list.color, display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div 
+              className="status-bullet" 
+              style={{ background: hasData ? (isFresh ? '#10b981' : '#ef4444') : 'transparent', border: hasData ? 'none' : '1px solid rgba(255,255,255,0.2)' }}
+              title={hasData ? (isFresh ? 'Updated in last 24h' : 'Stale data (>24h)') : 'No data fetched yet'}
+            />
             {list.isProtected && <Lock size={12} opacity={0.6} />}
             {list.country && COUNTRY_FLAGS[list.country]} {list.name}
             <span style={{ marginLeft: '4px', opacity: 0.6, fontSize: '12px', fontWeight: 400 }}>({list.tickers.length})</span>
@@ -131,12 +141,22 @@ export const ListPanel: React.FC<ListPanelProps> = ({
                     <div className="ticker-symbol">{ticker.symbol}</div>
                     <div className="ticker-name">{ticker.name}</div>
                   </div>
-                  <div className="ticker-price-group">
-                    <div style={{ fontWeight: 600 }}>${ticker.stats.price}</div>
-                    <div className={parseFloat(ticker.stats.change) >= 0 ? 'positive' : 'negative'} style={{ fontSize: '11px' }}>
-                      {parseFloat(ticker.stats.change) >= 0 ? '+' : ''}{ticker.stats.change} ({ticker.stats.changePercent})
+                  {ticker.name !== 'Unknown Company' && (
+                    <div className="ticker-price-group">
+                      <div style={{ fontWeight: 600 }}>${ticker.stats.price}</div>
+                      <div className={parseFloat(ticker.stats.change) >= 0 ? 'positive' : 'negative'} style={{ fontSize: '11px' }}>
+                        {parseFloat(ticker.stats.change) >= 0 ? '+' : ''}{ticker.stats.change} ({ticker.stats.changePercent})
+                      </div>
                     </div>
-                  </div>
+                  )}
+                  {ticker.name === 'Unknown Company' && (
+                    <div className="ticker-name" style={{ fontStyle: 'italic', opacity: 0.5 }}>Symbol not found</div>
+                  )}
+                  {ticker.stats.error && (
+                    <div className="negative" style={{ fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <AlertCircle size={12} /> {ticker.stats.error}
+                    </div>
+                  )}
                   <button className="btn" style={{ padding: '4px', marginLeft: '8px' }} onClick={() => onRemoveTicker(list.id, ticker.id)}>
                     <Trash2 size={12} opacity={0.5} />
                   </button>
@@ -144,14 +164,59 @@ export const ListPanel: React.FC<ListPanelProps> = ({
                 
                 {showStats && (
                   <div className="ticker-stats">
-                    <div className="stat-item">
-                      <span className="stat-label">Cap</span>
-                      <span>{ticker.stats.marketCap}</span>
+                    <div className="stat-row">
+                      <div className="stat-item">
+                        <span className="stat-label">Cap</span>
+                        <span>{ticker.stats.marketCap}</span>
+                      </div>
+                      <div className="stat-item">
+                        <span className="stat-label">Vol</span>
+                        <span>{ticker.stats.volume}</span>
+                      </div>
                     </div>
-                    <div className="stat-item">
-                      <span className="stat-label">Vol</span>
-                      <span>{ticker.stats.volume}</span>
-                    </div>
+                    {ticker.stats.sma20 && (
+                      <div className="stat-row" style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '4px' }}>
+                        <div className="stat-item" title="SMA20">
+                          <span className="stat-label">S20</span>
+                          <span className={parseFloat(ticker.stats.price) > ticker.stats.sma20 ? 'positive' : 'negative'}>
+                            {ticker.stats.sma20}
+                          </span>
+                        </div>
+                        <div className="stat-item" title="SMA50">
+                          <span className="stat-label">S50</span>
+                          <span className={parseFloat(ticker.stats.price) > ticker.stats.sma50 ? 'positive' : 'negative'}>
+                            {ticker.stats.sma50}
+                          </span>
+                        </div>
+                        <div className="stat-item" title="SMA200">
+                          <span className="stat-label">S200</span>
+                          <span className={parseFloat(ticker.stats.price) > ticker.stats.sma200 ? 'positive' : 'negative'}>
+                            {ticker.stats.sma200}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    {ticker.stats.perf1M !== undefined && (
+                      <div className="stat-row">
+                        <div className="stat-item">
+                          <span className="stat-label">1M</span>
+                          <span className={ticker.stats.perf1M >= 0 ? 'positive' : 'negative'}>{ticker.stats.perf1M}%</span>
+                        </div>
+                        <div className="stat-item">
+                          <span className="stat-label">3M</span>
+                          <span className={ticker.stats.perf3M !== undefined && ticker.stats.perf3M >= 0 ? 'positive' : 'negative'}>{ticker.stats.perf3M}%</span>
+                        </div>
+                        <div className="stat-item">
+                          <span className="stat-label">1Y</span>
+                          <span className={ticker.stats.perf1Y !== undefined && ticker.stats.perf1Y >= 0 ? 'positive' : 'negative'}>{ticker.stats.perf1Y}%</span>
+                        </div>
+                      </div>
+                    )}
+                    {ticker.stats.lastUpdated && (
+                      <div style={{ fontSize: '9px', opacity: 0.4, textAlign: 'right', marginTop: '2px' }}>
+                        Updated: {ticker.stats.lastUpdated}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

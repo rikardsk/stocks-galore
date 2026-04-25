@@ -33,4 +33,9 @@ Earnings winners
 ~~- Add country when creating a new list: "No Country", US, Canada, Sweden, Norway, Finland, Denmark, Germany, UK, France, Netherlands, Switzerland, Italy, Spain, Other~~
 ~~- Drag a group to reorder the groups.~~   
 ~~- Add count within parenthesis after list name and group name?~~
+~~- If it's an "Unknown Company", don't show price or percentage change.~~
+~~- Bullet in the header (green if refreshed in the last 24h, red if older)~~
+~~- Can I get some animation on the refresh button while it's refreshing?~~
+~~- What happens if there is an error fetching data? Can I see the error?~~
+
 
