@@ -1,5 +1,11 @@
 
 ## TODOs
+Can we add sector to the list of stats?
+Why is 1Y always 0%?
+Filter on market cap and on price? (Between if possible)
+Filter on % change?
+Filter Moving Averages?
+What does red/grean on the simple averages mean?
 Bigger "Workbench" area
 Zoom in/out with the mouse scroll wheel?
 Edit Lists?
