@@ -1,7 +1,6 @@
 
 ## TODOs
-Flag icons?
-Country: "No Country", US, Canada, Sweden, Norway, Finland, Denmark, Germany, UK, France, Netherlands, Switzerland, Italy, Spain, Other
+
 Edit Lists?
 Edit Categories?
 Database?
@@ -29,3 +28,7 @@ Earnings winners
 ~~- Permanent  list named "Watchlist" that cannot be deleted.~~
 ~~- Make it possible to  organize your stock lists into collapsible categories.~~
 ~~- Add button "+ New Group" in the sidebar~~
+~~- Add flag icons?~~
+~~- Add country when creating a new list: "No Country", US, Canada, Sweden, Norway, Finland, Denmark, Germany, UK, France, Netherlands, Switzerland, Italy, Spain, Other~~
+~~- Drag a group to reorder the groups.~~   
+

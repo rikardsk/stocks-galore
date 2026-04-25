@@ -93,6 +93,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: list.color }}></div>
         <span style={{ fontSize: '14px', fontWeight: 500 }}>
           {list.country && COUNTRY_FLAGS[list.country]} {list.name}
+          <span style={{ marginLeft: '4px', opacity: 0.5, fontSize: '12px' }}>({list.tickers.length})</span>
         </span>
       </div>
       <div className="item-actions" style={{ display: 'flex', gap: '4px' }}>
@@ -152,7 +153,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 {group.isCollapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
                 <Folder size={16} color="var(--accent)" />
-                <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{group.name}</span>
+                <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                  {group.name} 
+                  <span style={{ marginLeft: '4px', opacity: 0.5, fontWeight: 400 }}>({group.listIds.length})</span>
+                </span>
               </div>
               <button className="btn" style={{ padding: '4px' }} onClick={(e) => { e.stopPropagation(); onDeleteGroup(group.id); }}>
                 <Trash2 size={12} color="rgba(255,255,255,0.3)" />
