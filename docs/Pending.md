@@ -1,8 +1,6 @@
 
 ## TODOs
-Can we add sector to the list of stats?
-Why is 1Y always 0%?
-Filter on market cap and on price? (Between if possible)
+Filter on market cap and on price? (Between if possible), also filter on sector
 Filter on % change?
 Filter Moving Averages?
 What does red/grean on the simple averages mean?
@@ -17,6 +15,8 @@ How far from SMA10, SMA20, SMA50, SMA100, SMA200?
 Cross-overs?
 Earnings winners
 
+## Prompts
+Can we change the search button into a filter button. I want to be able to filter on market cap and on price and sector? And possibility to add more filters later. For price and market cap i want to be able to filter between two values. The filter should apply to all lists in the workbench area.
 
 ## Bugs
 
@@ -43,5 +43,6 @@ Earnings winners
 ~~- Bullet in the header (green if refreshed in the last 24h, red if older)~~
 ~~- Can I get some animation on the refresh button while it's refreshing?~~
 ~~- What happens if there is an error fetching data? Can I see the error?~~
-
+~~Can we add sector to the list of stats?~~
+~~Why is 1Y always 0%?~~
 

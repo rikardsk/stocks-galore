@@ -80,3 +80,60 @@ export const generateMockStats = () => ({
   volume: (Math.random() * 10).toFixed(1) + 'M',
   marketCap: (Math.random() * 3).toFixed(1) + 'T',
 });
+
+export interface StockFilters {
+  priceMin: string;
+  priceMax: string;
+  marketCapMin: string; // in billions
+  marketCapMax: string; // in billions
+  sectors: string[];
+}
+
+export const EMPTY_FILTERS: StockFilters = {
+  priceMin: '',
+  priceMax: '',
+  marketCapMin: '',
+  marketCapMax: '',
+  sectors: [],
+};
+
+/** Parse market cap strings like "2.30T", "0.15T" into billions */
+export const parseMarketCap = (capStr: string): number | null => {
+  if (!capStr || capStr === 'N/A') return null;
+  const num = parseFloat(capStr);
+  if (isNaN(num)) return null;
+  if (capStr.endsWith('T')) return num * 1000;
+  if (capStr.endsWith('B')) return num;
+  if (capStr.endsWith('M')) return num / 1000;
+  return num;
+};
+
+export const countActiveFilters = (filters: StockFilters): number => {
+  let count = 0;
+  if (filters.priceMin) count++;
+  if (filters.priceMax) count++;
+  if (filters.marketCapMin) count++;
+  if (filters.marketCapMax) count++;
+  if (filters.sectors.length > 0) count++;
+  return count;
+};
+
+export const tickerMatchesFilters = (ticker: Ticker, filters: StockFilters): boolean => {
+  const price = parseFloat(ticker.stats.price);
+  if (!isNaN(price)) {
+    if (filters.priceMin && price < parseFloat(filters.priceMin)) return false;
+    if (filters.priceMax && price > parseFloat(filters.priceMax)) return false;
+  }
+
+  const cap = parseMarketCap(ticker.stats.marketCap);
+  if (cap !== null) {
+    if (filters.marketCapMin && cap < parseFloat(filters.marketCapMin)) return false;
+    if (filters.marketCapMax && cap > parseFloat(filters.marketCapMax)) return false;
+  }
+
+  if (filters.sectors.length > 0) {
+    if (!ticker.stats.sector || !filters.sectors.includes(ticker.stats.sector)) return false;
+  }
+
+  return true;
+};

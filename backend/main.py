@@ -33,10 +33,14 @@ def calculate_stats(symbol: str, info: Dict, hist: pd.DataFrame) -> Dict[str, An
 
     # Performance
     def get_perf(days):
-        if len(hist) >= days:
+        if len(hist) > days:
             past_price = hist['Close'].iloc[-days]
-            return ((current_price - past_price) / past_price) * 100
-        return 0
+        elif len(hist) > max(1, int(days * 0.9)):
+            # Close enough to target — use earliest available data point
+            past_price = hist['Close'].iloc[0]
+        else:
+            return 0
+        return ((current_price - past_price) / past_price) * 100
 
     return {
         "symbol": symbol,
@@ -75,20 +79,34 @@ async def get_batch(symbols: str = Query(..., description="Comma-separated symbo
     if not symbol_list:
         return []
 
+    # Bulk download all histories in a single request (much faster than individual calls)
+    try:
+        all_hist = yf.download(symbol_list, period="1y", group_by="ticker", threads=True)
+    except Exception as e:
+        print(f"[batch] Bulk download failed: {e}")
+        all_hist = pd.DataFrame()
+
     results = []
-    # Using a loop here for simplicity and to get full 'info' which yf.download skips
     for symbol in symbol_list:
         try:
+            # Extract per-symbol history from the bulk download
+            if len(symbol_list) == 1:
+                hist = all_hist  # Single symbol: no multi-level columns
+            else:
+                hist = all_hist[symbol].dropna(how="all") if symbol in all_hist.columns.get_level_values(0) else pd.DataFrame()
+
+            if hist.empty:
+                print(f"[batch] No history for {symbol}, skipping")
+                continue
+
+            # Fetch info individually (needed for name, sector, marketCap, volume)
             ticker = yf.Ticker(symbol)
-            # Fetching info and history in separate calls can be slow, 
-            # but yfinance is the most accessible for this.
             info = ticker.info
-            hist = ticker.history(period="1y")
-            if not hist.empty:
-                results.append(calculate_stats(symbol, info, hist))
-        except:
+            results.append(calculate_stats(symbol, info, hist))
+        except Exception as e:
+            print(f"[batch] Error processing {symbol}: {e}")
             continue
-            
+
     return results
 
 if __name__ == "__main__":

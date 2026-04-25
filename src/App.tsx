@@ -20,6 +20,8 @@ const App: React.FC = () => {
   const [isAddTickerModalOpen, setIsAddTickerModalOpen] = useState(false);
   const [activeListId, setActiveListId] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastType, setToastType] = useState<'error' | 'success'>('error');
   
   const [newListName, setNewListName] = useState('');
   const [newListColor, setNewListColor] = useState(COLORS[0]);
@@ -29,6 +31,19 @@ const App: React.FC = () => {
   const [groups, setGroups] = useState<ListGroup[]>([]);
   const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
+
+  // Auto-dismiss toast after 5 seconds
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => setToastMessage(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
+
+  const showToast = (message: string, type: 'error' | 'success' = 'error') => {
+    setToastType(type);
+    setToastMessage(message);
+  };
 
   useEffect(() => {
     let currentLists = storage.getLists();
@@ -307,7 +322,9 @@ const App: React.FC = () => {
       setLists(updatedLists);
       storage.saveLists(updatedLists);
     } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
       console.error('Failed to refresh data:', error);
+      showToast(`Failed to refresh data: ${errorMsg}`);
       const updatedLists = lists.map(list => ({
         ...list,
         tickers: list.tickers.map(ticker => {
@@ -504,6 +521,14 @@ const App: React.FC = () => {
               <button className="btn" style={{ flex: 1, border: '1px solid var(--border-color)' }} onClick={() => setIsCreateGroupModalOpen(false)}>Cancel</button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className={`toast toast-${toastType}`}>
+          <span>{toastMessage}</span>
+          <button className="toast-close" onClick={() => setToastMessage(null)}>✕</button>
         </div>
       )}
     </div>

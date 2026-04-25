@@ -164,6 +164,14 @@ export const ListPanel: React.FC<ListPanelProps> = ({
                 
                 {showStats && (
                   <div className="ticker-stats">
+                    {ticker.stats.sector && ticker.stats.sector !== 'N/A' && (
+                      <div className="stat-row">
+                        <div className="stat-item" style={{ flex: '1 1 100%' }}>
+                          <span className="stat-label">Sector</span>
+                          <span>{ticker.stats.sector}</span>
+                        </div>
+                      </div>
+                    )}
                     <div className="stat-row">
                       <div className="stat-item">
                         <span className="stat-label">Cap</span>
