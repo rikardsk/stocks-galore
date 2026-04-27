@@ -2,6 +2,8 @@ from fastapi import FastAPI, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import yfinance as yf
 import pandas as pd
+import numpy as np
+import math
 from typing import List, Dict, Any
 import uvicorn
 
@@ -16,20 +18,42 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+def safe_float(val: Any) -> Any:
+    """Ensure value is a safe standard Python float, and convert NaN/Inf to None."""
+    if val is None or pd.isna(val):
+        return None
+    try:
+        val = float(val)
+        if math.isnan(val) or math.isinf(val):
+            return None
+        return round(val, 2)
+    except (ValueError, TypeError):
+        return None
+
 def calculate_stats(symbol: str, info: Dict, hist: pd.DataFrame) -> Dict[str, Any]:
     """Helper to calculate technical indicators and clean up info."""
     if hist.empty:
         return {}
+        
+    hist = hist.dropna(subset=['Close'])
+    if hist.empty:
+        return {}
 
-    current_price = hist['Close'].iloc[-1]
-    prev_close = hist['Close'].iloc[-2] if len(hist) > 1 else current_price
-    change = current_price - prev_close
-    change_percent = (change / prev_close) * 100 if prev_close != 0 else 0
+    current_price = safe_float(hist['Close'].iloc[-1])
+    if current_price is None:
+        return {} # Invalid data
+
+    prev_close = safe_float(hist['Close'].iloc[-2] if len(hist) > 1 else current_price)
+    if prev_close is None:
+        prev_close = current_price
+
+    change = safe_float(current_price - prev_close)
+    change_percent = safe_float((change / prev_close) * 100) if prev_close != 0 and change is None else safe_float((current_price - prev_close) / prev_close * 100) if prev_close != 0 else 0
 
     # Moving Averages
-    sma20 = hist['Close'].rolling(window=20).mean().iloc[-1]
-    sma50 = hist['Close'].rolling(window=50).mean().iloc[-1]
-    sma200 = hist['Close'].rolling(window=200).mean().iloc[-1]
+    sma20 = safe_float(hist['Close'].rolling(window=20).mean().iloc[-1])
+    sma50 = safe_float(hist['Close'].rolling(window=50).mean().iloc[-1])
+    sma200 = safe_float(hist['Close'].rolling(window=200).mean().iloc[-1])
 
     # Performance
     def get_perf(days):
@@ -40,23 +64,26 @@ def calculate_stats(symbol: str, info: Dict, hist: pd.DataFrame) -> Dict[str, An
             past_price = hist['Close'].iloc[0]
         else:
             return 0
-        return ((current_price - past_price) / past_price) * 100
+        past_price = safe_float(past_price)
+        if not past_price:
+            return 0
+        return safe_float(((current_price - past_price) / past_price) * 100) or 0
 
     return {
         "symbol": symbol,
         "name": info.get('longName', symbol),
-        "price": round(current_price, 2),
-        "change": round(change, 2),
-        "changePercent": f"{change_percent:+.2f}%",
+        "price": current_price,
+        "change": change or 0,
+        "changePercent": f"{change_percent:+.2f}%" if change_percent is not None else "0.00%",
         "volume": f"{info.get('volume', 0) / 1e6:.1f}M" if info.get('volume') else "N/A",
         "marketCap": f"{info.get('marketCap', 0) / 1e12:.2f}T" if info.get('marketCap') else "N/A",
         "sector": info.get('sector', 'N/A'),
-        "sma20": round(sma20, 2) if not pd.isna(sma20) else None,
-        "sma50": round(sma50, 2) if not pd.isna(sma50) else None,
-        "sma200": round(sma200, 2) if not pd.isna(sma200) else None,
-        "perf1M": round(get_perf(21), 2), # ~21 trading days
-        "perf3M": round(get_perf(63), 2),
-        "perf1Y": round(get_perf(252), 2),
+        "sma20": sma20,
+        "sma50": sma50,
+        "sma200": sma200,
+        "perf1M": get_perf(21), # ~21 trading days
+        "perf3M": get_perf(63),
+        "perf1Y": get_perf(252),
     }
 
 @app.get("/stock/{symbol}")
@@ -70,6 +97,8 @@ async def get_stock(symbol: str):
             raise HTTPException(status_code=404, detail="Stock not found")
             
         return calculate_stats(symbol, info, hist)
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -90,10 +119,20 @@ async def get_batch(symbols: str = Query(..., description="Comma-separated symbo
     for symbol in symbol_list:
         try:
             # Extract per-symbol history from the bulk download
-            if len(symbol_list) == 1:
-                hist = all_hist  # Single symbol: no multi-level columns
+            if all_hist.empty:
+                print(f"[batch] No history for {symbol}, skipping")
+                continue
+                
+            # yfinance with group_by="ticker" returns a MultiIndex even for a single symbol
+            # check the columns structure to safely extract the specific ticker's history
+            if isinstance(all_hist.columns, pd.MultiIndex):
+                if symbol in all_hist.columns.get_level_values(0):
+                    hist = all_hist[symbol].dropna(how="all")
+                else:
+                    hist = pd.DataFrame()
             else:
-                hist = all_hist[symbol].dropna(how="all") if symbol in all_hist.columns.get_level_values(0) else pd.DataFrame()
+                # Fallback if somehow it isn't multiindex
+                hist = all_hist.dropna(how="all") if len(symbol_list) == 1 else pd.DataFrame()
 
             if hist.empty:
                 print(f"[batch] No history for {symbol}, skipping")
@@ -111,3 +150,4 @@ async def get_batch(symbols: str = Query(..., description="Comma-separated symbo
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
