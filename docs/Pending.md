@@ -1,6 +1,10 @@
 
 ## TODOs
-Filter on market cap and on price? (Between if possible), also filter on sector
+Clear workbench
+Bigger workbench
+Export/Import
+Dark/Light mode
+Color background and/or badges
 Filter on % change?
 Filter Moving Averages?
 What does red/grean on the simple averages mean?
@@ -14,11 +18,10 @@ Change 1M, 3M, 1Y, 5Y
 How far from SMA10, SMA20, SMA50, SMA100, SMA200?
 Cross-overs?
 Earnings winners
+Earnings date
 
 ## Prompts
-I want to be able to filter on market cap and on price and sector? And possibility to add more filters later. For price and market cap i want to be able to filter between two values. The filter should apply to all lists in the workbench area.
-
-Do you have any suggestions for the settings button?
+Can you add a button between refresh and add new list for clearing the workbench
 
 ## Bugs
 
@@ -47,4 +50,5 @@ Do you have any suggestions for the settings button?
 ~~- What happens if there is an error fetching data? Can I see the error?~~
 ~~Can we add sector to the list of stats?~~
 ~~Why is 1Y always 0%?~~
+~~Filter on market cap and on price? (Between if possible), also filter on sector~~
 
