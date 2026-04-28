@@ -247,6 +247,14 @@ const App: React.FC = () => {
     setLists(lists.map(l => l.id === updatedList.id ? updatedList : l));
   };
 
+  const handleClearWorkbench = () => {
+    if (window.confirm('Clear all lists from the workbench?')) {
+      const updatedLists = lists.map(list => ({ ...list, isVisible: false }));
+      setLists(updatedLists);
+      storage.saveLists(updatedLists);
+    }
+  };
+
   const handleOpenAddTicker = (listId: string) => {
     setActiveListId(listId);
     setIsAddTickerModalOpen(true);
@@ -455,6 +463,7 @@ const App: React.FC = () => {
           onCreateList={() => setIsCreateModalOpen(true)} 
           onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
           onRefreshAll={handleRefreshAll}
+          onClearWorkbench={handleClearWorkbench}
           isRefreshing={isRefreshing}
           searchQuery={searchQuery}
           onSearchQueryChange={setSearchQuery}

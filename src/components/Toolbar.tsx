@@ -1,10 +1,11 @@
 import React from 'react';
-import { Plus, Layout, Settings, Search, BarChart2, RefreshCw, Filter, X } from 'lucide-react';
+import { Plus, Layout, Settings, Search, BarChart2, RefreshCw, Filter, X, Trash2 } from 'lucide-react';
 
 interface ToolbarProps {
   onCreateList: () => void;
   onToggleSidebar: () => void;
   onRefreshAll: () => void;
+  onClearWorkbench: () => void;
   isRefreshing: boolean;
   searchQuery: string;
   onSearchQueryChange: (query: string) => void;
@@ -14,7 +15,7 @@ interface ToolbarProps {
 }
 
 export const Toolbar: React.FC<ToolbarProps> = ({ 
-  onCreateList, onToggleSidebar, onRefreshAll, isRefreshing, 
+  onCreateList, onToggleSidebar, onRefreshAll, onClearWorkbench, isRefreshing, 
   searchQuery, onSearchQueryChange, onOpenFilter, onOpenSettings, activeFilterCount = 0 
 }) => {
   const [isSearchExpanded, setIsSearchExpanded] = React.useState(false);
@@ -26,6 +27,9 @@ export const Toolbar: React.FC<ToolbarProps> = ({
       </button>
       <button className="btn" title="Refresh All Data" onClick={onRefreshAll} disabled={isRefreshing}>
         <RefreshCw size={20} className={isRefreshing ? 'spinning' : ''} />
+      </button>
+      <button className="btn" title="Clear Workbench" onClick={onClearWorkbench}>
+        <Trash2 size={20} />
       </button>
       <button 
         className="btn" 

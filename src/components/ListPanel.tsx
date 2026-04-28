@@ -191,26 +191,48 @@ export const ListPanel: React.FC<ListPanelProps> = ({
                       </div>
                     </div>
                     {ticker.stats.sma20 && (
-                      <div className="stat-row" style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '4px' }}>
-                        <div className="stat-item" title="SMA20">
-                          <span className="stat-label">S20</span>
-                          <span className={parseFloat(ticker.stats.price) > ticker.stats.sma20 ? 'positive' : 'negative'}>
-                            {ticker.stats.sma20}
-                          </span>
+                      <>
+                        <div className="stat-row" style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '4px' }}>
+                          <div className="stat-item" title="SMA20">
+                            <span className="stat-label">S20</span>
+                            <span className={parseFloat(ticker.stats.price) > ticker.stats.sma20 ? 'positive' : 'negative'}>
+                              {ticker.stats.sma20}
+                            </span>
+                          </div>
+                          <div className="stat-item" title="SMA50">
+                            <span className="stat-label">S50</span>
+                            <span className={parseFloat(ticker.stats.price) > ticker.stats.sma50 ? 'positive' : 'negative'}>
+                              {ticker.stats.sma50}
+                            </span>
+                          </div>
+                          <div className="stat-item" title="SMA200">
+                            <span className="stat-label">S200</span>
+                            <span className={parseFloat(ticker.stats.price) > ticker.stats.sma200 ? 'positive' : 'negative'}>
+                              {ticker.stats.sma200}
+                            </span>
+                          </div>
                         </div>
-                        <div className="stat-item" title="SMA50">
-                          <span className="stat-label">S50</span>
-                          <span className={parseFloat(ticker.stats.price) > ticker.stats.sma50 ? 'positive' : 'negative'}>
-                            {ticker.stats.sma50}
-                          </span>
+                        <div className="stat-row" style={{ paddingBottom: '4px' }}>
+                          <div className="stat-item" title="% from SMA20">
+                            <span className="stat-label">%</span>
+                            <span className={parseFloat(ticker.stats.price) > ticker.stats.sma20 ? 'positive' : 'negative'}>
+                              {(((parseFloat(ticker.stats.price) - ticker.stats.sma20) / ticker.stats.sma20) * 100).toFixed(1)}%
+                            </span>
+                          </div>
+                          <div className="stat-item" title="% from SMA50">
+                            <span className="stat-label">%</span>
+                            <span className={parseFloat(ticker.stats.price) > ticker.stats.sma50 ? 'positive' : 'negative'}>
+                              {(((parseFloat(ticker.stats.price) - ticker.stats.sma50) / ticker.stats.sma50) * 100).toFixed(1)}%
+                            </span>
+                          </div>
+                          <div className="stat-item" title="% from SMA200">
+                            <span className="stat-label">%</span>
+                            <span className={parseFloat(ticker.stats.price) > ticker.stats.sma200 ? 'positive' : 'negative'}>
+                              {(((parseFloat(ticker.stats.price) - ticker.stats.sma200) / ticker.stats.sma200) * 100).toFixed(1)}%
+                            </span>
+                          </div>
                         </div>
-                        <div className="stat-item" title="SMA200">
-                          <span className="stat-label">S200</span>
-                          <span className={parseFloat(ticker.stats.price) > ticker.stats.sma200 ? 'positive' : 'negative'}>
-                            {ticker.stats.sma200}
-                          </span>
-                        </div>
-                      </div>
+                      </>
                     )}
                     {ticker.stats.perf1M !== undefined && (
                       <div className="stat-row">

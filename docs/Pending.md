@@ -1,6 +1,5 @@
 
 ## TODOs
-Clear workbench
 Bigger workbench
 Export/Import
 Dark/Light mode
@@ -13,17 +12,15 @@ Zoom in/out with the mouse scroll wheel?
 Edit Lists?
 Edit Categories?
 Database?
-Filter on price, market cap, etc?
-Change 1M, 3M, 1Y, 5Y
-How far from SMA10, SMA20, SMA50, SMA100, SMA200?
 Cross-overs?
 Earnings winners
 Earnings date
 
 ## Prompts
-Can you add a button between refresh and add new list for clearing the workbench
+~~Can you do a new row in the stats to show, a row below the one with S20, S50 and S200, that gives me the percentage difference between the current price and the S20, S50 and S200? Green if the price is above, red if below.~~
 
 ## Bugs
+
 
 ## Done
 ~~- Floating toggle button has been removed~~
@@ -51,4 +48,9 @@ Can you add a button between refresh and add new list for clearing the workbench
 ~~Can we add sector to the list of stats?~~
 ~~Why is 1Y always 0%?~~
 ~~Filter on market cap and on price? (Between if possible), also filter on sector~~
+~~- Added a button between refresh and add new list for clearing the workbench~~
+~~Change 1M, 3M, 1Y, 5Y~~
+~~How far from SMA10, SMA20, SMA50, SMA100, SMA200?~~
+
+
 
