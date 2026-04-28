@@ -1,8 +1,8 @@
 import React, { useState, useRef } from 'react';
 import Draggable from 'react-draggable';
 import { MoreVertical, X, ChevronDown, ChevronUp, Eye, EyeOff, Plus, Trash2, ArrowUpDown, ArrowUpAZ, ArrowDownAZ, Lock, AlertCircle } from 'lucide-react';
-import type { StockList, Ticker } from '../types';
-import { COUNTRY_FLAGS } from '../types';
+import type { StockList, Ticker, StockFilters } from '../types';
+import { COUNTRY_FLAGS, tickerMatchesFilters } from '../types';
 
 interface ListPanelProps {
   list: StockList;
@@ -11,6 +11,7 @@ interface ListPanelProps {
   onAddTicker: (listId: string) => void;
   onRemoveTicker: (listId: string, tickerId: string) => void;
   onTransferTicker: (fromListId: string, toListId: string, tickerId: string, isCopy: boolean) => void;
+  globalFilters?: StockFilters;
 }
 
 export const ListPanel: React.FC<ListPanelProps> = ({
@@ -19,7 +20,8 @@ export const ListPanel: React.FC<ListPanelProps> = ({
   onDelete,
   onAddTicker,
   onRemoveTicker,
-  onTransferTicker
+  onTransferTicker,
+  globalFilters
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(list.isCollapsed);
   const [showStats, setShowStats] = useState(list.showStats);
@@ -63,8 +65,12 @@ export const ListPanel: React.FC<ListPanelProps> = ({
     }
   };
 
-  // Sort tickers logic
-  const sortedTickers = [...list.tickers].sort((a, b) => {
+  // Filter and Sort tickers logic
+  const filteredTickers = globalFilters 
+    ? list.tickers.filter(t => tickerMatchesFilters(t, globalFilters))
+    : list.tickers;
+
+  const sortedTickers = [...filteredTickers].sort((a, b) => {
     if (list.sortOrder === 'none') return 0;
     const comparison = a.symbol.localeCompare(b.symbol);
     return list.sortOrder === 'asc' ? comparison : -comparison;
@@ -103,7 +109,9 @@ export const ListPanel: React.FC<ListPanelProps> = ({
             />
             {list.isProtected && <Lock size={12} opacity={0.6} />}
             {list.country && COUNTRY_FLAGS[list.country]} {list.name}
-            <span style={{ marginLeft: '4px', opacity: 0.6, fontSize: '12px', fontWeight: 400 }}>({list.tickers.length})</span>
+            <span style={{ marginLeft: '4px', opacity: 0.6, fontSize: '12px', fontWeight: 400 }}>
+              ({filteredTickers.length})
+            </span>
           </div>
           <div className="panel-actions">
             <button className="btn" onClick={handleToggleSort} title={`Sort: ${list.sortOrder}`}>

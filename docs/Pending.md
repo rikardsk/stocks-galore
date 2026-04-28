@@ -16,7 +16,9 @@ Cross-overs?
 Earnings winners
 
 ## Prompts
-Can we change the search button into a filter button. I want to be able to filter on market cap and on price and sector? And possibility to add more filters later. For price and market cap i want to be able to filter between two values. The filter should apply to all lists in the workbench area.
+I want to be able to filter on market cap and on price and sector? And possibility to add more filters later. For price and market cap i want to be able to filter between two values. The filter should apply to all lists in the workbench area.
+
+Do you have any suggestions for the settings button?
 
 ## Bugs
 

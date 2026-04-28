@@ -9,9 +9,14 @@ interface ToolbarProps {
   searchQuery: string;
   onSearchQueryChange: (query: string) => void;
   onOpenFilter?: () => void;
+  onOpenSettings?: () => void;
+  activeFilterCount?: number;
 }
 
-export const Toolbar: React.FC<ToolbarProps> = ({ onCreateList, onToggleSidebar, onRefreshAll, isRefreshing, searchQuery, onSearchQueryChange, onOpenFilter }) => {
+export const Toolbar: React.FC<ToolbarProps> = ({ 
+  onCreateList, onToggleSidebar, onRefreshAll, isRefreshing, 
+  searchQuery, onSearchQueryChange, onOpenFilter, onOpenSettings, activeFilterCount = 0 
+}) => {
   const [isSearchExpanded, setIsSearchExpanded] = React.useState(false);
 
   return (
@@ -48,10 +53,21 @@ export const Toolbar: React.FC<ToolbarProps> = ({ onCreateList, onToggleSidebar,
           autoFocus
         />
       )}
-      <button className="btn" title="Filter" onClick={onOpenFilter}>
+      <button className="btn" title="Filter" onClick={onOpenFilter} style={{ position: 'relative' }}>
         <Filter size={20} />
+        {activeFilterCount > 0 && (
+          <span style={{
+            position: 'absolute', top: '0px', right: '0px', 
+            background: 'var(--accent)', color: 'white', 
+            fontSize: '10px', fontWeight: 'bold', width: '14px', height: '14px', 
+            display: 'flex', alignItems: 'center', justifyContent: 'center', 
+            borderRadius: '50%'
+          }}>
+            {activeFilterCount}
+          </span>
+        )}
       </button>
-      <button className="btn" title="Settings">
+      <button className="btn" title="Settings" onClick={onOpenSettings}>
         <Settings size={20} />
       </button>
     </div>

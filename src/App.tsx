@@ -4,9 +4,11 @@ import { Sidebar } from './components/Sidebar';
 import { ListPanel } from './components/ListPanel';
 import { Toolbar } from './components/Toolbar';
 import { storage } from './storage';
-import { MOCK_TICKERS } from './types';
-import type { StockList, ListGroup } from './types';
+import { MOCK_TICKERS, EMPTY_FILTERS, countActiveFilters } from './types';
+import type { StockList, ListGroup, StockFilters } from './types';
 import { COUNTRY_FLAGS } from './types';
+import { FilterModal } from './components/FilterModal';
+import { SettingsModal, type RefreshInterval } from './components/SettingsModal';
 import './index.css';
 
 const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
@@ -23,6 +25,11 @@ const App: React.FC = () => {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastType, setToastType] = useState<'error' | 'success'>('error');
   const [searchQuery, setSearchQuery] = useState('');
+  
+  const [globalFilters, setGlobalFilters] = useState<StockFilters>(EMPTY_FILTERS);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [refreshInterval, setRefreshInterval] = useState<RefreshInterval>('manual');
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   
   const [newListName, setNewListName] = useState('');
   const [newListColor, setNewListColor] = useState(COLORS[0]);
@@ -93,6 +100,30 @@ const App: React.FC = () => {
     setLists(currentLists);
     setGroups(storage.getGroups());
   }, []);
+
+  // Compute available sectors across all lists for the filter modal
+  const availableSectors = React.useMemo(() => {
+    const sectors = new Set<string>();
+    lists.forEach(l => l.tickers.forEach(t => {
+      if (t.stats.sector && t.stats.sector !== 'N/A') sectors.add(t.stats.sector);
+    }));
+    return Array.from(sectors).sort();
+  }, [lists]);
+
+  // Handle auto-refresh based on interval
+  useEffect(() => {
+    if (refreshInterval === 'manual') return;
+    
+    let ms = 60000;
+    if (refreshInterval === '5m') ms = 300000;
+    if (refreshInterval === '15m') ms = 900000;
+
+    const timer = setInterval(() => {
+      handleRefreshAll();
+    }, ms);
+
+    return () => clearInterval(timer);
+  }, [refreshInterval, lists]);
 
   const handleCreateGroup = () => {
     if (!newGroupName.trim()) return;
@@ -411,6 +442,7 @@ const App: React.FC = () => {
           <ListPanel 
             key={list.id} 
             list={list} 
+            globalFilters={globalFilters}
             onUpdate={handleUpdateList} 
             onDelete={(id) => handleHideList(id, false)}
             onAddTicker={handleOpenAddTicker}
@@ -426,6 +458,9 @@ const App: React.FC = () => {
           isRefreshing={isRefreshing}
           searchQuery={searchQuery}
           onSearchQueryChange={setSearchQuery}
+          onOpenFilter={() => setIsFilterModalOpen(true)}
+          onOpenSettings={() => setIsSettingsModalOpen(true)}
+          activeFilterCount={countActiveFilters(globalFilters)}
         />
       </main>
 
@@ -529,6 +564,21 @@ const App: React.FC = () => {
           </div>
         </div>
       )}
+
+      <FilterModal 
+        isOpen={isFilterModalOpen} 
+        onClose={() => setIsFilterModalOpen(false)} 
+        filters={globalFilters} 
+        onApplyFilters={setGlobalFilters} 
+        availableSectors={availableSectors} 
+      />
+
+      <SettingsModal 
+        isOpen={isSettingsModalOpen} 
+        onClose={() => setIsSettingsModalOpen(false)} 
+        refreshInterval={refreshInterval} 
+        onRefreshIntervalChange={setRefreshInterval} 
+      />
 
       {/* Toast Notification */}
       {toastMessage && (
