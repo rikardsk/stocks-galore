@@ -22,6 +22,7 @@ const App: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastType, setToastType] = useState<'error' | 'success'>('error');
+  const [searchQuery, setSearchQuery] = useState('');
   
   const [newListName, setNewListName] = useState('');
   const [newListColor, setNewListColor] = useState(COLORS[0]);
@@ -403,7 +404,10 @@ const App: React.FC = () => {
       />
       
       <main className="workbench">
-        {lists.filter(l => l.isVisible).map(list => (
+        {lists.filter(list => {
+          if (!searchQuery.trim()) return list.isVisible;
+          return list.tickers.some(t => t.symbol.toLowerCase().includes(searchQuery.trim().toLowerCase()));
+        }).map(list => (
           <ListPanel 
             key={list.id} 
             list={list} 
@@ -420,6 +424,8 @@ const App: React.FC = () => {
           onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
           onRefreshAll={handleRefreshAll}
           isRefreshing={isRefreshing}
+          searchQuery={searchQuery}
+          onSearchQueryChange={setSearchQuery}
         />
       </main>
 

@@ -1,14 +1,19 @@
 import React from 'react';
-import { Plus, Layout, Settings, Search, BarChart2, RefreshCw } from 'lucide-react';
+import { Plus, Layout, Settings, Search, BarChart2, RefreshCw, Filter, X } from 'lucide-react';
 
 interface ToolbarProps {
   onCreateList: () => void;
   onToggleSidebar: () => void;
   onRefreshAll: () => void;
   isRefreshing: boolean;
+  searchQuery: string;
+  onSearchQueryChange: (query: string) => void;
+  onOpenFilter?: () => void;
 }
 
-export const Toolbar: React.FC<ToolbarProps> = ({ onCreateList, onToggleSidebar, onRefreshAll, isRefreshing }) => {
+export const Toolbar: React.FC<ToolbarProps> = ({ onCreateList, onToggleSidebar, onRefreshAll, isRefreshing, searchQuery, onSearchQueryChange, onOpenFilter }) => {
+  const [isSearchExpanded, setIsSearchExpanded] = React.useState(false);
+
   return (
     <div className="toolbar">
       <button className="btn" title="Toggle Sidebar" onClick={onToggleSidebar}>
@@ -25,8 +30,26 @@ export const Toolbar: React.FC<ToolbarProps> = ({ onCreateList, onToggleSidebar,
       >
         <Plus size={24} />
       </button>
-      <button className="btn" title="Search">
-        <Search size={20} />
+      <button className="btn" title={isSearchExpanded ? "Close Search" : "Search"} onClick={() => {
+        if (isSearchExpanded) {
+          onSearchQueryChange('');
+        }
+        setIsSearchExpanded(!isSearchExpanded);
+      }}>
+        {isSearchExpanded ? <X size={20} /> : <Search size={20} />}
+      </button>
+      {isSearchExpanded && (
+        <input 
+          type="text" 
+          placeholder="Search ticker..." 
+          value={searchQuery}
+          onChange={e => onSearchQueryChange(e.target.value)}
+          className="search-input"
+          autoFocus
+        />
+      )}
+      <button className="btn" title="Filter" onClick={onOpenFilter}>
+        <Filter size={20} />
       </button>
       <button className="btn" title="Settings">
         <Settings size={20} />
