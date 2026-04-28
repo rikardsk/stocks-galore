@@ -232,6 +232,26 @@ export const ListPanel: React.FC<ListPanelProps> = ({
                             </span>
                           </div>
                         </div>
+                        <div className="stat-row" style={{ paddingBottom: '4px', borderTop: '1px solid rgba(255,255,255,0.02)', paddingTop: '4px' }}>
+                          <div className="stat-item" title="Crossover SMA20">
+                            <span className="stat-label">Cross</span>
+                            <span className={(parseFloat(ticker.stats.price) - parseFloat(ticker.stats.change)) < ticker.stats.sma20 && parseFloat(ticker.stats.price) > ticker.stats.sma20 ? 'positive' : 'negative'}>
+                              {(parseFloat(ticker.stats.price) - parseFloat(ticker.stats.change)) < ticker.stats.sma20 && parseFloat(ticker.stats.price) > ticker.stats.sma20 ? 'YES' : 'NO'}
+                            </span>
+                          </div>
+                          <div className="stat-item" title="Crossover SMA50">
+                            <span className="stat-label">Cross</span>
+                            <span className={(parseFloat(ticker.stats.price) - parseFloat(ticker.stats.change)) < ticker.stats.sma50 && parseFloat(ticker.stats.price) > ticker.stats.sma50 ? 'positive' : 'negative'}>
+                              {(parseFloat(ticker.stats.price) - parseFloat(ticker.stats.change)) < ticker.stats.sma50 && parseFloat(ticker.stats.price) > ticker.stats.sma50 ? 'YES' : 'NO'}
+                            </span>
+                          </div>
+                          <div className="stat-item" title="Crossover SMA200">
+                            <span className="stat-label">Cross</span>
+                            <span className={(parseFloat(ticker.stats.price) - parseFloat(ticker.stats.change)) < ticker.stats.sma200 && parseFloat(ticker.stats.price) > ticker.stats.sma200 ? 'positive' : 'negative'}>
+                              {(parseFloat(ticker.stats.price) - parseFloat(ticker.stats.change)) < ticker.stats.sma200 && parseFloat(ticker.stats.price) > ticker.stats.sma200 ? 'YES' : 'NO'}
+                            </span>
+                          </div>
+                        </div>
                       </>
                     )}
                     {ticker.stats.perf1M !== undefined && (

@@ -19,6 +19,8 @@ Earnings date
 ## Prompts
 ~~Can you do a new row in the stats to show, a row below the one with S20, S50 and S200, that gives me the percentage difference between the current price and the S20, S50 and S200? Green if the price is above, red if below.~~
 
+~~Can you do a new row in the stats to show, a row below % thas says crossover and is YES or NO. YES if yesterdays close is beneath S20 (or which is in that column) and todays price is above it. If not it should say NO.~~
+
 ## Bugs
 
 
