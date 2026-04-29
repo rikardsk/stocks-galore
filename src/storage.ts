@@ -1,9 +1,11 @@
-import type { StockList, Ticker, ListGroup } from './types';
+import type { StockList, Ticker, ListGroup, StockAlert, TickerNotification } from './types';
 import { generateMockStats, MOCK_TICKERS } from './types';
 import { v4 as uuidv4 } from 'uuid';
 
 const STORAGE_KEY = 'stocks_galore_workbench';
 const GROUPS_KEY = 'stocks_galore_groups';
+const ALERTS_KEY = 'stocks_galore_alerts';
+const NOTIFICATIONS_KEY = 'stocks_galore_notifications';
 
 export const storage = {
   // --- Lists ---
@@ -158,5 +160,62 @@ export const storage = {
       storage.saveGroups(jsonData.groups);
     }
     return true;
+  },
+
+  // --- Alerts ---
+  getAlerts: (): StockAlert[] => {
+    const data = localStorage.getItem(ALERTS_KEY);
+    return data ? JSON.parse(data) : [];
+  },
+
+  saveAlerts: (alerts: StockAlert[]) => {
+    localStorage.setItem(ALERTS_KEY, JSON.stringify(alerts));
+  },
+
+  addAlert: (alert: Omit<StockAlert, 'id' | 'isTriggered'>): StockAlert => {
+    const alerts = storage.getAlerts();
+    const newAlert: StockAlert = {
+      ...alert,
+      id: uuidv4(),
+      isTriggered: false
+    };
+    storage.saveAlerts([...alerts, newAlert]);
+    return newAlert;
+  },
+
+  deleteAlert: (id: string) => {
+    const alerts = storage.getAlerts();
+    storage.saveAlerts(alerts.filter(a => a.id !== id));
+  },
+
+  // --- Notifications ---
+  getNotifications: (): TickerNotification[] => {
+    const data = localStorage.getItem(NOTIFICATIONS_KEY);
+    return data ? JSON.parse(data) : [];
+  },
+
+  saveNotifications: (notifications: TickerNotification[]) => {
+    localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(notifications));
+  },
+
+  addNotification: (notification: Omit<TickerNotification, 'id' | 'isRead' | 'timestamp'>): TickerNotification => {
+    const notifications = storage.getNotifications();
+    const newNotification: TickerNotification = {
+      ...notification,
+      id: uuidv4(),
+      timestamp: new Date().toISOString(),
+      isRead: false
+    };
+    storage.saveNotifications([newNotification, ...notifications]);
+    return newNotification;
+  },
+
+  markNotificationsRead: () => {
+    const notifications = storage.getNotifications();
+    storage.saveNotifications(notifications.map(n => ({ ...n, isRead: true })));
+  },
+
+  clearNotifications: () => {
+    storage.saveNotifications([]);
   }
 };

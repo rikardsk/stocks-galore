@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Layout, Settings, Search, RefreshCw, Filter, X, Trash2 } from 'lucide-react';
+import { Plus, Layout, Settings, Search, RefreshCw, Filter, Bell, X, Trash2 } from 'lucide-react';
 
 interface ToolbarProps {
   onCreateList: () => void;
@@ -12,12 +12,14 @@ interface ToolbarProps {
   onOpenFilter?: () => void;
   onOpenSettings?: () => void;
   onOpenTable?: () => void;
+  onOpenNotifications?: () => void;
+  unreadCount?: number;
   activeFilterCount?: number;
 }
 
 export const Toolbar: React.FC<ToolbarProps> = ({ 
   onCreateList, onToggleSidebar, onRefreshAll, onClearWorkbench, isRefreshing, 
-  searchQuery, onSearchQueryChange, onOpenFilter, onOpenSettings, onOpenTable, activeFilterCount = 0 
+  searchQuery, onSearchQueryChange, onOpenFilter, onOpenSettings, onOpenTable, onOpenNotifications, unreadCount = 0, activeFilterCount = 0 
 }) => {
   const [isSearchExpanded, setIsSearchExpanded] = React.useState(false);
 
@@ -72,6 +74,21 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             borderRadius: '50%'
           }}>
             {activeFilterCount}
+          </span>
+        )}
+      </button>
+      <button className="btn" title="Notifications" onClick={onOpenNotifications} style={{ position: 'relative' }}>
+        <Bell size={20} />
+        {unreadCount > 0 && (
+          <span style={{
+            position: 'absolute', top: '0px', right: '0px', 
+            background: '#ef4444', color: 'white', 
+            fontSize: '10px', fontWeight: 'bold', width: '14px', height: '14px', 
+            display: 'flex', alignItems: 'center', justifyContent: 'center', 
+            borderRadius: '50%',
+            border: '2px solid rgba(30, 30, 35, 1)'
+          }}>
+            {unreadCount}
           </span>
         )}
       </button>

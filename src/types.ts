@@ -90,6 +90,24 @@ export interface FilterRule {
   value: string;
 }
 
+export interface StockAlert {
+  id: string;
+  symbol: string;
+  metric: 'price' | 'changePercent';
+  operator: 'above' | 'below';
+  value: number;
+  isTriggered: boolean;
+}
+
+export interface TickerNotification {
+  id: string;
+  alertId: string;
+  symbol: string;
+  message: string;
+  timestamp: string;
+  isRead: boolean;
+}
+
 export interface StockFilters {
   priceMin: string;
   priceMax: string;

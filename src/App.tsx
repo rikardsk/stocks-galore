@@ -5,11 +5,13 @@ import { ListPanel } from './components/ListPanel';
 import { Toolbar } from './components/Toolbar';
 import { storage } from './storage';
 import { EMPTY_FILTERS, countActiveFilters } from './types';
-import type { StockList, ListGroup, StockFilters } from './types';
+import type { StockList, ListGroup, StockFilters, StockAlert, TickerNotification, Ticker } from './types';
 import { COUNTRY_FLAGS } from './types';
 import { FilterModal } from './components/FilterModal';
 import { SettingsModal, type RefreshInterval } from './components/SettingsModal';
 import { TableView } from './components/TableView';
+import { NotificationsModal } from './components/NotificationsModal';
+import { AlertsModal } from './components/AlertsModal';
 import './index.css';
 
 const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
@@ -32,6 +34,11 @@ const App: React.FC = () => {
   const [refreshInterval, setRefreshInterval] = useState<RefreshInterval>('manual');
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isTableViewOpen, setIsTableViewOpen] = useState(false);
+  
+  const [alerts, setAlerts] = useState<StockAlert[]>([]);
+  const [notifications, setNotifications] = useState<TickerNotification[]>([]);
+  const [isNotificationsModalOpen, setIsNotificationsModalOpen] = useState(false);
+  const [isAlertsModalOpen, setIsAlertsModalOpen] = useState(false);
   
   const [newListName, setNewListName] = useState('');
   const [newListColor, setNewListColor] = useState(COLORS[0]);
@@ -101,6 +108,8 @@ const App: React.FC = () => {
     
     setLists(currentLists);
     setGroups(storage.getGroups());
+    setAlerts(storage.getAlerts());
+    setNotifications(storage.getNotifications());
   }, []);
 
   // Compute available sectors across all lists for the filter modal
@@ -139,6 +148,93 @@ const App: React.FC = () => {
 
     return () => clearInterval(timer);
   }, [refreshInterval, lists]);
+
+  const checkAlerts = (updatedTickers: Ticker[]) => {
+    const activeAlerts = storage.getAlerts();
+    if (activeAlerts.length === 0) return;
+
+    let triggeredCount = 0;
+    const updatedAlerts = activeAlerts.map(alert => {
+      const ticker = updatedTickers.find(t => t.symbol === alert.symbol);
+      if (!ticker) return alert;
+
+      let isMet = false;
+      let currentValue = 0;
+
+      if (alert.metric === 'price') {
+        currentValue = parseFloat(ticker.stats.price);
+        if (alert.operator === 'above' && currentValue > alert.value) isMet = true;
+        if (alert.operator === 'below' && currentValue < alert.value) isMet = true;
+      } else if (alert.metric === 'changePercent') {
+        currentValue = parseFloat(ticker.stats.changePercent);
+        if (alert.operator === 'above' && currentValue > alert.value) isMet = true;
+        if (alert.operator === 'below' && currentValue < alert.value) isMet = true;
+      }
+
+      if (isMet && !alert.isTriggered) {
+        triggeredCount++;
+        const message = `${alert.symbol} ${alert.metric === 'price' ? 'Price' : 'Change'} is ${alert.operator} ${alert.metric === 'price' ? '$' : ''}${alert.value}${alert.metric === 'changePercent' ? '%' : ''} (Current: ${alert.metric === 'price' ? '$' : ''}${currentValue}${alert.metric === 'changePercent' ? '%' : ''})`;
+        
+        storage.addNotification({
+          alertId: alert.id,
+          symbol: alert.symbol,
+          message
+        });
+        return { ...alert, isTriggered: true };
+      }
+      
+      if (!isMet && alert.isTriggered) {
+        return { ...alert, isTriggered: false };
+      }
+
+      return alert;
+    });
+
+    if (triggeredCount > 0) {
+      storage.saveAlerts(updatedAlerts);
+      setAlerts(updatedAlerts);
+    }
+
+    // --- Automatic Crossover Detection ---
+    updatedTickers.forEach(ticker => {
+      const price = parseFloat(ticker.stats.price);
+      const change = parseFloat(ticker.stats.change);
+      const prevPrice = price - change;
+
+      [10, 20, 50, 100, 200].forEach(period => {
+        const smaKey = `sma${period}` as keyof typeof ticker.stats;
+        const smaVal = ticker.stats[smaKey] as number | undefined;
+
+        if (smaVal && prevPrice < smaVal && price > smaVal) {
+          // Check if we already notified about this today to avoid spamming on every refresh
+          // For simplicity, we'll check if a notification with this message already exists from today
+          const message = `${ticker.symbol} crossed ABOVE SMA${period} (Price: $${price}, SMA: ${smaVal})`;
+          const existingNotifs = storage.getNotifications();
+          const today = new Date().toISOString().split('T')[0];
+          
+          const isAlreadyNotified = existingNotifs.some(n => 
+            n.symbol === ticker.symbol && 
+            n.message.includes(`crossed ABOVE SMA${period}`) &&
+            n.timestamp.startsWith(today)
+          );
+
+          if (!isAlreadyNotified) {
+            triggeredCount++;
+            storage.addNotification({
+              alertId: `cross-${ticker.symbol}-${period}`,
+              symbol: ticker.symbol,
+              message
+            });
+          }
+        }
+      });
+    });
+
+    if (triggeredCount > 0) {
+      setNotifications(storage.getNotifications());
+      showToast(`${triggeredCount} new notification(s)!`, 'success');
+    }
+  };
 
   const handleCreateGroup = () => {
     if (!newGroupName.trim()) return;
@@ -320,6 +416,10 @@ const App: React.FC = () => {
               return l;
             });
             storage.saveLists(updated);
+            
+            // Check alerts for the newly added ticker
+            checkAlerts([newTicker]);
+            
             return updated;
           });
         } else {
@@ -380,6 +480,10 @@ const App: React.FC = () => {
       
       setLists(updatedLists);
       storage.saveLists(updatedLists);
+
+      // Check alerts for all refreshed tickers
+      const allRefreshedTickers = updatedLists.flatMap(l => l.tickers);
+      checkAlerts(allRefreshedTickers);
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
       console.error('Failed to refresh data:', error);
@@ -472,22 +576,26 @@ const App: React.FC = () => {
         onReorderGroup={handleReorderGroup}
       />
       
-      <main className="workbench">
-        {lists.filter(list => {
-          if (!searchQuery.trim()) return list.isVisible;
-          return list.tickers.some(t => t.symbol.toLowerCase().includes(searchQuery.trim().toLowerCase()));
-        }).map(list => (
-          <ListPanel 
-            key={list.id} 
-            list={list} 
-            globalFilters={globalFilters}
-            onUpdate={handleUpdateList} 
-            onDelete={(id) => handleHideList(id, false)}
-            onAddTicker={handleOpenAddTicker}
-            onRemoveTicker={handleRemoveTicker}
-            onTransferTicker={handleTransferTicker}
-          />
-        ))}
+      <div style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <main className="workbench">
+          <div className="canvas">
+            {lists.filter(list => {
+              if (!searchQuery.trim()) return list.isVisible;
+              return list.tickers.some(t => t.symbol.toLowerCase().includes(searchQuery.trim().toLowerCase()));
+            }).map(list => (
+              <ListPanel 
+                key={list.id} 
+                list={list} 
+                globalFilters={globalFilters}
+                onUpdate={handleUpdateList} 
+                onDelete={(id) => handleHideList(id, false)}
+                onAddTicker={handleOpenAddTicker}
+                onRemoveTicker={handleRemoveTicker}
+                onTransferTicker={handleTransferTicker}
+              />
+            ))}
+          </div>
+        </main>
         
         <Toolbar 
           onCreateList={() => setIsCreateModalOpen(true)} 
@@ -500,9 +608,11 @@ const App: React.FC = () => {
           onOpenFilter={() => setIsFilterModalOpen(true)}
           onOpenSettings={() => setIsSettingsModalOpen(true)}
           onOpenTable={() => setIsTableViewOpen(true)}
+          onOpenNotifications={() => setIsNotificationsModalOpen(true)}
+          unreadCount={notifications.filter(n => !n.isRead).length}
           activeFilterCount={countActiveFilters(globalFilters)}
         />
-      </main>
+      </div>
 
       {/* Create List Modal */}
       {isCreateModalOpen && (
@@ -626,6 +736,38 @@ const App: React.FC = () => {
         onClose={() => setIsTableViewOpen(false)} 
         tickers={allUniqueTickers}
         filters={globalFilters}
+      />
+
+      <NotificationsModal 
+        isOpen={isNotificationsModalOpen} 
+        onClose={() => setIsNotificationsModalOpen(false)} 
+        notifications={notifications}
+        onClear={() => {
+          storage.clearNotifications();
+          setNotifications([]);
+        }}
+        onMarkRead={() => {
+          storage.markNotificationsRead();
+          setNotifications(storage.getNotifications());
+        }}
+        onOpenAlerts={() => {
+          setIsNotificationsModalOpen(false);
+          setIsAlertsModalOpen(true);
+        }}
+      />
+
+      <AlertsModal 
+        isOpen={isAlertsModalOpen} 
+        onClose={() => setIsAlertsModalOpen(false)} 
+        alerts={alerts}
+        onAddAlert={(a) => {
+          storage.addAlert(a);
+          setAlerts(storage.getAlerts());
+        }}
+        onDeleteAlert={(id) => {
+          storage.deleteAlert(id);
+          setAlerts(storage.getAlerts());
+        }}
       />
 
       {/* Toast Notification */}
