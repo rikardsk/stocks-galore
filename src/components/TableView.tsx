@@ -121,7 +121,19 @@ export const TableView: React.FC<TableViewProps> = ({ isOpen, onClose, tickers, 
               {sortedTickers.map(ticker => {
                 const price = parseFloat(ticker.stats.price);
                 return (
-                  <tr key={ticker.id} className="table-row">
+                  <tr 
+                    key={ticker.id} 
+                    className="table-row"
+                    style={{
+                      background: (ticker.stats.perf1M !== undefined && ticker.stats.perf3M !== undefined && ticker.stats.perf1Y !== undefined)
+                        ? (ticker.stats.perf1M > 0 && ticker.stats.perf3M > 0 && ticker.stats.perf1Y > 0)
+                          ? 'rgba(16, 185, 129, 0.08)'
+                          : (ticker.stats.perf1M < 0 && ticker.stats.perf3M < 0 && ticker.stats.perf1Y < 0)
+                            ? 'rgba(239, 68, 68, 0.08)'
+                            : 'transparent'
+                        : 'transparent'
+                    }}
+                  >
                     <td style={tdStyle}><strong>{ticker.symbol}</strong></td>
                     <td style={tdStyle}>{ticker.name}</td>
                     <td style={tdStyle}>${ticker.stats.price}</td>

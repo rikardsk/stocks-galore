@@ -1,8 +1,8 @@
 ## TODOs
 ~~Notifications med badges for unread notifications~~
 ~~Tabell vy med alla stats för alla tickers och alla listor (inga dubletter)~~
-Color background and/or badges
-Bigger workbench
+~~Color background and/or badges~~
+~~Bigger workbench~~
 ~~Export/Import~~
 Grafer?
 Dark/Light mode

@@ -142,7 +142,16 @@ export const ListPanel: React.FC<ListPanelProps> = ({
                   e.dataTransfer.setData('ticker', JSON.stringify({ listId: list.id, tickerId: ticker.id }));
                   e.dataTransfer.effectAllowed = 'copyMove';
                 }}
-                style={{ cursor: 'grab' }}
+                style={{ 
+                  cursor: 'grab',
+                  background: (ticker.stats.perf1M !== undefined && ticker.stats.perf3M !== undefined && ticker.stats.perf1Y !== undefined)
+                    ? (ticker.stats.perf1M > 0 && ticker.stats.perf3M > 0 && ticker.stats.perf1Y > 0)
+                      ? 'rgba(16, 185, 129, 0.08)'
+                      : (ticker.stats.perf1M < 0 && ticker.stats.perf3M < 0 && ticker.stats.perf1Y < 0)
+                        ? 'rgba(239, 68, 68, 0.08)'
+                        : 'transparent'
+                    : 'transparent'
+                }}
               >
                 <div className="ticker-info">
                   <div>
