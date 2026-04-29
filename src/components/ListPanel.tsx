@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import Draggable from 'react-draggable';
-import { MoreVertical, X, ChevronDown, ChevronUp, Eye, EyeOff, Plus, Trash2, ArrowUpDown, ArrowUpAZ, ArrowDownAZ, Lock, AlertCircle } from 'lucide-react';
-import type { StockList, Ticker, StockFilters } from '../types';
+import { X, ChevronDown, ChevronUp, Eye, EyeOff, Plus, Trash2, ArrowUpDown, ArrowUpAZ, ArrowDownAZ, Lock, AlertCircle } from 'lucide-react';
+import type { StockList, StockFilters } from '../types';
 import { COUNTRY_FLAGS, tickerMatchesFilters } from '../types';
 
 interface ListPanelProps {
@@ -190,67 +190,55 @@ export const ListPanel: React.FC<ListPanelProps> = ({
                         <span>{ticker.stats.volume}</span>
                       </div>
                     </div>
-                    {ticker.stats.sma20 && (
+                    {ticker.stats.sma10 !== undefined && (
                       <>
                         <div className="stat-row" style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '4px' }}>
-                          <div className="stat-item" title="SMA20">
-                            <span className="stat-label">S20</span>
-                            <span className={parseFloat(ticker.stats.price) > ticker.stats.sma20 ? 'positive' : 'negative'}>
-                              {ticker.stats.sma20}
-                            </span>
-                          </div>
-                          <div className="stat-item" title="SMA50">
-                            <span className="stat-label">S50</span>
-                            <span className={parseFloat(ticker.stats.price) > ticker.stats.sma50 ? 'positive' : 'negative'}>
-                              {ticker.stats.sma50}
-                            </span>
-                          </div>
-                          <div className="stat-item" title="SMA200">
-                            <span className="stat-label">S200</span>
-                            <span className={parseFloat(ticker.stats.price) > ticker.stats.sma200 ? 'positive' : 'negative'}>
-                              {ticker.stats.sma200}
-                            </span>
-                          </div>
+                          {[10, 20, 50, 100, 200].map(period => {
+                            const smaKey = `sma${period}` as keyof typeof ticker.stats;
+                            const smaVal = ticker.stats[smaKey] as number | undefined;
+                            if (smaVal === undefined) return null;
+                            return (
+                              <div key={period} className="stat-item" title={`SMA${period}`} style={{ gap: '2px' }}>
+                                <span className="stat-label" style={{ fontSize: '9px' }}>S{period}</span>
+                                <span className={parseFloat(ticker.stats.price) > smaVal ? 'positive' : 'negative'}>
+                                  {smaVal}
+                                </span>
+                              </div>
+                            );
+                          })}
                         </div>
                         <div className="stat-row" style={{ paddingBottom: '4px' }}>
-                          <div className="stat-item" title="% from SMA20">
-                            <span className="stat-label">%</span>
-                            <span className={parseFloat(ticker.stats.price) > ticker.stats.sma20 ? 'positive' : 'negative'}>
-                              {(((parseFloat(ticker.stats.price) - ticker.stats.sma20) / ticker.stats.sma20) * 100).toFixed(1)}%
-                            </span>
-                          </div>
-                          <div className="stat-item" title="% from SMA50">
-                            <span className="stat-label">%</span>
-                            <span className={parseFloat(ticker.stats.price) > ticker.stats.sma50 ? 'positive' : 'negative'}>
-                              {(((parseFloat(ticker.stats.price) - ticker.stats.sma50) / ticker.stats.sma50) * 100).toFixed(1)}%
-                            </span>
-                          </div>
-                          <div className="stat-item" title="% from SMA200">
-                            <span className="stat-label">%</span>
-                            <span className={parseFloat(ticker.stats.price) > ticker.stats.sma200 ? 'positive' : 'negative'}>
-                              {(((parseFloat(ticker.stats.price) - ticker.stats.sma200) / ticker.stats.sma200) * 100).toFixed(1)}%
-                            </span>
-                          </div>
+                          {[10, 20, 50, 100, 200].map(period => {
+                            const smaKey = `sma${period}` as keyof typeof ticker.stats;
+                            const smaVal = ticker.stats[smaKey] as number | undefined;
+                            if (smaVal === undefined) return null;
+                            const dist = ((parseFloat(ticker.stats.price) - smaVal) / smaVal) * 100;
+                            return (
+                              <div key={period} className="stat-item" title={`% from SMA${period}`}>
+                                <span className="stat-label" style={{ fontSize: '9px' }}>%</span>
+                                <span className={dist >= 0 ? 'positive' : 'negative'}>
+                                  {dist.toFixed(1)}%
+                                </span>
+                              </div>
+                            );
+                          })}
                         </div>
                         <div className="stat-row" style={{ paddingBottom: '4px', borderTop: '1px solid rgba(255,255,255,0.02)', paddingTop: '4px' }}>
-                          <div className="stat-item" title="Crossover SMA20">
-                            <span className="stat-label">Cross</span>
-                            <span className={(parseFloat(ticker.stats.price) - parseFloat(ticker.stats.change)) < ticker.stats.sma20 && parseFloat(ticker.stats.price) > ticker.stats.sma20 ? 'positive' : 'negative'}>
-                              {(parseFloat(ticker.stats.price) - parseFloat(ticker.stats.change)) < ticker.stats.sma20 && parseFloat(ticker.stats.price) > ticker.stats.sma20 ? 'YES' : 'NO'}
-                            </span>
-                          </div>
-                          <div className="stat-item" title="Crossover SMA50">
-                            <span className="stat-label">Cross</span>
-                            <span className={(parseFloat(ticker.stats.price) - parseFloat(ticker.stats.change)) < ticker.stats.sma50 && parseFloat(ticker.stats.price) > ticker.stats.sma50 ? 'positive' : 'negative'}>
-                              {(parseFloat(ticker.stats.price) - parseFloat(ticker.stats.change)) < ticker.stats.sma50 && parseFloat(ticker.stats.price) > ticker.stats.sma50 ? 'YES' : 'NO'}
-                            </span>
-                          </div>
-                          <div className="stat-item" title="Crossover SMA200">
-                            <span className="stat-label">Cross</span>
-                            <span className={(parseFloat(ticker.stats.price) - parseFloat(ticker.stats.change)) < ticker.stats.sma200 && parseFloat(ticker.stats.price) > ticker.stats.sma200 ? 'positive' : 'negative'}>
-                              {(parseFloat(ticker.stats.price) - parseFloat(ticker.stats.change)) < ticker.stats.sma200 && parseFloat(ticker.stats.price) > ticker.stats.sma200 ? 'YES' : 'NO'}
-                            </span>
-                          </div>
+                          {[10, 20, 50, 100, 200].map(period => {
+                            const smaKey = `sma${period}` as keyof typeof ticker.stats;
+                            const smaVal = ticker.stats[smaKey] as number | undefined;
+                            if (smaVal === undefined) return null;
+                            const prevPrice = parseFloat(ticker.stats.price) - parseFloat(ticker.stats.change);
+                            const isCross = prevPrice < smaVal && parseFloat(ticker.stats.price) > smaVal;
+                            return (
+                              <div key={period} className="stat-item" title={`Crossover SMA${period}`}>
+                                <span className="stat-label" style={{ fontSize: '9px' }}>X</span>
+                                <span className={isCross ? 'positive' : 'negative'}>
+                                  {isCross ? 'YES' : 'NO'}
+                                </span>
+                              </div>
+                            );
+                          })}
                         </div>
                       </>
                     )}

@@ -443,3 +443,7 @@ select option {
     transform: translateY(0);
   }
 }
+
+.table-row:hover {
+  background: rgba(255, 255, 255, 0.05);
+}

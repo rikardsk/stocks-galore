@@ -51,8 +51,10 @@ def calculate_stats(symbol: str, info: Dict, hist: pd.DataFrame) -> Dict[str, An
     change_percent = safe_float((change / prev_close) * 100) if prev_close != 0 and change is None else safe_float((current_price - prev_close) / prev_close * 100) if prev_close != 0 else 0
 
     # Moving Averages
+    sma10 = safe_float(hist['Close'].rolling(window=10).mean().iloc[-1])
     sma20 = safe_float(hist['Close'].rolling(window=20).mean().iloc[-1])
     sma50 = safe_float(hist['Close'].rolling(window=50).mean().iloc[-1])
+    sma100 = safe_float(hist['Close'].rolling(window=100).mean().iloc[-1])
     sma200 = safe_float(hist['Close'].rolling(window=200).mean().iloc[-1])
 
     # Performance
@@ -78,8 +80,10 @@ def calculate_stats(symbol: str, info: Dict, hist: pd.DataFrame) -> Dict[str, An
         "volume": f"{info.get('volume', 0) / 1e6:.1f}M" if info.get('volume') else "N/A",
         "marketCap": f"{info.get('marketCap', 0) / 1e12:.2f}T" if info.get('marketCap') else "N/A",
         "sector": info.get('sector', 'N/A'),
+        "sma10": sma10,
         "sma20": sma20,
         "sma50": sma50,
+        "sma100": sma100,
         "sma200": sma200,
         "perf1M": get_perf(21), # ~21 trading days
         "perf3M": get_perf(63),

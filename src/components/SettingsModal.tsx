@@ -7,13 +7,15 @@ interface SettingsModalProps {
   onClose: () => void;
   refreshInterval: RefreshInterval;
   onRefreshIntervalChange: (interval: RefreshInterval) => void;
+  onImportData: (data: any) => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
   isOpen,
   onClose,
   refreshInterval,
-  onRefreshIntervalChange
+  onRefreshIntervalChange,
+  onImportData
 }) => {
   if (!isOpen) return null;
 
@@ -50,11 +52,46 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
         </div>
 
-        <div className="input-group" style={{ marginTop: '24px', opacity: 0.5 }}>
-          <label>Advanced (Coming Soon)</label>
-           <button className="btn" style={{ width: '100%', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', padding: '10px', fontSize: '13px' }} disabled>
-            Export Complete Workbench JSON Data
-          </button>
+        <div className="input-group" style={{ marginTop: '24px' }}>
+          <label>Data Management</label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <button 
+              className="btn btn-primary" 
+              style={{ width: '100%', padding: '10px', fontSize: '13px', justifyContent: 'center' }}
+              onClick={() => {
+                import('../storage').then(({ storage }) => storage.exportData());
+              }}
+            >
+              Export Complete Workbench (JSON)
+            </button>
+            
+            <div style={{ position: 'relative' }}>
+              <input 
+                type="file" 
+                accept=".json"
+                style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  const reader = new FileReader();
+                  reader.onload = (event) => {
+                    try {
+                      const json = JSON.parse(event.target?.result as string);
+                      if (window.confirm('This will replace your current workbench data. Are you sure?')) {
+                        onImportData(json);
+                      }
+                    } catch (err) {
+                      alert('Invalid JSON file');
+                    }
+                  };
+                  reader.readAsText(file);
+                }}
+              />
+              <button className="btn" style={{ width: '100%', border: '1px solid var(--border-color)', padding: '10px', fontSize: '13px', justifyContent: 'center' }}>
+                Import Workbench JSON File
+              </button>
+            </div>
+          </div>
         </div>
 
         <div style={{ display: 'flex', gap: '12px', marginTop: '30px' }}>

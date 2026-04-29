@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, List, Trash2, Edit3, ChevronDown, ChevronRight, FolderPlus, Folder, GripVertical } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronRight, FolderPlus, Folder, GripVertical } from 'lucide-react';
 import type { StockList, ListGroup } from '../types';
 import { COUNTRY_FLAGS } from '../types';
 

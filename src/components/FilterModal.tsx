@@ -1,5 +1,6 @@
 import React from 'react';
-import type { StockFilters } from '../types';
+import { Plus, Trash2 } from 'lucide-react';
+import type { StockFilters, FilterRule } from '../types';
 
 interface FilterModalProps {
   isOpen: boolean;
@@ -33,8 +34,36 @@ export const FilterModal: React.FC<FilterModalProps> = ({
       priceMax: '',
       marketCapMin: '',
       marketCapMax: '',
-      sectors: []
+      sectors: [],
+      rules: []
     });
+  };
+
+  const handleAddRule = () => {
+    const newRule: FilterRule = {
+      id: Math.random().toString(36).substring(7),
+      metric: 'sma20_dist',
+      operator: 'above',
+      value: ''
+    };
+    setLocalFilters(prev => ({
+      ...prev,
+      rules: [...(prev.rules || []), newRule]
+    }));
+  };
+
+  const handleUpdateRule = (id: string, updates: Partial<FilterRule>) => {
+    setLocalFilters(prev => ({
+      ...prev,
+      rules: (prev.rules || []).map(r => r.id === id ? { ...r, ...updates } : r)
+    }));
+  };
+
+  const handleRemoveRule = (id: string) => {
+    setLocalFilters(prev => ({
+      ...prev,
+      rules: (prev.rules || []).filter(r => r.id !== id)
+    }));
   };
 
   const handleToggleSector = (sector: string) => {
@@ -51,7 +80,8 @@ export const FilterModal: React.FC<FilterModalProps> = ({
     (localFilters.priceMax ? 1 : 0) + 
     (localFilters.marketCapMin ? 1 : 0) + 
     (localFilters.marketCapMax ? 1 : 0) + 
-    localFilters.sectors.length;
+    localFilters.sectors.length + 
+    (localFilters.rules ? localFilters.rules.length : 0);
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -123,6 +153,58 @@ export const FilterModal: React.FC<FilterModalProps> = ({
               ))}
             </div>
           )}
+        </div>
+
+        <div className="input-group">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <label style={{ margin: 0 }}>Advanced Rules</label>
+            <button className="btn" style={{ padding: '4px 8px', fontSize: '12px', display: 'flex', gap: '4px', alignItems: 'center' }} onClick={handleAddRule}>
+              <Plus size={14} /> Add Rule
+            </button>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
+            {(localFilters.rules || []).length === 0 && (
+              <div style={{ color: 'var(--text-secondary)', fontSize: '14px', fontStyle: 'italic', padding: '4px 0' }}>
+                No advanced rules active.
+              </div>
+            )}
+            {(localFilters.rules || []).map(rule => (
+              <div key={rule.id} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <select 
+                  value={rule.metric} 
+                  onChange={e => handleUpdateRule(rule.id, { metric: e.target.value as FilterRule['metric'] })}
+                  style={{ flex: 2 }}
+                >
+                  <option value="sma10_dist">SMA10 Dist (%)</option>
+                  <option value="sma20_dist">SMA20 Dist (%)</option>
+                  <option value="sma50_dist">SMA50 Dist (%)</option>
+                  <option value="sma100_dist">SMA100 Dist (%)</option>
+                  <option value="sma200_dist">SMA200 Dist (%)</option>
+                  <option value="perf1M">1M Perf (%)</option>
+                  <option value="perf3M">3M Perf (%)</option>
+                  <option value="perf1Y">1Y Perf (%)</option>
+                </select>
+                <select 
+                  value={rule.operator} 
+                  onChange={e => handleUpdateRule(rule.id, { operator: e.target.value as FilterRule['operator'] })}
+                  style={{ flex: 1 }}
+                >
+                  <option value="above">Above</option>
+                  <option value="below">Below</option>
+                </select>
+                <input 
+                  type="number" 
+                  value={rule.value} 
+                  onChange={e => handleUpdateRule(rule.id, { value: e.target.value })}
+                  placeholder="%"
+                  style={{ flex: 1, width: '60px' }}
+                />
+                <button className="btn" style={{ padding: '8px' }} onClick={() => handleRemoveRule(rule.id)}>
+                  <Trash2 size={16} opacity={0.5} />
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div style={{ display: 'flex', gap: '12px', marginTop: '30px' }}>

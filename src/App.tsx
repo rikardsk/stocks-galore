@@ -4,11 +4,12 @@ import { Sidebar } from './components/Sidebar';
 import { ListPanel } from './components/ListPanel';
 import { Toolbar } from './components/Toolbar';
 import { storage } from './storage';
-import { MOCK_TICKERS, EMPTY_FILTERS, countActiveFilters } from './types';
+import { EMPTY_FILTERS, countActiveFilters } from './types';
 import type { StockList, ListGroup, StockFilters } from './types';
 import { COUNTRY_FLAGS } from './types';
 import { FilterModal } from './components/FilterModal';
 import { SettingsModal, type RefreshInterval } from './components/SettingsModal';
+import { TableView } from './components/TableView';
 import './index.css';
 
 const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
@@ -30,6 +31,7 @@ const App: React.FC = () => {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [refreshInterval, setRefreshInterval] = useState<RefreshInterval>('manual');
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isTableViewOpen, setIsTableViewOpen] = useState(false);
   
   const [newListName, setNewListName] = useState('');
   const [newListColor, setNewListColor] = useState(COLORS[0]);
@@ -108,6 +110,19 @@ const App: React.FC = () => {
       if (t.stats.sector && t.stats.sector !== 'N/A') sectors.add(t.stats.sector);
     }));
     return Array.from(sectors).sort();
+  }, [lists]);
+
+  // Unique tickers across all lists for the Table View
+  const allUniqueTickers = React.useMemo(() => {
+    const seen = new Set<string>();
+    const unique: Ticker[] = [];
+    lists.forEach(l => l.tickers.forEach(t => {
+      if (!seen.has(t.symbol)) {
+        seen.add(t.symbol);
+        unique.push(t);
+      }
+    }));
+    return unique;
   }, [lists]);
 
   // Handle auto-refresh based on interval
@@ -284,8 +299,10 @@ const App: React.FC = () => {
               volume: data.volume,
               marketCap: data.marketCap,
               sector: data.sector,
+              sma10: data.sma10,
               sma20: data.sma20,
               sma50: data.sma50,
+              sma100: data.sma100,
               sma200: data.sma200,
               perf1M: data.perf1M,
               perf3M: data.perf3M,
@@ -344,8 +361,10 @@ const App: React.FC = () => {
                 volume: freshData.volume,
                 marketCap: freshData.marketCap,
                 sector: freshData.sector,
+                sma10: freshData.sma10,
                 sma20: freshData.sma20,
                 sma50: freshData.sma50,
+                sma100: freshData.sma100,
                 sma200: freshData.sma200,
                 perf1M: freshData.perf1M,
                 perf3M: freshData.perf3M,
@@ -417,6 +436,17 @@ const App: React.FC = () => {
     setLists(allLists);
   };
 
+  const handleImportData = (data: any) => {
+    if (storage.importData(data)) {
+      setLists(storage.getLists());
+      setGroups(storage.getGroups());
+      showToast('Data imported successfully!', 'success');
+      setIsSettingsModalOpen(false);
+    } else {
+      showToast('Import failed: Invalid data format', 'error');
+    }
+  };
+
   return (
     <div className="app-container">
       <Sidebar 
@@ -469,6 +499,7 @@ const App: React.FC = () => {
           onSearchQueryChange={setSearchQuery}
           onOpenFilter={() => setIsFilterModalOpen(true)}
           onOpenSettings={() => setIsSettingsModalOpen(true)}
+          onOpenTable={() => setIsTableViewOpen(true)}
           activeFilterCount={countActiveFilters(globalFilters)}
         />
       </main>
@@ -586,7 +617,15 @@ const App: React.FC = () => {
         isOpen={isSettingsModalOpen} 
         onClose={() => setIsSettingsModalOpen(false)} 
         refreshInterval={refreshInterval} 
-        onRefreshIntervalChange={setRefreshInterval} 
+        onRefreshIntervalChange={setRefreshInterval}
+        onImportData={handleImportData}
+      />
+
+      <TableView 
+        isOpen={isTableViewOpen} 
+        onClose={() => setIsTableViewOpen(false)} 
+        tickers={allUniqueTickers}
+        filters={globalFilters}
       />
 
       {/* Toast Notification */}

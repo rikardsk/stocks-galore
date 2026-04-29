@@ -125,5 +125,38 @@ export const storage = {
   deleteGroup: (id: string) => {
     const groups = storage.getGroups();
     storage.saveGroups(groups.filter(g => g.id !== id));
+  },
+
+  // --- Export/Import ---
+  exportData: () => {
+    const lists = storage.getLists();
+    const groups = storage.getGroups();
+    const data = {
+      version: '1.0',
+      timestamp: new Date().toISOString(),
+      lists,
+      groups
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `stocks_galore_backup_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  },
+
+  importData: (jsonData: any) => {
+    if (!jsonData || typeof jsonData !== 'object') return false;
+    
+    if (jsonData.lists && Array.isArray(jsonData.lists)) {
+      storage.saveLists(jsonData.lists);
+    }
+    if (jsonData.groups && Array.isArray(jsonData.groups)) {
+      storage.saveGroups(jsonData.groups);
+    }
+    return true;
   }
 };

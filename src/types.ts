@@ -10,8 +10,10 @@ export type Ticker = {
     marketCap: string;
     // New backend fields
     sector?: string;
+    sma10?: number;
     sma20?: number;
     sma50?: number;
+    sma100?: number;
     sma200?: number;
     perf1M?: number;
     perf3M?: number;
@@ -81,12 +83,20 @@ export const generateMockStats = () => ({
   marketCap: (Math.random() * 3).toFixed(1) + 'T',
 });
 
+export interface FilterRule {
+  id: string;
+  metric: 'sma10_dist' | 'sma20_dist' | 'sma50_dist' | 'sma100_dist' | 'sma200_dist' | 'perf1M' | 'perf3M' | 'perf1Y';
+  operator: 'above' | 'below';
+  value: string;
+}
+
 export interface StockFilters {
   priceMin: string;
   priceMax: string;
   marketCapMin: string; // in billions
   marketCapMax: string; // in billions
   sectors: string[];
+  rules?: FilterRule[];
 }
 
 export const EMPTY_FILTERS: StockFilters = {
@@ -95,6 +105,7 @@ export const EMPTY_FILTERS: StockFilters = {
   marketCapMin: '',
   marketCapMax: '',
   sectors: [],
+  rules: [],
 };
 
 /** Parse market cap strings like "2.30T", "0.15T" into billions */
@@ -114,7 +125,8 @@ export const countActiveFilters = (filters: StockFilters): number => {
   if (filters.priceMax) count++;
   if (filters.marketCapMin) count++;
   if (filters.marketCapMax) count++;
-  if (filters.sectors.length > 0) count++;
+  if (filters.sectors && filters.sectors.length > 0) count++;
+  if (filters.rules && filters.rules.length > 0) count += filters.rules.length;
   return count;
 };
 
@@ -131,8 +143,60 @@ export const tickerMatchesFilters = (ticker: Ticker, filters: StockFilters): boo
     if (filters.marketCapMax && cap > parseFloat(filters.marketCapMax)) return false;
   }
 
-  if (filters.sectors.length > 0) {
+  if (filters.sectors && filters.sectors.length > 0) {
     if (!ticker.stats.sector || !filters.sectors.includes(ticker.stats.sector)) return false;
+  }
+
+  if (filters.rules && filters.rules.length > 0) {
+    for (const rule of filters.rules) {
+      if (!rule.value) continue;
+      const targetVal = parseFloat(rule.value);
+      if (isNaN(targetVal)) continue;
+
+      let actualVal: number | undefined;
+
+      switch (rule.metric) {
+        case 'sma10_dist':
+          if (ticker.stats.sma10) {
+            actualVal = ((price - ticker.stats.sma10) / ticker.stats.sma10) * 100;
+          }
+          break;
+        case 'sma20_dist':
+          if (ticker.stats.sma20) {
+            actualVal = ((price - ticker.stats.sma20) / ticker.stats.sma20) * 100;
+          }
+          break;
+        case 'sma50_dist':
+          if (ticker.stats.sma50) {
+            actualVal = ((price - ticker.stats.sma50) / ticker.stats.sma50) * 100;
+          }
+          break;
+        case 'sma100_dist':
+          if (ticker.stats.sma100) {
+            actualVal = ((price - ticker.stats.sma100) / ticker.stats.sma100) * 100;
+          }
+          break;
+        case 'sma200_dist':
+          if (ticker.stats.sma200) {
+            actualVal = ((price - ticker.stats.sma200) / ticker.stats.sma200) * 100;
+          }
+          break;
+        case 'perf1M':
+          actualVal = ticker.stats.perf1M;
+          break;
+        case 'perf3M':
+          actualVal = ticker.stats.perf3M;
+          break;
+        case 'perf1Y':
+          actualVal = ticker.stats.perf1Y;
+          break;
+      }
+
+      if (actualVal === undefined) return false;
+
+      if (rule.operator === 'above' && actualVal < targetVal) return false;
+      if (rule.operator === 'below' && actualVal > targetVal) return false;
+    }
   }
 
   return true;

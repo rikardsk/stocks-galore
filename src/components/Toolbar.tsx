@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Layout, Settings, Search, BarChart2, RefreshCw, Filter, X, Trash2 } from 'lucide-react';
+import { Plus, Layout, Settings, Search, RefreshCw, Filter, X, Trash2 } from 'lucide-react';
 
 interface ToolbarProps {
   onCreateList: () => void;
@@ -11,12 +11,13 @@ interface ToolbarProps {
   onSearchQueryChange: (query: string) => void;
   onOpenFilter?: () => void;
   onOpenSettings?: () => void;
+  onOpenTable?: () => void;
   activeFilterCount?: number;
 }
 
 export const Toolbar: React.FC<ToolbarProps> = ({ 
   onCreateList, onToggleSidebar, onRefreshAll, onClearWorkbench, isRefreshing, 
-  searchQuery, onSearchQueryChange, onOpenFilter, onOpenSettings, activeFilterCount = 0 
+  searchQuery, onSearchQueryChange, onOpenFilter, onOpenSettings, onOpenTable, activeFilterCount = 0 
 }) => {
   const [isSearchExpanded, setIsSearchExpanded] = React.useState(false);
 
@@ -30,6 +31,9 @@ export const Toolbar: React.FC<ToolbarProps> = ({
       </button>
       <button className="btn" title="Clear Workbench" onClick={onClearWorkbench}>
         <Trash2 size={20} />
+      </button>
+      <button className="btn" title="Market Table" onClick={onOpenTable}>
+        <Layout size={20} style={{ transform: 'rotate(90deg)' }} />
       </button>
       <button 
         className="btn" 
