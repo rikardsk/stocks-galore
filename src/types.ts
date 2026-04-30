@@ -18,6 +18,7 @@ export type Ticker = {
     perf1M?: number;
     perf3M?: number;
     perf1Y?: number;
+    dividendYield?: number;
     lastUpdated?: string;
     error?: string;
   };
@@ -85,7 +86,7 @@ export const generateMockStats = () => ({
 
 export interface FilterRule {
   id: string;
-  metric: 'sma10_dist' | 'sma20_dist' | 'sma50_dist' | 'sma100_dist' | 'sma200_dist' | 'perf1M' | 'perf3M' | 'perf1Y';
+  metric: 'sma10_dist' | 'sma20_dist' | 'sma50_dist' | 'sma100_dist' | 'sma200_dist' | 'perf1M' | 'perf3M' | 'perf1Y' | 'dividendYield';
   operator: 'above' | 'below';
   value: string;
 }
@@ -207,6 +208,9 @@ export const tickerMatchesFilters = (ticker: Ticker, filters: StockFilters): boo
           break;
         case 'perf1Y':
           actualVal = ticker.stats.perf1Y;
+          break;
+        case 'dividendYield':
+          actualVal = ticker.stats.dividendYield;
           break;
       }
 

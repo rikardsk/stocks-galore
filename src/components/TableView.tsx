@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { X, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
-import type { Ticker, StockFilters } from '../types';
+import type { Ticker, StockFilters, StockList, ListGroup } from '../types';
 import { tickerMatchesFilters } from '../types';
 
 interface TableViewProps {
@@ -8,6 +8,8 @@ interface TableViewProps {
   onClose: () => void;
   tickers: Ticker[];
   filters?: StockFilters;
+  lists: StockList[];
+  groups: ListGroup[];
 }
 
 type SortConfig = {
@@ -15,13 +17,36 @@ type SortConfig = {
   direction: 'asc' | 'desc' | 'none';
 };
 
-export const TableView: React.FC<TableViewProps> = ({ isOpen, onClose, tickers, filters }) => {
+export const TableView: React.FC<TableViewProps> = ({ isOpen, onClose, tickers, filters, lists, groups }) => {
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'symbol', direction: 'asc' });
+  const [selectedGroupId, setSelectedGroupId] = useState<string>('all');
+  const [selectedListId, setSelectedListId] = useState<string>('all');
 
   const filteredTickers = useMemo(() => {
-    if (!filters) return tickers;
-    return tickers.filter(t => tickerMatchesFilters(t, filters));
-  }, [tickers, filters]);
+    let result = tickers;
+
+    // Filter by group/list first
+    if (selectedGroupId !== 'all') {
+      const group = groups.find(g => g.id === selectedGroupId);
+      if (group) {
+        const listIds = group.listIds;
+        const groupTickers = lists
+          .filter(l => listIds.includes(l.id))
+          .flatMap(l => l.tickers.map(t => t.symbol));
+        const uniqueGroupSymbols = new Set(groupTickers);
+        result = result.filter(t => uniqueGroupSymbols.has(t.symbol));
+      }
+    } else if (selectedListId !== 'all') {
+      const list = lists.find(l => l.id === selectedListId);
+      if (list) {
+        const listSymbols = new Set(list.tickers.map(t => t.symbol));
+        result = result.filter(t => listSymbols.has(t.symbol));
+      }
+    }
+
+    if (!filters) return result;
+    return result.filter(t => tickerMatchesFilters(t, filters));
+  }, [tickers, filters, selectedGroupId, selectedListId, lists, groups]);
 
   const sortedTickers = useMemo(() => {
     if (sortConfig.direction === 'none') return filteredTickers;
@@ -53,6 +78,9 @@ export const TableView: React.FC<TableViewProps> = ({ isOpen, onClose, tickers, 
       } else if (sortConfig.key.startsWith('perf')) {
         aVal = a.stats[sortConfig.key as keyof typeof a.stats] || 0;
         bVal = b.stats[sortConfig.key as keyof typeof b.stats] || 0;
+      } else if (sortConfig.key === 'dividendYield') {
+        aVal = a.stats.dividendYield || 0;
+        bVal = b.stats.dividendYield || 0;
       } else {
         aVal = (a as any)[sortConfig.key] || (a.stats as any)[sortConfig.key];
         bVal = (b as any)[sortConfig.key] || (b.stats as any)[sortConfig.key];
@@ -94,8 +122,47 @@ export const TableView: React.FC<TableViewProps> = ({ isOpen, onClose, tickers, 
           overflow: 'hidden'
         }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h2 style={{ margin: 0 }}>Market Overview Table ({filteredTickers.length} Tickers)</h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '20px' }}>
+          <h2 style={{ margin: 0, whiteSpace: 'nowrap' }}>Market Overview Table ({filteredTickers.length})</h2>
+          
+          <div style={{ display: 'flex', gap: '12px', flex: 1, justifyContent: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Group:</span>
+              <select 
+                value={selectedGroupId} 
+                onChange={(e) => {
+                  setSelectedGroupId(e.target.value);
+                  setSelectedListId('all'); // Reset list when group changes
+                }}
+                className="btn"
+                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', padding: '4px 8px' }}
+              >
+                <option value="all">All Groups</option>
+                {groups.map(g => (
+                  <option key={g.id} value={g.id}>{g.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>List:</span>
+              <select 
+                value={selectedListId} 
+                onChange={(e) => {
+                  setSelectedListId(e.target.value);
+                  setSelectedGroupId('all'); // Reset group when list changes
+                }}
+                className="btn"
+                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', padding: '4px 8px' }}
+              >
+                <option value="all">All Lists</option>
+                {lists.map(l => (
+                  <option key={l.id} value={l.id}>{l.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           <button className="btn" onClick={onClose}><X /></button>
         </div>
 
@@ -115,6 +182,7 @@ export const TableView: React.FC<TableViewProps> = ({ isOpen, onClose, tickers, 
                 <th onClick={() => requestSort('perf1M')} style={thStyle}>1M % {getSortIcon('perf1M')}</th>
                 <th onClick={() => requestSort('perf3M')} style={thStyle}>3M % {getSortIcon('perf3M')}</th>
                 <th onClick={() => requestSort('perf1Y')} style={thStyle}>1Y % {getSortIcon('perf1Y')}</th>
+                <th onClick={() => requestSort('dividendYield')} style={thStyle}>Yield % {getSortIcon('dividendYield')}</th>
               </tr>
             </thead>
             <tbody>
@@ -154,6 +222,7 @@ export const TableView: React.FC<TableViewProps> = ({ isOpen, onClose, tickers, 
                     <td style={{ ...tdStyle, color: (ticker.stats.perf1M || 0) >= 0 ? '#10b981' : '#ef4444' }}>{ticker.stats.perf1M}%</td>
                     <td style={{ ...tdStyle, color: (ticker.stats.perf3M || 0) >= 0 ? '#10b981' : '#ef4444' }}>{ticker.stats.perf3M}%</td>
                     <td style={{ ...tdStyle, color: (ticker.stats.perf1Y || 0) >= 0 ? '#10b981' : '#ef4444' }}>{ticker.stats.perf1Y}%</td>
+                    <td style={{ ...tdStyle, color: '#f59e0b' }}>{ticker.stats.dividendYield ? ticker.stats.dividendYield.toFixed(2) + '%' : '0.00%'}</td>
                   </tr>
                 );
               })}

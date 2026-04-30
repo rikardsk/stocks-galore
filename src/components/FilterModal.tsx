@@ -183,6 +183,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                   <option value="perf1M">1M Perf (%)</option>
                   <option value="perf3M">3M Perf (%)</option>
                   <option value="perf1Y">1Y Perf (%)</option>
+                  <option value="dividendYield">Dividend Yield (%)</option>
                 </select>
                 <select 
                   value={rule.operator} 

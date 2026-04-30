@@ -198,6 +198,10 @@ export const ListPanel: React.FC<ListPanelProps> = ({
                         <span className="stat-label">Vol</span>
                         <span>{ticker.stats.volume}</span>
                       </div>
+                      <div className="stat-item">
+                        <span className="stat-label">Yld</span>
+                        <span style={{ color: '#f59e0b' }}>{ticker.stats.dividendYield ? ticker.stats.dividendYield.toFixed(2) + '%' : '0.00%'}</span>
+                      </div>
                     </div>
                     {ticker.stats.sma10 !== undefined && (
                       <>

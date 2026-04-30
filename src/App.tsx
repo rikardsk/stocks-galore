@@ -403,6 +403,7 @@ const App: React.FC = () => {
               perf1M: data.perf1M,
               perf3M: data.perf3M,
               perf1Y: data.perf1Y,
+              dividendYield: data.dividendYield,
               lastUpdated: new Date().toISOString()
             }
           };
@@ -469,6 +470,7 @@ const App: React.FC = () => {
                 perf1M: freshData.perf1M,
                 perf3M: freshData.perf3M,
                 perf1Y: freshData.perf1Y,
+                dividendYield: freshData.dividendYield,
                 lastUpdated: new Date().toISOString(),
                 error: undefined
               }
@@ -736,6 +738,8 @@ const App: React.FC = () => {
         onClose={() => setIsTableViewOpen(false)} 
         tickers={allUniqueTickers}
         filters={globalFilters}
+        lists={lists}
+        groups={groups}
       />
 
       <NotificationsModal 
