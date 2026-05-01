@@ -119,6 +119,7 @@ export interface StockFilters {
   sectors: string[];
   rules?: FilterRule[];
   ownedOnly?: boolean;
+  watchlistOnly?: boolean;
 }
 
 export const EMPTY_FILTERS: StockFilters = {
@@ -129,6 +130,7 @@ export const EMPTY_FILTERS: StockFilters = {
   sectors: [],
   rules: [],
   ownedOnly: false,
+  watchlistOnly: false,
 };
 
 /** Parse market cap strings like "2.30T", "0.15T" into billions */
@@ -150,6 +152,8 @@ export const countActiveFilters = (filters: StockFilters): number => {
   if (filters.marketCapMax) count++;
   if (filters.sectors && filters.sectors.length > 0) count++;
   if (filters.rules && filters.rules.length > 0) count += filters.rules.length;
+  if (filters.ownedOnly) count++;
+  if (filters.watchlistOnly) count++;
   return count;
 };
 

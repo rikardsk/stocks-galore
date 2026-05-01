@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { X, ArrowUpDown, ArrowUp, ArrowDown, Briefcase, Star } from 'lucide-react';
+import { X, ArrowUpDown, ArrowUp, ArrowDown, Briefcase, Star, Printer } from 'lucide-react';
 import type { Ticker, StockFilters, StockList, ListGroup } from '../types';
 import { tickerMatchesFilters } from '../types';
 
@@ -57,6 +57,10 @@ export const TableView: React.FC<TableViewProps> = ({
         const listSymbols = new Set(list.tickers.map(t => t.symbol));
         result = result.filter(t => listSymbols.has(t.symbol));
       }
+    }
+
+    if (filters.watchlistOnly) {
+      result = result.filter(t => watchlistSymbols.has(t.symbol));
     }
 
     if (!filters) return result;
@@ -202,6 +206,38 @@ export const TableView: React.FC<TableViewProps> = ({
             >
               <Briefcase size={14} fill={filters.ownedOnly ? "white" : "none"} /> Portfolio
             </button>
+
+            <button 
+              className={`btn ${filters.watchlistOnly ? 'btn-primary' : ''}`}
+              style={{ 
+                padding: '4px 12px', 
+                fontSize: '12px', 
+                gap: '6px',
+                border: '1px solid var(--border-color)',
+                background: filters.watchlistOnly ? '#6366f1' : 'rgba(255,255,255,0.05)'
+              }}
+              onClick={() => {
+                onApplyFilters({ ...filters, watchlistOnly: !filters.watchlistOnly });
+              }}
+              title="Show only stocks in your watchlist"
+            >
+              <Star size={14} fill={filters.watchlistOnly ? "white" : "none"} /> Watchlist
+            </button>
+
+            <button 
+              className="btn"
+              style={{ 
+                padding: '4px 12px', 
+                fontSize: '12px', 
+                gap: '6px',
+                border: '1px solid var(--border-color)',
+                background: 'rgba(255,255,255,0.05)'
+              }}
+              onClick={() => window.print()}
+              title="Print current table (first 6 columns)"
+            >
+              <Printer size={14} /> Print
+            </button>
           </div>
 
           <button className="btn" onClick={onClose}><X /></button>
@@ -211,19 +247,19 @@ export const TableView: React.FC<TableViewProps> = ({
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
             <thead style={{ position: 'sticky', top: 0, background: '#1c1c21', zIndex: 1 }}>
               <tr>
-                <th onClick={() => requestSort('symbol')} style={thStyle}>Symbol {getSortIcon('symbol')}</th>
-                <th onClick={() => requestSort('name')} style={thStyle}>Name {getSortIcon('name')}</th>
-                <th onClick={() => requestSort('price')} style={thStyle}>Price {getSortIcon('price')}</th>
-                <th onClick={() => requestSort('changePercent')} style={thStyle}>Change % {getSortIcon('changePercent')}</th>
-                <th onClick={() => requestSort('marketCap')} style={thStyle}>Cap {getSortIcon('marketCap')}</th>
-                <th onClick={() => requestSort('sector')} style={thStyle}>Sector {getSortIcon('sector')}</th>
+                <th onClick={() => requestSort('symbol')} style={thStyle} className="print-col">Symbol {getSortIcon('symbol')}</th>
+                <th onClick={() => requestSort('name')} style={thStyle} className="print-col">Name {getSortIcon('name')}</th>
+                <th onClick={() => requestSort('price')} style={thStyle} className="print-col">Price {getSortIcon('price')}</th>
+                <th onClick={() => requestSort('changePercent')} style={thStyle} className="print-col">Change % {getSortIcon('changePercent')}</th>
+                <th onClick={() => requestSort('marketCap')} style={thStyle} className="print-col">Cap {getSortIcon('marketCap')}</th>
+                <th onClick={() => requestSort('sector')} style={thStyle} className="print-col">Sector {getSortIcon('sector')}</th>
                 {[10, 20, 50, 100, 200].map(p => (
-                  <th key={p} onClick={() => requestSort(`sma${p}`)} style={thStyle}>S{p} % {getSortIcon(`sma${p}`)}</th>
+                  <th key={p} onClick={() => requestSort(`sma${p}`)} style={{ ...thStyle }} className="no-print">S{p} % {getSortIcon(`sma${p}`)}</th>
                 ))}
-                <th onClick={() => requestSort('perf1M')} style={thStyle}>1M % {getSortIcon('perf1M')}</th>
-                <th onClick={() => requestSort('perf3M')} style={thStyle}>3M % {getSortIcon('perf3M')}</th>
-                <th onClick={() => requestSort('perf1Y')} style={thStyle}>1Y % {getSortIcon('perf1Y')}</th>
-                <th onClick={() => requestSort('dividendYield')} style={thStyle}>Yield % {getSortIcon('dividendYield')}</th>
+                <th onClick={() => requestSort('perf1M')} style={thStyle} className="no-print">1M % {getSortIcon('perf1M')}</th>
+                <th onClick={() => requestSort('perf3M')} style={thStyle} className="no-print">3M % {getSortIcon('perf3M')}</th>
+                <th onClick={() => requestSort('perf1Y')} style={thStyle} className="no-print">1Y % {getSortIcon('perf1Y')}</th>
+                <th onClick={() => requestSort('dividendYield')} style={thStyle} className="no-print">Yield % {getSortIcon('dividendYield')}</th>
               </tr>
             </thead>
             <tbody>
@@ -252,10 +288,10 @@ export const TableView: React.FC<TableViewProps> = ({
                           : 'transparent'
                     }}
                   >
-                    <td style={tdStyle}>
+                    <td style={tdStyle} className="print-col">
                       <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <button 
-                          className="btn" 
+                          className="btn no-print" 
                           style={{ padding: '2px', color: ticker.isOwned ? '#f59e0b' : 'var(--text-secondary)', opacity: ticker.isOwned ? 1 : 0.2 }}
                           onClick={() => onToggleOwned(ticker)}
                           title={ticker.isOwned ? "Remove from Portfolio" : "Add to Portfolio"}
@@ -263,7 +299,7 @@ export const TableView: React.FC<TableViewProps> = ({
                           <Briefcase size={12} fill={ticker.isOwned ? "#f59e0b" : "none"} />
                         </button>
                         <button 
-                          className="btn" 
+                          className="btn no-print" 
                           style={{ 
                             padding: '2px', 
                             color: watchlistSymbols.has(ticker.symbol) ? '#6366f1' : 'var(--text-secondary)', 
@@ -276,27 +312,28 @@ export const TableView: React.FC<TableViewProps> = ({
                         </button>
                         <strong style={{ marginLeft: '4px' }}>{ticker.symbol}</strong>
                       </div>
+                      <div className="only-print">{ticker.symbol}</div>
                     </td>
-                    <td style={tdStyle}>{ticker.name}</td>
-                    <td style={tdStyle}>${ticker.stats.price || '0.00'}</td>
-                    <td style={{ ...tdStyle, color: changePct >= 0 ? '#10b981' : '#ef4444' }}>
-                      {ticker.stats.changePercent || '0.00%'}
+                    <td style={tdStyle} className="print-col">{ticker.name}</td>
+                    <td style={tdStyle} className="print-col">${ticker.stats?.price || '0.00'}</td>
+                    <td style={{ ...tdStyle, color: changePct >= 0 ? '#10b981' : '#ef4444' }} className="print-col">
+                      {ticker.stats?.changePercent || '0.00%'}
                     </td>
-                    <td style={tdStyle}>{ticker.stats.marketCap}</td>
-                    <td style={tdStyle}>{ticker.stats.sector}</td>
+                    <td style={tdStyle} className="print-col">{ticker.stats?.marketCap}</td>
+                    <td style={tdStyle} className="print-col">{ticker.stats?.sector}</td>
                     {[10, 20, 50, 100, 200].map(p => {
-                      const sma = ticker.stats[`sma${p}` as keyof typeof ticker.stats] as number | undefined;
-                      const dist = sma ? ((price - sma) / sma) * 100 : null;
+                      const sma = ticker.stats ? (ticker.stats[`sma${p}` as keyof typeof ticker.stats] as number | undefined) : undefined;
+                      const dist = (sma && price) ? ((price - sma) / sma) * 100 : null;
                       return (
-                        <td key={p} style={{ ...tdStyle, color: dist !== null ? (dist >= 0 ? '#10b981' : '#ef4444') : 'inherit' }}>
+                        <td key={p} style={{ ...tdStyle, color: dist !== null ? (dist >= 0 ? '#10b981' : '#ef4444') : 'inherit' }} className="no-print">
                           {dist !== null ? dist.toFixed(1) + '%' : '-'}
                         </td>
                       );
                     })}
-                    <td style={{ ...tdStyle, color: (ticker.stats.perf1M || 0) >= 0 ? '#10b981' : '#ef4444' }}>{ticker.stats.perf1M || 0}%</td>
-                    <td style={{ ...tdStyle, color: (ticker.stats.perf3M || 0) >= 0 ? '#10b981' : '#ef4444' }}>{ticker.stats.perf3M || 0}%</td>
-                    <td style={{ ...tdStyle, color: (ticker.stats.perf1Y || 0) >= 0 ? '#10b981' : '#ef4444' }}>{ticker.stats.perf1Y || 0}%</td>
-                    <td style={{ ...tdStyle, color: '#f59e0b' }}>{yieldStr}</td>
+                    <td style={{ ...tdStyle, color: (ticker.stats?.perf1M || 0) >= 0 ? '#10b981' : '#ef4444' }} className="no-print">{ticker.stats?.perf1M || 0}%</td>
+                    <td style={{ ...tdStyle, color: (ticker.stats?.perf3M || 0) >= 0 ? '#10b981' : '#ef4444' }} className="no-print">{ticker.stats?.perf3M || 0}%</td>
+                    <td style={{ ...tdStyle, color: (ticker.stats?.perf1Y || 0) >= 0 ? '#10b981' : '#ef4444' }} className="no-print">{ticker.stats?.perf1Y || 0}%</td>
+                    <td style={{ ...tdStyle, color: '#f59e0b' }} className="no-print">{yieldStr}</td>
                   </tr>
                 );
               })}

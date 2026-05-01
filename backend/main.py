@@ -82,7 +82,11 @@ def calculate_stats(symbol: str, info: Dict, hist: pd.DataFrame) -> Dict[str, An
         "change": change or 0,
         "changePercent": f"{change_percent:+.2f}%" if change_percent is not None else "0.00%",
         "volume": f"{info.get('volume', 0) / 1e6:.1f}M" if info.get('volume') else "N/A",
-        "marketCap": f"{info.get('marketCap', 0) / 1e12:.2f}T" if info.get('marketCap') else "N/A",
+        "marketCap": (
+            f"{info.get('marketCap') / 1e12:.2f}T" if info.get('marketCap', 0) >= 1e12 else
+            f"{info.get('marketCap') / 1e9:.1f}B" if info.get('marketCap', 0) >= 1e9 else
+            f"{info.get('marketCap') / 1e6:.0f}M" if info.get('marketCap', 0) > 0 else "N/A"
+        ) if info.get('marketCap') else "N/A",
         "sector": info.get('sector', 'N/A'),
         "dividendYield": safe_float(info.get('dividendYield', 0)) if info.get('dividendYield') else 0,
         "sma10": sma10,
