@@ -55,5 +55,6 @@ Earnings date?
 ~~Change 1M, 3M, 1Y, 5Y~~
 ~~How far from SMA10, SMA20, SMA50, SMA100, SMA200?~~
 ~~Crossover~~
-
+~~Sparkline~~
+~~Progress bar during refresh~~
 

@@ -26,6 +26,7 @@ const App: React.FC = () => {
   const [isAddTickerModalOpen, setIsAddTickerModalOpen] = useState(false);
   const [activeListId, setActiveListId] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [refreshProgress, setRefreshProgress] = useState(0);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastType, setToastType] = useState<'error' | 'success'>('error');
   const [searchQuery, setSearchQuery] = useState('');
@@ -556,15 +557,32 @@ const App: React.FC = () => {
     if (allSymbols.length === 0) return;
 
     setIsRefreshing(true);
+    setRefreshProgress(0);
+    
+    const CHUNK_SIZE = 15;
+    const chunks = [];
+    for (let i = 0; i < allSymbols.length; i += CHUNK_SIZE) {
+      chunks.push(allSymbols.slice(i, i + CHUNK_SIZE));
+    }
+
+    let allFreshData: any[] = [];
+    let processedCount = 0;
+
     try {
-      const response = await fetch(`${API_BASE_URL}/batch?symbols=${allSymbols.join(',')}`);
-      if (!response.ok) throw new Error('Backend unavaliable');
-      const data = await response.json();
+      for (const chunk of chunks) {
+        const response = await fetch(`${API_BASE_URL}/batch?symbols=${chunk.join(',')}`);
+        if (!response.ok) throw new Error('Backend unavailable');
+        const data = await response.json();
+        allFreshData = [...allFreshData, ...data];
+        
+        processedCount += chunk.length;
+        setRefreshProgress(Math.round((processedCount / allSymbols.length) * 100));
+      }
       
       const updatedLists = lists.map(list => ({
         ...list,
         tickers: list.tickers.map(ticker => {
-          const freshData = data.find((d: any) => d.symbol === ticker.symbol);
+          const freshData = allFreshData.find((d: any) => d.symbol === ticker.symbol);
           if (freshData) {
             return {
               ...ticker,
@@ -606,21 +624,9 @@ const App: React.FC = () => {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
       console.error('Failed to refresh data:', error);
       showToast(`Failed to refresh data: ${errorMsg}`);
-      const updatedLists = lists.map(list => ({
-        ...list,
-        tickers: list.tickers.map(ticker => {
-          if (allSymbols.includes(ticker.symbol)) {
-            return {
-              ...ticker,
-              stats: { ...ticker.stats, error: 'Refresh failed' }
-            };
-          }
-          return ticker;
-        })
-      }));
-      setLists(updatedLists);
     } finally {
       setIsRefreshing(false);
+      setTimeout(() => setRefreshProgress(0), 1000);
     }
   };
 
@@ -730,6 +736,26 @@ const App: React.FC = () => {
       />
       
       <div style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {isRefreshing && (
+          <div style={{ 
+            position: 'absolute', 
+            top: 0, 
+            left: 0, 
+            right: 0, 
+            height: '3px', 
+            background: 'rgba(255,255,255,0.1)', 
+            zIndex: 1000,
+            overflow: 'hidden'
+          }}>
+            <div style={{ 
+              height: '100%', 
+              background: 'var(--accent)', 
+              width: `${refreshProgress}%`,
+              transition: 'width 0.3s ease-out',
+              boxShadow: '0 0 10px var(--accent)'
+            }} />
+          </div>
+        )}
         <main className="workbench">
           <div className="canvas">
             {lists.filter(list => {

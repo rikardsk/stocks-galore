@@ -32,20 +32,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onReorderList,
   onReorderGroup
 }) => {
-  const protectedLists = lists.filter(list => list.isProtected);
-  const regularLists = lists.filter(list => !list.isProtected);
-  const ungroupedLists = regularLists
-    .filter(list => !groups.some(g => g.listIds.includes(list.id)))
-    .sort((a, b) => calculateAverageGain(b) - calculateAverageGain(a));
-
   const calculateAverageGain = (list: StockList) => {
-    if (list.tickers.length === 0) return 0;
+    if (!list || !list.tickers || list.tickers.length === 0) return 0;
     const total = list.tickers.reduce((sum, t) => {
+      if (!t || !t.stats) return sum;
       const change = parseFloat(t.stats.changePercent);
       return sum + (isNaN(change) ? 0 : change);
     }, 0);
     return total / list.tickers.length;
   };
+
+  const protectedLists = lists.filter(list => list.isProtected);
+  const regularLists = lists.filter(list => !list.isProtected);
+  const ungroupedLists = regularLists
+    .filter(list => !groups.some(g => g.listIds.includes(list.id)))
+    .sort((a, b) => calculateAverageGain(b) - calculateAverageGain(a));
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
