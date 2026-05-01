@@ -462,24 +462,26 @@ select option {
 
 /* Print Styles */
 @media print {
-  body * {
-    visibility: hidden;
+  /* Hide the rest of the application */
+  .sidebar, .toolbar, .workbench, .notifications-badge, .toast-container, .modal-overlay > button {
+    display: none !important;
   }
   
+  /* Reset the modal overlay for printing */
   .modal-overlay {
-    background: transparent !important;
-    padding: 0 !important;
-    position: static !important;
-  }
-  
-  .modal, .modal * {
-    visibility: visible;
-  }
-  
-  .modal {
     position: absolute !important;
-    left: 0 !important;
     top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    background: white !important;
+    padding: 0 !important;
+    display: block !important;
+  }
+  
+  /* Reset the modal container */
+  .modal {
+    position: static !important;
     width: 100% !important;
     max-width: none !important;
     height: auto !important;
@@ -487,8 +489,12 @@ select option {
     color: black !important;
     box-shadow: none !important;
     border: none !important;
+    transform: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
+  /* Force table columns and colors */
   .no-print {
     display: none !important;
   }
@@ -496,25 +502,42 @@ select option {
   .print-col {
     display: table-cell !important;
     color: black !important;
-    border-bottom: 1px solid #eee !important;
-    padding: 8px !important;
+    border-bottom: 1px solid #ddd !important;
+    padding: 10px 5px !important;
     text-align: left !important;
+    font-size: 12px !important;
+  }
+
+  th.print-col {
+    background: #f0f0f0 !important;
+    font-weight: bold !important;
+    -webkit-print-color-adjust: exact;
   }
 
   .table-row {
     background: transparent !important;
-    border-left: none !important;
+    border: none !important;
   }
 
   table {
     width: 100% !important;
     border-collapse: collapse !important;
+    page-break-inside: auto;
   }
 
-  th {
-    background: #f5f5f5 !important;
-    color: black !important;
-    border-bottom: 2px solid #ddd !important;
+  tr {
+    page-break-inside: avoid !important;
+    page-break-after: auto;
+  }
+
+  /* Show only the symbol text in print, hide the row buttons */
+  .no-print {
+    display: none !important;
+  }
+
+  /* Page margins */
+  @page {
+    margin: 2cm 1.5cm;
   }
 }
 

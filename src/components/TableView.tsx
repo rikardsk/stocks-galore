@@ -151,9 +151,11 @@ export const TableView: React.FC<TableViewProps> = ({
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '20px' }}>
-          <h2 style={{ margin: 0, whiteSpace: 'nowrap' }}>Market Overview Table ({filteredTickers.length})</h2>
+          <h2 style={{ margin: 0, whiteSpace: 'nowrap' }} className="print-title">
+            Market Overview Table ({filteredTickers.length})
+          </h2>
           
-          <div style={{ display: 'flex', gap: '12px', flex: 1, justifyContent: 'center' }}>
+          <div style={{ display: 'flex', gap: '12px', flex: 1, justifyContent: 'center' }} className="no-print">
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Group:</span>
               <select 
@@ -200,7 +202,12 @@ export const TableView: React.FC<TableViewProps> = ({
                 background: filters.ownedOnly ? 'var(--accent)' : 'rgba(255,255,255,0.05)'
               }}
               onClick={() => {
-                onApplyFilters({ ...filters, ownedOnly: !filters.ownedOnly });
+                const nextOwnedOnly = !filters.ownedOnly;
+                onApplyFilters({ 
+                  ...filters, 
+                  ownedOnly: nextOwnedOnly,
+                  watchlistOnly: nextOwnedOnly ? false : filters.watchlistOnly 
+                });
               }}
               title="Show only stocks you own"
             >
@@ -217,7 +224,12 @@ export const TableView: React.FC<TableViewProps> = ({
                 background: filters.watchlistOnly ? '#6366f1' : 'rgba(255,255,255,0.05)'
               }}
               onClick={() => {
-                onApplyFilters({ ...filters, watchlistOnly: !filters.watchlistOnly });
+                const nextWatchlistOnly = !filters.watchlistOnly;
+                onApplyFilters({ 
+                  ...filters, 
+                  watchlistOnly: nextWatchlistOnly,
+                  ownedOnly: nextWatchlistOnly ? false : filters.ownedOnly 
+                });
               }}
               title="Show only stocks in your watchlist"
             >
@@ -240,7 +252,7 @@ export const TableView: React.FC<TableViewProps> = ({
             </button>
           </div>
 
-          <button className="btn" onClick={onClose}><X /></button>
+          <button className="btn no-print" onClick={onClose}><X /></button>
         </div>
 
         <div style={{ flex: 1, overflow: 'auto', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
@@ -289,7 +301,7 @@ export const TableView: React.FC<TableViewProps> = ({
                     }}
                   >
                     <td style={tdStyle} className="print-col">
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }} className="no-print">
                         <button 
                           className="btn no-print" 
                           style={{ padding: '2px', color: ticker.isOwned ? '#f59e0b' : 'var(--text-secondary)', opacity: ticker.isOwned ? 1 : 0.2 }}
@@ -312,7 +324,7 @@ export const TableView: React.FC<TableViewProps> = ({
                         </button>
                         <strong style={{ marginLeft: '4px' }}>{ticker.symbol}</strong>
                       </div>
-                      <div className="only-print">{ticker.symbol}</div>
+                      <div className="only-print" style={{ fontWeight: 'bold' }}>{ticker.symbol}</div>
                     </td>
                     <td style={tdStyle} className="print-col">{ticker.name}</td>
                     <td style={tdStyle} className="print-col">${ticker.stats?.price || '0.00'}</td>

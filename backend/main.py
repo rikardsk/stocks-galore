@@ -77,7 +77,7 @@ def calculate_stats(symbol: str, info: Dict, hist: pd.DataFrame) -> Dict[str, An
 
     return {
         "symbol": symbol,
-        "name": info.get('longName', symbol),
+        "name": info.get('longName') or info.get('shortName') or symbol,
         "price": current_price,
         "change": change or 0,
         "changePercent": f"{change_percent:+.2f}%" if change_percent is not None else "0.00%",
