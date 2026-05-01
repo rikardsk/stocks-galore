@@ -947,7 +947,18 @@ const App: React.FC = () => {
         filters={globalFilters}
         lists={lists}
         groups={groups}
+        watchlistSymbols={watchlistSymbols}
         onApplyFilters={setGlobalFilters}
+        onToggleWatchlist={handleToggleWatchlist}
+        onToggleOwned={(ticker) => {
+          const listWithTicker = lists.find(l => l.tickers.some(t => t.symbol === ticker.symbol));
+          if (listWithTicker) {
+            const updatedTickers = listWithTicker.tickers.map(t => 
+              t.symbol === ticker.symbol ? { ...t, isOwned: !t.isOwned } : t
+            );
+            handleUpdateList({ ...listWithTicker, tickers: updatedTickers });
+          }
+        }}
       />
 
       <NotificationsModal 
