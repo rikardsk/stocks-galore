@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import Draggable from 'react-draggable';
-import { X, ChevronDown, ChevronUp, Eye, EyeOff, Plus, Trash2, ArrowUpDown, ArrowUpAZ, ArrowDownAZ, Lock, AlertCircle, Briefcase } from 'lucide-react';
+import { X, ChevronDown, ChevronUp, Eye, EyeOff, Plus, Trash2, ArrowUpDown, ArrowUpAZ, ArrowDownAZ, Lock, AlertCircle, Briefcase, Star } from 'lucide-react';
 import type { StockList, StockFilters } from '../types';
 import { COUNTRY_FLAGS, tickerMatchesFilters } from '../types';
 
@@ -12,6 +12,8 @@ interface ListPanelProps {
   onRemoveTicker: (listId: string, tickerId: string) => void;
   onTransferTicker: (fromListId: string, toListId: string, tickerId: string, isCopy: boolean) => void;
   globalFilters?: StockFilters;
+  watchlistSymbols: Set<string>;
+  onToggleWatchlist: (ticker: any) => void;
 }
 
 export const ListPanel: React.FC<ListPanelProps> = ({
@@ -21,7 +23,9 @@ export const ListPanel: React.FC<ListPanelProps> = ({
   onAddTicker,
   onRemoveTicker,
   onTransferTicker,
-  globalFilters
+  globalFilters,
+  watchlistSymbols,
+  onToggleWatchlist
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(list.isCollapsed);
   const [showStats, setShowStats] = useState(list.showStats);
@@ -171,6 +175,22 @@ export const ListPanel: React.FC<ListPanelProps> = ({
                       title={ticker.isOwned ? "Remove from Portfolio" : "Add to Portfolio"}
                     >
                       <Briefcase size={14} fill={ticker.isOwned ? "#f59e0b" : "none"} />
+                    </button>
+                    <button 
+                      className="btn" 
+                      style={{ 
+                        padding: '4px', 
+                        color: watchlistSymbols.has(ticker.symbol) ? '#6366f1' : 'var(--text-secondary)', 
+                        opacity: watchlistSymbols.has(ticker.symbol) ? 1 : 0.3,
+                        marginLeft: '-4px'
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onToggleWatchlist(ticker);
+                      }}
+                      title={watchlistSymbols.has(ticker.symbol) ? "Remove from Watchlist" : "Add to Watchlist"}
+                    >
+                      <Star size={14} fill={watchlistSymbols.has(ticker.symbol) ? "#6366f1" : "none"} />
                     </button>
                     <div>
                       <div className="ticker-symbol" style={{ color: ticker.isOwned ? '#f59e0b' : '#fff' }}>{ticker.symbol}</div>

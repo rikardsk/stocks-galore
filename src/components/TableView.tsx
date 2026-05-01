@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { X, ArrowUpDown, ArrowUp, ArrowDown, Briefcase } from 'lucide-react';
+import { X, ArrowUpDown, ArrowUp, ArrowDown, Briefcase, Star } from 'lucide-react';
 import type { Ticker, StockFilters, StockList, ListGroup } from '../types';
 import { tickerMatchesFilters } from '../types';
 
@@ -11,6 +11,9 @@ interface TableViewProps {
   lists: StockList[];
   groups: ListGroup[];
   onApplyFilters: (filters: StockFilters) => void;
+  watchlistSymbols: Set<string>;
+  onToggleWatchlist: (ticker: Ticker) => void;
+  onToggleOwned: (ticker: Ticker) => void;
 }
 
 type SortConfig = {
@@ -18,7 +21,7 @@ type SortConfig = {
   direction: 'asc' | 'desc' | 'none';
 };
 
-export const TableView: React.FC<TableViewProps> = ({ isOpen, onClose, tickers, filters, lists, groups, onApplyFilters }) => {
+export const TableView: React.FC<TableViewProps> = ({ isOpen, onClose, tickers, filters, lists, groups, onApplyFilters, watchlistSymbols, onToggleWatchlist, onToggleOwned }) => {
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'symbol', direction: 'asc' });
   const [selectedGroupId, setSelectedGroupId] = useState<string>('all');
   const [selectedListId, setSelectedListId] = useState<string>('all');
@@ -224,9 +227,28 @@ export const TableView: React.FC<TableViewProps> = ({ isOpen, onClose, tickers, 
                     }}
                   >
                     <td style={tdStyle}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        {ticker.isOwned && <Briefcase size={12} color="#f59e0b" fill="#f59e0b" />}
-                        <strong>{ticker.symbol}</strong>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <button 
+                          className="btn" 
+                          style={{ padding: '2px', color: ticker.isOwned ? '#f59e0b' : 'var(--text-secondary)', opacity: ticker.isOwned ? 1 : 0.2 }}
+                          onClick={() => onToggleOwned(ticker)}
+                          title={ticker.isOwned ? "Remove from Portfolio" : "Add to Portfolio"}
+                        >
+                          <Briefcase size={12} fill={ticker.isOwned ? "#f59e0b" : "none"} />
+                        </button>
+                        <button 
+                          className="btn" 
+                          style={{ 
+                            padding: '2px', 
+                            color: watchlistSymbols.has(ticker.symbol) ? '#6366f1' : 'var(--text-secondary)', 
+                            opacity: watchlistSymbols.has(ticker.symbol) ? 1 : 0.2
+                          }}
+                          onClick={() => onToggleWatchlist(ticker)}
+                          title={watchlistSymbols.has(ticker.symbol) ? "Remove from Watchlist" : "Add to Watchlist"}
+                        >
+                          <Star size={12} fill={watchlistSymbols.has(ticker.symbol) ? "#6366f1" : "none"} />
+                        </button>
+                        <strong style={{ marginLeft: '4px' }}>{ticker.symbol}</strong>
                       </div>
                     </td>
                     <td style={tdStyle}>{ticker.name}</td>
