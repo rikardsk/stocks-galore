@@ -1,10 +1,13 @@
 ## TODOs
+~~Make Watchlist & Portfolio static in the sidebar~~
+~~Average gain in the header and sidebar~~
+~~Green list and header if average > 5% and red if average < -5%~~
 ~~Notifications med badges for unread notifications~~
 ~~Tabell vy med alla stats för alla tickers och alla listor (inga dubletter)~~
 ~~Color background and/or badges~~
 ~~Bigger workbench~~
 ~~Export/Import~~
-Grafer?
+~~Grafer?~~
 Dark/Light mode
 ~~Filter on % change?~~
 ~~Filter Moving Averages?~~

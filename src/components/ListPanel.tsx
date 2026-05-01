@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import Draggable from 'react-draggable';
 import { X, ChevronDown, ChevronUp, Eye, EyeOff, Plus, Trash2, ArrowUpDown, ArrowUpAZ, ArrowDownAZ, Lock, AlertCircle, Briefcase, Star } from 'lucide-react';
+import { Sparkline } from './Sparkline';
 import type { StockList, StockFilters } from '../types';
 import { COUNTRY_FLAGS, tickerMatchesFilters } from '../types';
 
@@ -84,6 +85,13 @@ export const ListPanel: React.FC<ListPanelProps> = ({
   const maxLastUpdated = Math.max(...lastUpdatedTimes, 0);
   const isFresh = maxLastUpdated > Date.now() - 24 * 60 * 60 * 1000;
   const hasData = maxLastUpdated > 0;
+  
+  const avgGain = filteredTickers.length > 0 
+    ? filteredTickers.reduce((sum, t) => sum + (parseFloat(t.stats.changePercent) || 0), 0) / filteredTickers.length 
+    : 0;
+  
+  const isBigGain = avgGain > 5;
+  const isBigLoss = avgGain < -5;
 
   return (
     <Draggable
@@ -101,21 +109,37 @@ export const ListPanel: React.FC<ListPanelProps> = ({
         onDrop={handleDrop}
       >
         <div className="panel-header" style={{ 
-          borderBottom: `2px solid ${list.color}`,
+          background: isBigGain 
+            ? 'rgba(16, 185, 129, 0.25)' 
+            : isBigLoss 
+              ? 'rgba(239, 68, 68, 0.25)' 
+              : list.color + '22', 
+          borderBottom: `2px solid ${isBigGain ? '#10b981' : isBigLoss ? '#ef4444' : list.color}`,
           cursor: list.isProtected ? 'default' : 'grab'
         }}
         >
-          <div className="panel-title" style={{ color: list.color, display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div className="panel-title" style={{ color: isBigGain ? '#10b981' : isBigLoss ? '#ef4444' : list.color, display: 'flex', alignItems: 'center', gap: '8px' }}>
             <div 
               className="status-bullet" 
               style={{ background: hasData ? (isFresh ? '#10b981' : '#ef4444') : 'transparent', border: hasData ? 'none' : '1px solid rgba(255,255,255,0.2)' }}
               title={hasData ? (isFresh ? 'Updated in last 24h' : 'Stale data (>24h)') : 'No data fetched yet'}
             />
             {list.isProtected && <Lock size={12} opacity={0.6} />}
-            {list.country && COUNTRY_FLAGS[list.country]} {list.name}
-            <span style={{ marginLeft: '4px', opacity: 0.6, fontSize: '12px', fontWeight: 400 }}>
-              ({filteredTickers.length})
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '13px', whiteSpace: 'nowrap' }}>
+                {list.country && COUNTRY_FLAGS[list.country]} {list.name}
+              </span>
+              <span style={{ opacity: 0.6, fontSize: '11px', fontWeight: 400 }}>
+                ({filteredTickers.length})
+              </span>
+              <span style={{ 
+                fontSize: '11px', 
+                fontWeight: 700, 
+                color: avgGain >= 0 ? '#10b981' : '#ef4444' 
+              }}>
+                {avgGain >= 0 ? '+' : ''}{avgGain.toFixed(2)}%
+              </span>
+            </div>
           </div>
           <div className="panel-actions">
             <button className="btn" onClick={handleToggleSort} title={`Sort: ${list.sortOrder}`}>
@@ -193,6 +217,14 @@ export const ListPanel: React.FC<ListPanelProps> = ({
                       <div className="ticker-symbol" style={{ color: ticker.isOwned ? '#f59e0b' : '#fff' }}>{ticker.symbol}</div>
                       <div className="ticker-name">{ticker.name}</div>
                     </div>
+                    {ticker.stats.sparkline && (
+                      <div style={{ marginLeft: '4px', opacity: 0.8 }}>
+                        <Sparkline 
+                          data={ticker.stats.sparkline} 
+                          color={parseFloat(ticker.stats.changePercent) >= 0 ? '#10b981' : '#ef4444'} 
+                        />
+                      </div>
+                    )}
                   </div>
                   {ticker.name !== 'Unknown Company' && (
                     <div className="ticker-price-group">

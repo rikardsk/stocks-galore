@@ -71,6 +71,10 @@ def calculate_stats(symbol: str, info: Dict, hist: pd.DataFrame) -> Dict[str, An
             return 0
         return safe_float(((current_price - past_price) / past_price) * 100) or 0
 
+    # Sparkline (last 30 days)
+    sparkline_data = [safe_float(p) for p in hist['Close'].tail(30).tolist()]
+    sparkline_data = [p for p in sparkline_data if p is not None]
+
     return {
         "symbol": symbol,
         "name": info.get('longName', symbol),
@@ -89,6 +93,7 @@ def calculate_stats(symbol: str, info: Dict, hist: pd.DataFrame) -> Dict[str, An
         "perf1M": get_perf(21), # ~21 trading days
         "perf3M": get_perf(63),
         "perf1Y": get_perf(252),
+        "sparkline": sparkline_data
     }
 
 @app.get("/stock/{symbol}")

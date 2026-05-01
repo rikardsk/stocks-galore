@@ -21,6 +21,7 @@ export type Ticker = {
     dividendYield?: number;
     lastUpdated?: string;
     error?: string;
+    sparkline?: number[];
   };
   isOwned?: boolean;
 };

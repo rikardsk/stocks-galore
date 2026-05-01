@@ -21,7 +21,18 @@ type SortConfig = {
   direction: 'asc' | 'desc' | 'none';
 };
 
-export const TableView: React.FC<TableViewProps> = ({ isOpen, onClose, tickers, filters, lists, groups, onApplyFilters, watchlistSymbols, onToggleWatchlist, onToggleOwned }) => {
+export const TableView: React.FC<TableViewProps> = ({ 
+  isOpen, 
+  onClose, 
+  tickers = [], 
+  filters, 
+  lists = [], 
+  groups = [], 
+  onApplyFilters, 
+  watchlistSymbols = new Set<string>(), 
+  onToggleWatchlist, 
+  onToggleOwned 
+}) => {
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'symbol', direction: 'asc' });
   const [selectedGroupId, setSelectedGroupId] = useState<string>('all');
   const [selectedListId, setSelectedListId] = useState<string>('all');
@@ -49,7 +60,14 @@ export const TableView: React.FC<TableViewProps> = ({ isOpen, onClose, tickers, 
     }
 
     if (!filters) return result;
-    return result.filter(t => tickerMatchesFilters(t, filters));
+    return result.filter(t => {
+      try {
+        return tickerMatchesFilters(t, filters);
+      } catch (e) {
+        console.error('Error matching filters for ticker:', t.symbol, e);
+        return false;
+      }
+    });
   }, [tickers, filters, selectedGroupId, selectedListId, lists, groups]);
 
   const sortedTickers = useMemo(() => {
@@ -86,8 +104,10 @@ export const TableView: React.FC<TableViewProps> = ({ isOpen, onClose, tickers, 
         aVal = a.stats.dividendYield || 0;
         bVal = b.stats.dividendYield || 0;
       } else {
-        aVal = (a as any)[sortConfig.key] || (a.stats as any)[sortConfig.key];
-        bVal = (b as any)[sortConfig.key] || (b.stats as any)[sortConfig.key];
+        const stats = a.stats || {};
+        const bStats = b.stats || {};
+        aVal = (a as any)[sortConfig.key] || (stats as any)[sortConfig.key];
+        bVal = (b as any)[sortConfig.key] || (bStats as any)[sortConfig.key];
       }
 
       if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
@@ -208,7 +228,13 @@ export const TableView: React.FC<TableViewProps> = ({ isOpen, onClose, tickers, 
             </thead>
             <tbody>
               {sortedTickers.map(ticker => {
-                const price = parseFloat(ticker.stats.price);
+                if (!ticker || !ticker.stats) return null;
+                const priceStr = ticker.stats.price || '0';
+                const price = parseFloat(priceStr);
+                const changePct = parseFloat(ticker.stats.changePercent || '0');
+                const dividendYield = ticker.stats.dividendYield;
+                const yieldStr = typeof dividendYield === 'number' ? dividendYield.toFixed(2) + '%' : '0.00%';
+                
                 return (
                   <tr 
                     key={ticker.id} 
@@ -252,9 +278,9 @@ export const TableView: React.FC<TableViewProps> = ({ isOpen, onClose, tickers, 
                       </div>
                     </td>
                     <td style={tdStyle}>{ticker.name}</td>
-                    <td style={tdStyle}>${ticker.stats.price}</td>
-                    <td style={{ ...tdStyle, color: parseFloat(ticker.stats.changePercent) >= 0 ? '#10b981' : '#ef4444' }}>
-                      {ticker.stats.changePercent}
+                    <td style={tdStyle}>${ticker.stats.price || '0.00'}</td>
+                    <td style={{ ...tdStyle, color: changePct >= 0 ? '#10b981' : '#ef4444' }}>
+                      {ticker.stats.changePercent || '0.00%'}
                     </td>
                     <td style={tdStyle}>{ticker.stats.marketCap}</td>
                     <td style={tdStyle}>{ticker.stats.sector}</td>
@@ -267,10 +293,10 @@ export const TableView: React.FC<TableViewProps> = ({ isOpen, onClose, tickers, 
                         </td>
                       );
                     })}
-                    <td style={{ ...tdStyle, color: (ticker.stats.perf1M || 0) >= 0 ? '#10b981' : '#ef4444' }}>{ticker.stats.perf1M}%</td>
-                    <td style={{ ...tdStyle, color: (ticker.stats.perf3M || 0) >= 0 ? '#10b981' : '#ef4444' }}>{ticker.stats.perf3M}%</td>
-                    <td style={{ ...tdStyle, color: (ticker.stats.perf1Y || 0) >= 0 ? '#10b981' : '#ef4444' }}>{ticker.stats.perf1Y}%</td>
-                    <td style={{ ...tdStyle, color: '#f59e0b' }}>{ticker.stats.dividendYield ? ticker.stats.dividendYield.toFixed(2) + '%' : '0.00%'}</td>
+                    <td style={{ ...tdStyle, color: (ticker.stats.perf1M || 0) >= 0 ? '#10b981' : '#ef4444' }}>{ticker.stats.perf1M || 0}%</td>
+                    <td style={{ ...tdStyle, color: (ticker.stats.perf3M || 0) >= 0 ? '#10b981' : '#ef4444' }}>{ticker.stats.perf3M || 0}%</td>
+                    <td style={{ ...tdStyle, color: (ticker.stats.perf1Y || 0) >= 0 ? '#10b981' : '#ef4444' }}>{ticker.stats.perf1Y || 0}%</td>
+                    <td style={{ ...tdStyle, color: '#f59e0b' }}>{yieldStr}</td>
                   </tr>
                 );
               })}

@@ -79,7 +79,7 @@ const App: React.FC = () => {
         tickers: [],
         position: { x: 50, y: 50 },
         isCollapsed: false,
-        showStats: false,
+        showStats: true,
         isVisible: true,
         sortOrder: 'none',
         isProtected: true
@@ -89,12 +89,13 @@ const App: React.FC = () => {
     } else {
       // Update the existing one and ensure it's protected and has the right ID
       const existing = currentLists[watchlistIndex];
-      if (!existing.isProtected || existing.id !== WATCHLIST_ID) {
+      if (!existing.isProtected || existing.id !== WATCHLIST_ID || existing.position.y !== 50) {
         currentLists[watchlistIndex] = { 
           ...existing, 
           id: WATCHLIST_ID, 
-          name: 'Watchlist', // Ensure name is capitalized
-          isProtected: true 
+          name: 'Watchlist',
+          isProtected: true,
+          position: { ...existing.position, y: 50 }
         };
         changed = true;
         
@@ -134,12 +135,13 @@ const App: React.FC = () => {
     } else {
       // Update the existing one and ensure it's protected and has the right ID
       const existing = currentLists[portfolioIndex];
-      if (!existing.isProtected || existing.id !== PORTFOLIO_ID) {
+      if (!existing.isProtected || existing.id !== PORTFOLIO_ID || existing.position.y !== 50) {
         currentLists[portfolioIndex] = { 
           ...existing, 
           id: PORTFOLIO_ID, 
           name: 'Portfolio',
-          isProtected: true 
+          isProtected: true,
+          position: { ...existing.position, y: 50 }
         };
         changed = true;
 
@@ -516,7 +518,8 @@ const App: React.FC = () => {
               perf3M: data.perf3M,
               perf1Y: data.perf1Y,
               dividendYield: data.dividendYield,
-              lastUpdated: new Date().toISOString()
+              lastUpdated: new Date().toISOString(),
+              sparkline: data.sparkline
             }
           };
           
@@ -584,6 +587,7 @@ const App: React.FC = () => {
                 perf1Y: freshData.perf1Y,
                 dividendYield: freshData.dividendYield,
                 lastUpdated: new Date().toISOString(),
+                sparkline: freshData.sparkline,
                 error: undefined
               }
             };
