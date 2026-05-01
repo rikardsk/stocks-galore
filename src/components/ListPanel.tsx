@@ -101,10 +101,10 @@ export const ListPanel: React.FC<ListPanelProps> = ({
         onDrop={handleDrop}
       >
         <div className="panel-header" style={{ 
-          background: list.color + '22', 
           borderBottom: `2px solid ${list.color}`,
           cursor: list.isProtected ? 'default' : 'grab'
-        }}>
+        }}
+        >
           <div className="panel-title" style={{ color: list.color, display: 'flex', alignItems: 'center', gap: '8px' }}>
             <div 
               className="status-bullet" 
@@ -125,9 +125,6 @@ export const ListPanel: React.FC<ListPanelProps> = ({
             </button>
             <button className="btn" onClick={handleToggleStats} title="Toggle Stats">
               {showStats ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
-            <button className="btn" onClick={handleToggleCollapse}>
-              {isCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
             </button>
             <button className="btn" onClick={() => onDelete(list.id)}>
               <X size={16} />
@@ -319,17 +316,26 @@ export const ListPanel: React.FC<ListPanelProps> = ({
                 )}
               </div>
             ))}
-            
-            <button 
-              className="btn" 
-              style={{ width: '100%', padding: '12px', color: 'var(--text-secondary)', gap: '8px', fontSize: '13px' }}
-              onClick={() => onAddTicker(list.id)}
-            >
-              <Plus size={14} />
-              Add Ticker
-            </button>
           </div>
         )}
+
+        <div style={{ display: 'flex', gap: '8px', padding: '8px', background: 'rgba(0,0,0,0.1)', borderTop: '1px solid rgba(255,255,255,0.05)', borderRadius: '0 0 12px 12px' }}>
+          <button 
+            className="btn" 
+            style={{ flex: 1, padding: '10px', color: 'var(--text-secondary)', gap: '8px', fontSize: '13px', background: 'rgba(255,255,255,0.03)' }}
+            onClick={() => onAddTicker(list.id)}
+          >
+            <Plus size={14} /> Add Ticker
+          </button>
+          <button 
+            className="btn" 
+            style={{ padding: '10px', color: 'var(--text-secondary)', background: 'rgba(255,255,255,0.03)' }}
+            onClick={handleToggleCollapse}
+            title={isCollapsed ? "Expand" : "Minimize"}
+          >
+            {isCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+          </button>
+        </div>
       </div>
     </Draggable>
   );
