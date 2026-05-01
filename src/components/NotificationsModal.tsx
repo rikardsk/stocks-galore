@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Bell, Calendar } from 'lucide-react';
+import { X, Bell, Calendar, Search } from 'lucide-react';
 import type { TickerNotification } from '../types';
 
 interface NotificationsModalProps {
@@ -19,6 +19,44 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   onMarkRead,
   onOpenAlerts
 }) => {
+  const [timeFilter, setTimeFilter] = React.useState<'today' | 'week' | 'all'>('all');
+  const [searchQuery, setSearchQuery] = React.useState('');
+
+  const filteredNotifications = React.useMemo(() => {
+    let filtered = notifications;
+
+    // Time filter
+    if (timeFilter !== 'all') {
+      const now = new Date();
+      const cutoff = new Date();
+      if (timeFilter === 'today') {
+        cutoff.setHours(0, 0, 0, 0);
+      } else if (timeFilter === 'week') {
+        cutoff.setDate(now.getDate() - 7);
+      }
+      filtered = filtered.filter(n => new Date(n.timestamp) >= cutoff);
+    }
+
+    // Search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.trim().toUpperCase();
+      filtered = filtered.filter(n => n.symbol.toUpperCase().includes(query));
+    }
+
+    return filtered;
+  }, [notifications, timeFilter, searchQuery]);
+
+  const topTickers = React.useMemo(() => {
+    const counts: Record<string, number> = {};
+    notifications.forEach(n => {
+      counts[n.symbol] = (counts[n.symbol] || 0) + 1;
+    });
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 6)
+      .map(([symbol]) => symbol);
+  }, [notifications]);
+
   React.useEffect(() => {
     if (isOpen && notifications.some(n => !n.isRead)) {
       onMarkRead();
@@ -33,10 +71,75 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Bell size={20} color="var(--accent)" />
-            <h3 style={{ margin: 0 }}>Notifications</h3>
+            <h3 style={{ margin: 0 }}>Notifications ({filteredNotifications.length})</h3>
           </div>
           <button className="btn" onClick={onClose}><X size={20} /></button>
         </div>
+
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+          <div style={{ position: 'relative', flex: 1 }}>
+            <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }} />
+            <input 
+              type="text" 
+              placeholder="Search ticker..." 
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              style={{ 
+                width: '100%', 
+                background: 'rgba(255,255,255,0.05)', 
+                border: '1px solid var(--border-color)', 
+                borderRadius: '8px',
+                padding: '8px 8px 8px 30px',
+                fontSize: '12px',
+                color: 'white'
+              }}
+            />
+          </div>
+          <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', padding: '2px', border: '1px solid var(--border-color)' }}>
+            {(['today', 'week', 'all'] as const).map(f => (
+              <button 
+                key={f}
+                onClick={() => setTimeFilter(f)}
+                style={{ 
+                  padding: '4px 8px', 
+                  fontSize: '10px', 
+                  borderRadius: '6px',
+                  background: timeFilter === f ? 'var(--accent)' : 'transparent',
+                  color: timeFilter === f ? 'white' : 'var(--text-secondary)',
+                  border: 'none',
+                  cursor: 'pointer',
+                  textTransform: 'capitalize'
+                }}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {topTickers.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '16px' }}>
+            <span style={{ fontSize: '10px', color: 'var(--text-secondary)', width: '100%', marginBottom: '2px' }}>Frequent:</span>
+            {topTickers.map(symbol => (
+              <button
+                key={symbol}
+                onClick={() => setSearchQuery(symbol === searchQuery ? '' : symbol)}
+                style={{
+                  padding: '2px 8px',
+                  fontSize: '10px',
+                  borderRadius: '100px',
+                  background: searchQuery === symbol ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
+                  border: `1px solid ${searchQuery === symbol ? 'var(--accent)' : 'var(--border-color)'}`,
+                  color: searchQuery === symbol ? 'white' : 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                {symbol}
+              </button>
+            ))}
+          </div>
+        )}
 
         <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
           <button 
@@ -57,15 +160,15 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto', paddingRight: '4px' }}>
-          {notifications.length === 0 ? (
+          {filteredNotifications.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-secondary)' }}>
               <Bell size={40} opacity={0.1} style={{ marginBottom: '16px' }} />
-              <p>No notifications yet.</p>
-              <p style={{ fontSize: '12px', marginTop: '8px' }}>Set up price alerts to stay updated.</p>
+              <p>{notifications.length === 0 ? 'No notifications yet.' : 'No matching notifications.'}</p>
+              {notifications.length === 0 && <p style={{ fontSize: '12px', marginTop: '8px' }}>Set up price alerts to stay updated.</p>}
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {notifications.map(n => (
+              {filteredNotifications.map(n => (
                 <div 
                   key={n.id} 
                   style={{ 
