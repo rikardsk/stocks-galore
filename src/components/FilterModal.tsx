@@ -95,6 +95,23 @@ export const FilterModal: React.FC<FilterModalProps> = ({
           )}
         </div>
 
+        <div style={{ marginBottom: '24px' }}>
+          <button 
+            className={`btn ${localFilters.ownedOnly ? 'btn-primary' : ''}`}
+            style={{ 
+              width: '100%',
+              padding: '10px', 
+              fontSize: '14px', 
+              gap: '8px',
+              border: '1px solid var(--border-color)',
+              background: localFilters.ownedOnly ? 'var(--accent)' : 'rgba(0,0,0,0.2)'
+            }}
+            onClick={() => setLocalFilters({ ...localFilters, ownedOnly: !localFilters.ownedOnly })}
+          >
+            {localFilters.ownedOnly ? '★ Showing Portfolio Only' : '☆ Show Portfolio Only'}
+          </button>
+        </div>
+
         <div className="input-group">
           <label>Price Range ($)</label>
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>

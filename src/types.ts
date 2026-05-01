@@ -22,6 +22,7 @@ export type Ticker = {
     lastUpdated?: string;
     error?: string;
   };
+  isOwned?: boolean;
 };
 
 export type StockList = {
@@ -116,6 +117,7 @@ export interface StockFilters {
   marketCapMax: string; // in billions
   sectors: string[];
   rules?: FilterRule[];
+  ownedOnly?: boolean;
 }
 
 export const EMPTY_FILTERS: StockFilters = {
@@ -125,6 +127,7 @@ export const EMPTY_FILTERS: StockFilters = {
   marketCapMax: '',
   sectors: [],
   rules: [],
+  ownedOnly: false,
 };
 
 /** Parse market cap strings like "2.30T", "0.15T" into billions */
@@ -150,6 +153,8 @@ export const countActiveFilters = (filters: StockFilters): number => {
 };
 
 export const tickerMatchesFilters = (ticker: Ticker, filters: StockFilters): boolean => {
+  if (filters.ownedOnly && !ticker.isOwned) return false;
+
   const price = parseFloat(ticker.stats.price);
   if (!isNaN(price)) {
     if (filters.priceMin && price < parseFloat(filters.priceMin)) return false;

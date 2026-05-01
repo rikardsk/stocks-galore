@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import Draggable from 'react-draggable';
-import { X, ChevronDown, ChevronUp, Eye, EyeOff, Plus, Trash2, ArrowUpDown, ArrowUpAZ, ArrowDownAZ, Lock, AlertCircle } from 'lucide-react';
+import { X, ChevronDown, ChevronUp, Eye, EyeOff, Plus, Trash2, ArrowUpDown, ArrowUpAZ, ArrowDownAZ, Lock, AlertCircle, Briefcase } from 'lucide-react';
 import type { StockList, StockFilters } from '../types';
 import { COUNTRY_FLAGS, tickerMatchesFilters } from '../types';
 
@@ -144,19 +144,38 @@ export const ListPanel: React.FC<ListPanelProps> = ({
                 }}
                 style={{ 
                   cursor: 'grab',
-                  background: (ticker.stats.perf1M !== undefined && ticker.stats.perf3M !== undefined && ticker.stats.perf1Y !== undefined)
-                    ? (ticker.stats.perf1M > 0 && ticker.stats.perf3M > 0 && ticker.stats.perf1Y > 0)
-                      ? 'rgba(16, 185, 129, 0.08)'
-                      : (ticker.stats.perf1M < 0 && ticker.stats.perf3M < 0 && ticker.stats.perf1Y < 0)
-                        ? 'rgba(239, 68, 68, 0.08)'
-                        : 'transparent'
-                    : 'transparent'
+                  borderLeft: ticker.isOwned ? '3px solid #f59e0b' : 'none',
+                  background: ticker.isOwned 
+                    ? 'rgba(245, 158, 11, 0.05)'
+                    : (ticker.stats.perf1M !== undefined && ticker.stats.perf3M !== undefined && ticker.stats.perf1Y !== undefined)
+                      ? (ticker.stats.perf1M > 0 && ticker.stats.perf3M > 0 && ticker.stats.perf1Y > 0)
+                        ? 'rgba(16, 185, 129, 0.08)'
+                        : (ticker.stats.perf1M < 0 && ticker.stats.perf3M < 0 && ticker.stats.perf1Y < 0)
+                          ? 'rgba(239, 68, 68, 0.08)'
+                          : 'transparent'
+                      : 'transparent'
                 }}
               >
                 <div className="ticker-info">
-                  <div>
-                    <div className="ticker-symbol">{ticker.symbol}</div>
-                    <div className="ticker-name">{ticker.name}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <button 
+                      className="btn" 
+                      style={{ padding: '4px', color: ticker.isOwned ? '#f59e0b' : 'var(--text-secondary)', opacity: ticker.isOwned ? 1 : 0.3 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const updatedTickers = list.tickers.map(t => 
+                          t.id === ticker.id ? { ...t, isOwned: !t.isOwned } : t
+                        );
+                        onUpdate({ ...list, tickers: updatedTickers });
+                      }}
+                      title={ticker.isOwned ? "Remove from Portfolio" : "Add to Portfolio"}
+                    >
+                      <Briefcase size={14} fill={ticker.isOwned ? "#f59e0b" : "none"} />
+                    </button>
+                    <div>
+                      <div className="ticker-symbol" style={{ color: ticker.isOwned ? '#f59e0b' : '#fff' }}>{ticker.symbol}</div>
+                      <div className="ticker-name">{ticker.name}</div>
+                    </div>
                   </div>
                   {ticker.name !== 'Unknown Company' && (
                     <div className="ticker-price-group">

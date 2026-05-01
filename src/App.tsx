@@ -16,6 +16,7 @@ import './index.css';
 
 const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 const WATCHLIST_ID = 'permanent-watchlist';
+const PORTFOLIO_ID = 'permanent-portfolio';
 const API_BASE_URL = 'http://localhost:8000';
 
 const App: React.FC = () => {
@@ -100,6 +101,51 @@ const App: React.FC = () => {
         // Remove any other duplicates that might have been created
         currentLists = currentLists.filter((l, idx) => 
           idx === watchlistIndex || (l.id !== WATCHLIST_ID && l.name !== 'Watchlist')
+        );
+      }
+    }
+
+    // Find any existing Portfolio (by ID or name)
+    const portfolioIndex = currentLists.findIndex(l => l.id === PORTFOLIO_ID || l.name === 'Portfolio');
+    
+    if (portfolioIndex === -1) {
+      // Create it if it doesn't exist
+      const portfolio: StockList = {
+        id: PORTFOLIO_ID,
+        name: 'Portfolio',
+        color: '#f59e0b',
+        tickers: [],
+        position: { x: 450, y: 50 }, // Offset from Watchlist (50, 50)
+        isCollapsed: false,
+        showStats: true,
+        isVisible: true,
+        sortOrder: 'none',
+        isProtected: true
+      };
+      
+      // Place it right after Watchlist if it exists
+      const wIdx = currentLists.findIndex(l => l.id === WATCHLIST_ID);
+      if (wIdx !== -1) {
+        currentLists.splice(wIdx + 1, 0, portfolio);
+      } else {
+        currentLists.push(portfolio);
+      }
+      changed = true;
+    } else {
+      // Update the existing one and ensure it's protected and has the right ID
+      const existing = currentLists[portfolioIndex];
+      if (!existing.isProtected || existing.id !== PORTFOLIO_ID) {
+        currentLists[portfolioIndex] = { 
+          ...existing, 
+          id: PORTFOLIO_ID, 
+          name: 'Portfolio',
+          isProtected: true 
+        };
+        changed = true;
+
+        // Remove any other duplicates that might have been created
+        currentLists = currentLists.filter((l, idx) => 
+          idx === portfolioIndex || (l.id !== PORTFOLIO_ID && l.name !== 'Portfolio')
         );
       }
     }
@@ -354,8 +400,74 @@ const App: React.FC = () => {
   };
 
   const handleUpdateList = (updatedList: StockList) => {
-    storage.updateList(updatedList);
-    setLists(lists.map(l => l.id === updatedList.id ? updatedList : l));
+    // 1. Determine the source of truth for owned status
+    const ownedStatusMap: Record<string, boolean> = {};
+    
+    // Check all lists (except the one being updated) for current owned status
+    lists.forEach(l => {
+      if (l.id !== updatedList.id) {
+        l.tickers.forEach(t => {
+          if (t.isOwned) ownedStatusMap[t.symbol] = true;
+        });
+      }
+    });
+
+    // Update with the changes from the updated list
+    updatedList.tickers.forEach(t => {
+      ownedStatusMap[t.symbol] = !!t.isOwned;
+    });
+
+    // If we are updating the Portfolio list itself, any ticker in it MUST be owned
+    if (updatedList.id === PORTFOLIO_ID) {
+      updatedList.tickers.forEach(t => {
+        t.isOwned = true;
+        ownedStatusMap[t.symbol] = true;
+      });
+    }
+
+    // 2. Sync isOwned across ALL lists and collect all owned tickers
+    const allOwnedTickersMap: Record<string, Ticker> = {};
+    
+    let syncedLists = lists.map(l => {
+      const currentList = l.id === updatedList.id ? updatedList : l;
+      
+      const updatedTickers = currentList.tickers.map(t => {
+        const shouldBeOwned = !!ownedStatusMap[t.symbol];
+        if (t.isOwned !== shouldBeOwned) {
+          return { ...t, isOwned: shouldBeOwned };
+        }
+        return t;
+      });
+
+      // Collect owned tickers for the Portfolio list (ignoring the portfolio list itself for now)
+      if (currentList.id !== PORTFOLIO_ID) {
+        updatedTickers.forEach(t => {
+          if (t.isOwned && !allOwnedTickersMap[t.symbol]) {
+            allOwnedTickersMap[t.symbol] = { ...t };
+          }
+        });
+      }
+
+      return { ...currentList, tickers: updatedTickers };
+    });
+
+    // 3. Ensure the Portfolio list contains exactly the owned tickers
+    syncedLists = syncedLists.map(l => {
+      if (l.id === PORTFOLIO_ID) {
+        const ownedTickers = Object.values(allOwnedTickersMap);
+        // We only update if the contents actually changed to avoid unnecessary re-renders
+        const currentSymbols = l.tickers.map(t => t.symbol).sort().join(',');
+        const newSymbols = ownedTickers.map(t => t.symbol).sort().join(',');
+        
+        if (currentSymbols !== newSymbols) {
+          return { ...l, tickers: ownedTickers };
+        }
+      }
+      return l;
+    });
+
+    storage.saveLists(syncedLists);
+    setLists(syncedLists);
   };
 
   const handleClearWorkbench = () => {
@@ -509,14 +621,19 @@ const App: React.FC = () => {
   };
 
   const handleRemoveTicker = (listId: string, tickerId: string) => {
-    storage.removeTickerFromList(listId, tickerId);
-    setLists(storage.getLists());
+    const list = lists.find(l => l.id === listId);
+    if (list) {
+      const updatedList = {
+        ...list,
+        tickers: list.tickers.filter(t => t.id !== tickerId)
+      };
+      handleUpdateList(updatedList);
+    }
   };
 
   const handleTransferTicker = (fromListId: string, toListId: string, tickerId: string, isCopy: boolean) => {
-    const allLists = storage.getLists();
-    const fromList = allLists.find(l => l.id === fromListId);
-    const toList = allLists.find(l => l.id === toListId);
+    const fromList = lists.find(l => l.id === fromListId);
+    const toList = lists.find(l => l.id === toListId);
     
     if (!fromList || !toList) return;
     
@@ -528,18 +645,19 @@ const App: React.FC = () => {
     if (isDuplicate) return;
 
     if (isCopy) {
-      // Create a brand new ticker object to avoid reference issues
       const copiedTicker = { ...ticker, id: uuidv4() };
-      toList.tickers.push(copiedTicker);
+      const updatedToList = { ...toList, tickers: [...toList.tickers, copiedTicker] };
+      handleUpdateList(updatedToList);
     } else {
-      // Move logic: Remove from source
-      fromList.tickers = fromList.tickers.filter(t => t.id !== tickerId);
-      // Add to target
-      toList.tickers.push(ticker);
+      // Move: Update both lists. We can do this by updating toList and the sync logic will handle the rest
+      // but we need to remove from fromList first.
+      const updatedFromList = { ...fromList, tickers: fromList.tickers.filter(t => t.id !== tickerId) };
+      const updatedToList = { ...toList, tickers: [...toList.tickers, ticker] };
+      
+      // We'll update the fromList first, then the toList to ensure sync
+      storage.updateList(updatedFromList);
+      handleUpdateList(updatedToList);
     }
-
-    storage.saveLists(allLists);
-    setLists(allLists);
   };
 
   const handleImportData = (data: any) => {
@@ -740,6 +858,7 @@ const App: React.FC = () => {
         filters={globalFilters}
         lists={lists}
         groups={groups}
+        onApplyFilters={setGlobalFilters}
       />
 
       <NotificationsModal 

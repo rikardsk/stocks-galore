@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { X, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { X, ArrowUpDown, ArrowUp, ArrowDown, Briefcase } from 'lucide-react';
 import type { Ticker, StockFilters, StockList, ListGroup } from '../types';
 import { tickerMatchesFilters } from '../types';
 
@@ -7,9 +7,10 @@ interface TableViewProps {
   isOpen: boolean;
   onClose: () => void;
   tickers: Ticker[];
-  filters?: StockFilters;
+  filters: StockFilters;
   lists: StockList[];
   groups: ListGroup[];
+  onApplyFilters: (filters: StockFilters) => void;
 }
 
 type SortConfig = {
@@ -17,7 +18,7 @@ type SortConfig = {
   direction: 'asc' | 'desc' | 'none';
 };
 
-export const TableView: React.FC<TableViewProps> = ({ isOpen, onClose, tickers, filters, lists, groups }) => {
+export const TableView: React.FC<TableViewProps> = ({ isOpen, onClose, tickers, filters, lists, groups, onApplyFilters }) => {
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'symbol', direction: 'asc' });
   const [selectedGroupId, setSelectedGroupId] = useState<string>('all');
   const [selectedListId, setSelectedListId] = useState<string>('all');
@@ -161,6 +162,23 @@ export const TableView: React.FC<TableViewProps> = ({ isOpen, onClose, tickers, 
                 ))}
               </select>
             </div>
+
+            <button 
+              className={`btn ${filters.ownedOnly ? 'btn-primary' : ''}`}
+              style={{ 
+                padding: '4px 12px', 
+                fontSize: '12px', 
+                gap: '6px',
+                border: '1px solid var(--border-color)',
+                background: filters.ownedOnly ? 'var(--accent)' : 'rgba(255,255,255,0.05)'
+              }}
+              onClick={() => {
+                onApplyFilters({ ...filters, ownedOnly: !filters.ownedOnly });
+              }}
+              title="Show only stocks you own"
+            >
+              <Briefcase size={14} fill={filters.ownedOnly ? "white" : "none"} /> Portfolio
+            </button>
           </div>
 
           <button className="btn" onClick={onClose}><X /></button>
@@ -193,16 +211,24 @@ export const TableView: React.FC<TableViewProps> = ({ isOpen, onClose, tickers, 
                     key={ticker.id} 
                     className="table-row"
                     style={{
-                      background: (ticker.stats.perf1M !== undefined && ticker.stats.perf3M !== undefined && ticker.stats.perf1Y !== undefined)
-                        ? (ticker.stats.perf1M > 0 && ticker.stats.perf3M > 0 && ticker.stats.perf1Y > 0)
-                          ? 'rgba(16, 185, 129, 0.08)'
-                          : (ticker.stats.perf1M < 0 && ticker.stats.perf3M < 0 && ticker.stats.perf1Y < 0)
-                            ? 'rgba(239, 68, 68, 0.08)'
-                            : 'transparent'
-                        : 'transparent'
+                      borderLeft: ticker.isOwned ? '3px solid #f59e0b' : 'none',
+                      background: ticker.isOwned 
+                        ? 'rgba(245, 158, 11, 0.05)'
+                        : (ticker.stats.perf1M !== undefined && ticker.stats.perf3M !== undefined && ticker.stats.perf1Y !== undefined)
+                          ? (ticker.stats.perf1M > 0 && ticker.stats.perf3M > 0 && ticker.stats.perf1Y > 0)
+                            ? 'rgba(16, 185, 129, 0.08)'
+                            : (ticker.stats.perf1M < 0 && ticker.stats.perf3M < 0 && ticker.stats.perf1Y < 0)
+                              ? 'rgba(239, 68, 68, 0.08)'
+                              : 'transparent'
+                          : 'transparent'
                     }}
                   >
-                    <td style={tdStyle}><strong>{ticker.symbol}</strong></td>
+                    <td style={tdStyle}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {ticker.isOwned && <Briefcase size={12} color="#f59e0b" fill="#f59e0b" />}
+                        <strong>{ticker.symbol}</strong>
+                      </div>
+                    </td>
                     <td style={tdStyle}>{ticker.name}</td>
                     <td style={tdStyle}>${ticker.stats.price}</td>
                     <td style={{ ...tdStyle, color: parseFloat(ticker.stats.changePercent) >= 0 ? '#10b981' : '#ef4444' }}>
