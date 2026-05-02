@@ -22,6 +22,7 @@ export type Ticker = {
     lastUpdated?: string;
     error?: string;
     sparkline?: number[];
+    description?: string;
   };
   isOwned?: boolean;
 };

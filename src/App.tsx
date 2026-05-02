@@ -524,7 +524,8 @@ const App: React.FC = () => {
               perf1Y: data.perf1Y,
               dividendYield: data.dividendYield,
               lastUpdated: new Date().toISOString(),
-              sparkline: data.sparkline
+              sparkline: data.sparkline,
+              description: data.description
             }
           };
           
@@ -610,6 +611,7 @@ const App: React.FC = () => {
                 dividendYield: freshData.dividendYield,
                 lastUpdated: new Date().toISOString(),
                 sparkline: freshData.sparkline,
+                description: freshData.description,
                 error: undefined
               }
             };

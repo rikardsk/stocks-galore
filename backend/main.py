@@ -97,7 +97,8 @@ def calculate_stats(symbol: str, info: Dict, hist: pd.DataFrame) -> Dict[str, An
         "perf1M": get_perf(21), # ~21 trading days
         "perf3M": get_perf(63),
         "perf1Y": get_perf(252),
-        "sparkline": sparkline_data
+        "sparkline": sparkline_data,
+        "description": info.get('longBusinessSummary') or "No description available."
     }
 
 @app.get("/stock/{symbol}")

@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import Draggable from 'react-draggable';
-import { X, ChevronDown, ChevronUp, Eye, EyeOff, Plus, Trash2, ArrowUpDown, ArrowUpAZ, ArrowDownAZ, Lock, AlertCircle, Briefcase, Star } from 'lucide-react';
+import { X, ChevronDown, ChevronUp, Eye, EyeOff, Plus, Trash2, ArrowUpDown, ArrowUpAZ, ArrowDownAZ, Lock, AlertCircle, Briefcase, Star, Info } from 'lucide-react';
 import { Sparkline } from './Sparkline';
 import type { StockList, StockFilters } from '../types';
 import { COUNTRY_FLAGS, tickerMatchesFilters, formatMarketCap } from '../types';
@@ -30,6 +30,7 @@ export const ListPanel: React.FC<ListPanelProps> = ({
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(list.isCollapsed);
   const [showStats, setShowStats] = useState(list.showStats);
+  const [expandedTickerDescriptionId, setExpandedTickerDescriptionId] = useState<string | null>(null);
   const nodeRef = useRef(null);
 
   const handleToggleCollapse = () => {
@@ -213,6 +214,22 @@ export const ListPanel: React.FC<ListPanelProps> = ({
                     >
                       <Star size={14} fill={watchlistSymbols.has(ticker.symbol) ? "#6366f1" : "none"} />
                     </button>
+                    <button 
+                      className="btn" 
+                      style={{ 
+                        padding: '4px', 
+                        color: expandedTickerDescriptionId === ticker.id ? 'var(--accent)' : 'var(--text-secondary)', 
+                        opacity: expandedTickerDescriptionId === ticker.id ? 1 : 0.3,
+                        marginLeft: '-4px'
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setExpandedTickerDescriptionId(prev => prev === ticker.id ? null : ticker.id);
+                      }}
+                      title="Company Info"
+                    >
+                      <Info size={14} />
+                    </button>
                     <div>
                       <div className="ticker-symbol" style={{ color: ticker.isOwned ? '#f59e0b' : '#fff' }}>{ticker.symbol}</div>
                       <div className="ticker-name">{ticker.name}</div>
@@ -344,6 +361,24 @@ export const ListPanel: React.FC<ListPanelProps> = ({
                         Updated: {ticker.stats.lastUpdated}
                       </div>
                     )}
+                  </div>
+                )}
+
+                {expandedTickerDescriptionId === ticker.id && (
+                  <div style={{ 
+                    padding: '12px', 
+                    fontSize: '11px', 
+                    lineHeight: '1.5', 
+                    color: 'var(--text-secondary)', 
+                    background: 'rgba(0,0,0,0.2)', 
+                    borderRadius: '8px',
+                    margin: '8px',
+                    borderLeft: '2px solid var(--accent)'
+                  }}>
+                    <div style={{ fontWeight: 600, color: 'var(--accent)', marginBottom: '4px', fontSize: '10px', textTransform: 'uppercase' }}>
+                      About {ticker.symbol}
+                    </div>
+                    {ticker.stats.description || "No description available. Try refreshing data."}
                   </div>
                 )}
               </div>
