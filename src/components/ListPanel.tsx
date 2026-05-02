@@ -3,7 +3,7 @@ import Draggable from 'react-draggable';
 import { X, ChevronDown, ChevronUp, Eye, EyeOff, Plus, Trash2, ArrowUpDown, ArrowUpAZ, ArrowDownAZ, Lock, AlertCircle, Briefcase, Star } from 'lucide-react';
 import { Sparkline } from './Sparkline';
 import type { StockList, StockFilters } from '../types';
-import { COUNTRY_FLAGS, tickerMatchesFilters } from '../types';
+import { COUNTRY_FLAGS, tickerMatchesFilters, formatMarketCap } from '../types';
 
 interface ListPanelProps {
   list: StockList;
@@ -260,7 +260,7 @@ export const ListPanel: React.FC<ListPanelProps> = ({
                     <div className="stat-row">
                       <div className="stat-item">
                         <span className="stat-label">Cap</span>
-                        <span>{ticker.stats.marketCap}</span>
+                        <span>{formatMarketCap(ticker.stats.marketCap)}</span>
                       </div>
                       <div className="stat-item">
                         <span className="stat-label">Vol</span>

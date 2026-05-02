@@ -12,6 +12,7 @@ import { SettingsModal, type RefreshInterval } from './components/SettingsModal'
 import { TableView } from './components/TableView';
 import { NotificationsModal } from './components/NotificationsModal';
 import { AlertsModal } from './components/AlertsModal';
+import { AnalyticsModal } from './components/AnalyticsModal';
 import './index.css';
 
 const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
@@ -41,6 +42,7 @@ const App: React.FC = () => {
   const [notifications, setNotifications] = useState<TickerNotification[]>([]);
   const [isNotificationsModalOpen, setIsNotificationsModalOpen] = useState(false);
   const [isAlertsModalOpen, setIsAlertsModalOpen] = useState(false);
+  const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
   
   const [newListName, setNewListName] = useState('');
   const [newListColor, setNewListColor] = useState(COLORS[0]);
@@ -790,6 +792,7 @@ const App: React.FC = () => {
           onOpenSettings={() => setIsSettingsModalOpen(true)}
           onOpenTable={() => setIsTableViewOpen(true)}
           onOpenNotifications={() => setIsNotificationsModalOpen(true)}
+          onOpenAnalytics={() => setIsAnalyticsOpen(true)}
           unreadCount={notifications.filter(n => !n.isRead).length}
           activeFilterCount={countActiveFilters(globalFilters)}
         />
@@ -959,6 +962,14 @@ const App: React.FC = () => {
             handleUpdateList({ ...listWithTicker, tickers: updatedTickers });
           }
         }}
+      />
+
+      <AnalyticsModal 
+        isOpen={isAnalyticsOpen}
+        onClose={() => setIsAnalyticsOpen(false)}
+        tickers={allUniqueTickers}
+        lists={lists}
+        groups={groups}
       />
 
       <NotificationsModal 

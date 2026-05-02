@@ -134,14 +134,35 @@ export const EMPTY_FILTERS: StockFilters = {
 };
 
 /** Parse market cap strings like "2.30T", "0.15T" into billions */
-export const parseMarketCap = (capStr: string): number | null => {
-  if (!capStr || capStr === 'N/A') return null;
+export const parseMarketCap = (capStr: string | number): number | null => {
+  if (capStr === undefined || capStr === null || capStr === 'N/A') return null;
+  if (typeof capStr === 'number') return capStr;
+  
   const num = parseFloat(capStr);
   if (isNaN(num)) return null;
   if (capStr.endsWith('T')) return num * 1000;
   if (capStr.endsWith('B')) return num;
   if (capStr.endsWith('M')) return num / 1000;
   return num;
+};
+
+/** Format market cap (in billions) to a nice string */
+export const formatMarketCap = (capInBillions: number | string | null | undefined): string => {
+  if (capInBillions === null || capInBillions === undefined) return 'N/A';
+  
+  const num = typeof capInBillions === 'string' ? parseMarketCap(capInBillions) : capInBillions;
+  if (num === null || isNaN(num)) return 'N/A';
+
+  if (num >= 1000) {
+    return (num / 1000).toFixed(2) + 'T';
+  }
+  if (num >= 1) {
+    return num.toFixed(2) + 'B';
+  }
+  if (num >= 0.001) {
+    return (num * 1000).toFixed(2) + 'M';
+  }
+  return num.toFixed(2) + 'B';
 };
 
 export const countActiveFilters = (filters: StockFilters): number => {

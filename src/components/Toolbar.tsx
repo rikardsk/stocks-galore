@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Layout, Settings, Search, RefreshCw, Filter, Bell, X, Trash2 } from 'lucide-react';
+import { Plus, Layout, Settings, Search, RefreshCw, Filter, Bell, X, Trash2, BarChart2 } from 'lucide-react';
 
 interface ToolbarProps {
   onCreateList: () => void;
@@ -13,13 +13,15 @@ interface ToolbarProps {
   onOpenSettings?: () => void;
   onOpenTable?: () => void;
   onOpenNotifications?: () => void;
+  onOpenAnalytics?: () => void;
   unreadCount?: number;
   activeFilterCount?: number;
 }
 
 export const Toolbar: React.FC<ToolbarProps> = ({ 
   onCreateList, onToggleSidebar, onRefreshAll, onClearWorkbench, isRefreshing, 
-  searchQuery, onSearchQueryChange, onOpenFilter, onOpenSettings, onOpenTable, onOpenNotifications, unreadCount = 0, activeFilterCount = 0 
+  searchQuery, onSearchQueryChange, onOpenFilter, onOpenSettings, onOpenTable, 
+  onOpenNotifications, onOpenAnalytics, unreadCount = 0, activeFilterCount = 0 
 }) => {
   const [isSearchExpanded, setIsSearchExpanded] = React.useState(false);
 
@@ -36,6 +38,9 @@ export const Toolbar: React.FC<ToolbarProps> = ({
       </button>
       <button className="btn" title="Market Table" onClick={onOpenTable}>
         <Layout size={20} style={{ transform: 'rotate(90deg)' }} />
+      </button>
+      <button className="btn" title="Analytics" onClick={onOpenAnalytics}>
+        <BarChart2 size={20} />
       </button>
       <button 
         className="btn" 

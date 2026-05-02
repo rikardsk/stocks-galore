@@ -57,4 +57,5 @@ Earnings date?
 ~~Crossover~~
 ~~Sparkline~~
 ~~Progress bar during refresh~~
+~~Analytics dashboard with market cap histogram~~
 

@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { X, ArrowUpDown, ArrowUp, ArrowDown, Briefcase, Star, Printer } from 'lucide-react';
 import type { Ticker, StockFilters, StockList, ListGroup } from '../types';
-import { tickerMatchesFilters } from '../types';
+import { tickerMatchesFilters, formatMarketCap } from '../types';
 
 interface TableViewProps {
   isOpen: boolean;
@@ -331,7 +331,7 @@ export const TableView: React.FC<TableViewProps> = ({
                     <td style={{ ...tdStyle, color: changePct >= 0 ? '#10b981' : '#ef4444' }} className="print-col">
                       {ticker.stats?.changePercent || '0.00%'}
                     </td>
-                    <td style={tdStyle} className="print-col">{ticker.stats?.marketCap}</td>
+                    <td style={tdStyle} className="print-col">{formatMarketCap(ticker.stats?.marketCap)}</td>
                     <td style={tdStyle} className="print-col">{ticker.stats?.sector}</td>
                     {[10, 20, 50, 100, 200].map(p => {
                       const sma = ticker.stats ? (ticker.stats[`sma${p}` as keyof typeof ticker.stats] as number | undefined) : undefined;
