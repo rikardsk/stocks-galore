@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Layout, Settings, Search, RefreshCw, Filter, Bell, X, Trash2, BarChart2 } from 'lucide-react';
+import { Plus, Layout, Settings, Search, RefreshCw, Filter, Bell, X, Trash2, BarChart2, Trophy } from 'lucide-react';
 
 interface ToolbarProps {
   onCreateList: () => void;
@@ -14,6 +14,7 @@ interface ToolbarProps {
   onOpenTable?: () => void;
   onOpenNotifications?: () => void;
   onOpenAnalytics?: () => void;
+  onOpenRanking?: () => void;
   unreadCount?: number;
   activeFilterCount?: number;
 }
@@ -21,7 +22,7 @@ interface ToolbarProps {
 export const Toolbar: React.FC<ToolbarProps> = ({ 
   onCreateList, onToggleSidebar, onRefreshAll, onClearWorkbench, isRefreshing, 
   searchQuery, onSearchQueryChange, onOpenFilter, onOpenSettings, onOpenTable, 
-  onOpenNotifications, onOpenAnalytics, unreadCount = 0, activeFilterCount = 0 
+  onOpenNotifications, onOpenAnalytics, onOpenRanking, unreadCount = 0, activeFilterCount = 0 
 }) => {
   const [isSearchExpanded, setIsSearchExpanded] = React.useState(false);
 
@@ -49,6 +50,9 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         title="Add New List"
       >
         <Plus size={24} />
+      </button>
+      <button className="btn" title="Ranking" onClick={onOpenRanking}>
+        <Trophy size={20} />
       </button>
       <button className="btn" title={isSearchExpanded ? "Close Search" : "Search"} onClick={() => {
         if (isSearchExpanded) {

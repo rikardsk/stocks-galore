@@ -13,6 +13,7 @@ import { TableView } from './components/TableView';
 import { NotificationsModal } from './components/NotificationsModal';
 import { AlertsModal } from './components/AlertsModal';
 import { AnalyticsModal } from './components/AnalyticsModal';
+import { RankingModal } from './components/RankingModal';
 import './index.css';
 
 const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
@@ -43,6 +44,7 @@ const App: React.FC = () => {
   const [isNotificationsModalOpen, setIsNotificationsModalOpen] = useState(false);
   const [isAlertsModalOpen, setIsAlertsModalOpen] = useState(false);
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
+  const [isRankingOpen, setIsRankingOpen] = useState(false);
   
   const [newListName, setNewListName] = useState('');
   const [newListColor, setNewListColor] = useState(COLORS[0]);
@@ -793,6 +795,7 @@ const App: React.FC = () => {
           onOpenTable={() => setIsTableViewOpen(true)}
           onOpenNotifications={() => setIsNotificationsModalOpen(true)}
           onOpenAnalytics={() => setIsAnalyticsOpen(true)}
+          onOpenRanking={() => setIsRankingOpen(true)}
           unreadCount={notifications.filter(n => !n.isRead).length}
           activeFilterCount={countActiveFilters(globalFilters)}
         />
@@ -970,6 +973,12 @@ const App: React.FC = () => {
         tickers={allUniqueTickers}
         lists={lists}
         groups={groups}
+      />
+
+      <RankingModal 
+        isOpen={isRankingOpen}
+        onClose={() => setIsRankingOpen(false)}
+        tickers={allUniqueTickers}
       />
 
       <NotificationsModal 
