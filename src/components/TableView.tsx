@@ -14,6 +14,7 @@ interface TableViewProps {
   watchlistSymbols: Set<string>;
   onToggleWatchlist: (ticker: Ticker) => void;
   onToggleOwned: (ticker: Ticker) => void;
+  onSelectTicker: (ticker: Ticker) => void;
 }
 
 type SortConfig = {
@@ -31,7 +32,8 @@ export const TableView: React.FC<TableViewProps> = ({
   onApplyFilters, 
   watchlistSymbols = new Set<string>(), 
   onToggleWatchlist, 
-  onToggleOwned 
+  onToggleOwned,
+  onSelectTicker
 }) => {
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'symbol', direction: 'asc' });
   const [selectedGroupId, setSelectedGroupId] = useState<string>('all');
@@ -322,7 +324,12 @@ export const TableView: React.FC<TableViewProps> = ({
                         >
                           <Star size={12} fill={watchlistSymbols.has(ticker.symbol) ? "#6366f1" : "none"} />
                         </button>
-                        <strong style={{ marginLeft: '4px' }}>{ticker.symbol}</strong>
+                        <strong 
+                          style={{ marginLeft: '4px', cursor: 'pointer', color: ticker.isOwned ? '#f59e0b' : '#fff' }}
+                          onClick={() => onSelectTicker(ticker)}
+                        >
+                          {ticker.symbol}
+                        </strong>
                       </div>
                       <div className="only-print" style={{ fontWeight: 'bold' }}>{ticker.symbol}</div>
                     </td>

@@ -15,6 +15,7 @@ interface ListPanelProps {
   globalFilters?: StockFilters;
   watchlistSymbols: Set<string>;
   onToggleWatchlist: (ticker: any) => void;
+  onSelectTicker: (ticker: any) => void;
 }
 
 export const ListPanel: React.FC<ListPanelProps> = ({
@@ -26,7 +27,8 @@ export const ListPanel: React.FC<ListPanelProps> = ({
   onTransferTicker,
   globalFilters,
   watchlistSymbols,
-  onToggleWatchlist
+  onToggleWatchlist,
+  onSelectTicker
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(list.isCollapsed);
   const [showStats, setShowStats] = useState(list.showStats);
@@ -230,7 +232,7 @@ export const ListPanel: React.FC<ListPanelProps> = ({
                     >
                       <Info size={14} />
                     </button>
-                    <div>
+                    <div onClick={() => onSelectTicker(ticker)} style={{ cursor: 'pointer' }}>
                       <div className="ticker-symbol" style={{ color: ticker.isOwned ? '#f59e0b' : '#fff' }}>{ticker.symbol}</div>
                       <div className="ticker-name">{ticker.name}</div>
                     </div>

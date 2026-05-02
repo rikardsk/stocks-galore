@@ -23,6 +23,10 @@ export type Ticker = {
     error?: string;
     sparkline?: number[];
     description?: string;
+    pe?: number;
+    high52?: number;
+    low52?: number;
+    avgVolume?: string;
   };
   isOwned?: boolean;
 };

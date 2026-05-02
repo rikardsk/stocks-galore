@@ -98,7 +98,11 @@ def calculate_stats(symbol: str, info: Dict, hist: pd.DataFrame) -> Dict[str, An
         "perf3M": get_perf(63),
         "perf1Y": get_perf(252),
         "sparkline": sparkline_data,
-        "description": info.get('longBusinessSummary') or "No description available."
+        "description": info.get('longBusinessSummary') or "No description available.",
+        "pe": safe_float(info.get('trailingPE')),
+        "high52": safe_float(info.get('fiftyTwoWeekHigh')),
+        "low52": safe_float(info.get('fiftyTwoWeekLow')),
+        "avgVolume": f"{info.get('averageVolume', 0) / 1e6:.1f}M" if info.get('averageVolume') else "N/A"
     }
 
 @app.get("/stock/{symbol}")
@@ -116,6 +120,33 @@ async def get_stock(symbol: str):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/stock/{symbol}/history")
+async def get_stock_history(symbol: str, period: str = "1y"):
+    try:
+        ticker = yf.Ticker(symbol)
+        # Use valid yfinance periods: 1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, ytd, max
+        hist = ticker.history(period=period)
+        
+        if hist.empty:
+            return []
+            
+        # Clean up data for frontend
+        hist = hist.reset_index()
+        data = []
+        for _, row in hist.iterrows():
+            data.append({
+                "date": row['Date'].strftime('%Y-%m-%d') if 'Date' in row else row['Datetime'].strftime('%H:%M'),
+                "price": safe_float(row['Close']),
+                "open": safe_float(row['Open']),
+                "high": safe_float(row['High']),
+                "low": safe_float(row['Low']),
+                "volume": int(row['Volume']) if not pd.isna(row['Volume']) else 0
+            })
+        return data
+    except Exception as e:
+        print(f"Error fetching history for {symbol}: {e}")
+        return []
 
 @app.get("/batch")
 async def get_batch(symbols: str = Query(..., description="Comma-separated symbols")):

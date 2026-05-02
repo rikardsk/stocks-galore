@@ -5,11 +5,9 @@ Add a small, simple line chart inside each ticker row (next to the symbol).
 
 Why: It gives you an instant "gut feel" for whether the stock has been trending up or down over the last 30 days without needing to open anything.
 Aesthetics: Very thin, subtle lines (green if 1M performance > 0, red if < 0).
-2. Interactive "Deep Dive" Modal
-Clicking on a ticker symbol could open a large modal with a full interactive chart.
-
-Features: Switch between Line and Candlestick views, toggle timeframes (1D, 1W, 1M, 1Y, 5Y), and see volume bars at the bottom.
-SMA Overlays: Since we already calculate SMA10, 20, 50, etc., we can draw these directly over the price line.
+~~2. Interactive "Deep Dive" Modal~~
+~~Clicking on a ticker symbol opens a large modal with a full interactive chart.~~
+~~Features: Switch between timeframes (1W, 1M, 3M, 1Y, 5Y), see volume bars, and fundamental stats.~~
 3. Expandable Chart Row
 Instead of a separate modal, each ticker row could have a "Show Chart" button that expands the row to reveal a medium-sized chart right there in the list.
 

@@ -14,6 +14,7 @@ import { NotificationsModal } from './components/NotificationsModal';
 import { AlertsModal } from './components/AlertsModal';
 import { AnalyticsModal } from './components/AnalyticsModal';
 import { RankingModal } from './components/RankingModal';
+import { StockDetailModal } from './components/StockDetailModal';
 import './index.css';
 
 const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
@@ -45,6 +46,7 @@ const App: React.FC = () => {
   const [isAlertsModalOpen, setIsAlertsModalOpen] = useState(false);
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
   const [isRankingOpen, setIsRankingOpen] = useState(false);
+  const [selectedDetailTicker, setSelectedDetailTicker] = useState<Ticker | null>(null);
   
   const [newListName, setNewListName] = useState('');
   const [newListColor, setNewListColor] = useState(COLORS[0]);
@@ -525,7 +527,11 @@ const App: React.FC = () => {
               dividendYield: data.dividendYield,
               lastUpdated: new Date().toISOString(),
               sparkline: data.sparkline,
-              description: data.description
+              description: data.description,
+              pe: data.pe,
+              high52: data.high52,
+              low52: data.low52,
+              avgVolume: data.avgVolume
             }
           };
           
@@ -612,6 +618,10 @@ const App: React.FC = () => {
                 lastUpdated: new Date().toISOString(),
                 sparkline: freshData.sparkline,
                 description: freshData.description,
+                pe: freshData.pe,
+                high52: freshData.high52,
+                low52: freshData.low52,
+                avgVolume: freshData.avgVolume,
                 error: undefined
               }
             };
@@ -779,6 +789,7 @@ const App: React.FC = () => {
                 onRemoveTicker={handleRemoveTicker}
                 onTransferTicker={handleTransferTicker}
                 onToggleWatchlist={handleToggleWatchlist}
+                onSelectTicker={setSelectedDetailTicker}
               />
             ))}
           </div>
@@ -981,6 +992,21 @@ const App: React.FC = () => {
         isOpen={isRankingOpen}
         onClose={() => setIsRankingOpen(false)}
         tickers={allUniqueTickers}
+      />
+
+      <StockDetailModal 
+        isOpen={!!selectedDetailTicker}
+        ticker={selectedDetailTicker}
+        onClose={() => setSelectedDetailTicker(null)}
+        onToggleOwned={(ticker) => {
+          const isCurrentlyOwned = ticker.isOwned;
+          setLists(prev => prev.map(l => ({
+            ...l,
+            tickers: l.tickers.map(t => t.symbol === ticker.symbol ? { ...t, isOwned: !isCurrentlyOwned } : t)
+          })));
+        }}
+        onToggleWatchlist={(ticker) => handleToggleWatchlist(ticker)}
+        isWatchlisted={selectedDetailTicker ? watchlistSymbols.has(selectedDetailTicker.symbol) : false}
       />
 
       <NotificationsModal 
