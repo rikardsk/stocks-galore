@@ -6,9 +6,10 @@ interface RankingModalProps {
   isOpen: boolean;
   onClose: () => void;
   tickers: Ticker[];
+  onSelectTicker: (ticker: Ticker) => void;
 }
 
-export const RankingModal: React.FC<RankingModalProps> = ({ isOpen, onClose, tickers }) => {
+export const RankingModal: React.FC<RankingModalProps> = ({ isOpen, onClose, tickers, onSelectTicker }) => {
   const rankings = useMemo(() => {
     const validTickers = tickers.filter(t => t.name !== 'Unknown Company');
 
@@ -47,6 +48,7 @@ export const RankingModal: React.FC<RankingModalProps> = ({ isOpen, onClose, tic
             icon={<Clock size={18} color="#10b981" />} 
             tickers={rankings.top1M} 
             metric="perf1M" 
+            onSelectTicker={onSelectTicker}
           />
 
           {/* Top 3M */}
@@ -55,6 +57,7 @@ export const RankingModal: React.FC<RankingModalProps> = ({ isOpen, onClose, tic
             icon={<TrendingUp size={18} color="#6366f1" />} 
             tickers={rankings.top3M} 
             metric="perf3M" 
+            onSelectTicker={onSelectTicker}
           />
 
           {/* Top 1Y */}
@@ -63,6 +66,7 @@ export const RankingModal: React.FC<RankingModalProps> = ({ isOpen, onClose, tic
             icon={<Calendar size={18} color="#ec4899" />} 
             tickers={rankings.top1Y} 
             metric="perf1Y" 
+            onSelectTicker={onSelectTicker}
           />
         </div>
       </div>
@@ -75,9 +79,10 @@ interface RankingColumnProps {
   icon: React.ReactNode;
   tickers: Ticker[];
   metric: 'perf1M' | 'perf3M' | 'perf1Y';
+  onSelectTicker: (ticker: Ticker) => void;
 }
 
-const RankingColumn: React.FC<RankingColumnProps> = ({ title, icon, tickers, metric }) => {
+const RankingColumn: React.FC<RankingColumnProps> = ({ title, icon, tickers, metric, onSelectTicker }) => {
   return (
     <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
       <div style={{ padding: '16px', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -119,7 +124,10 @@ const RankingColumn: React.FC<RankingColumnProps> = ({ title, icon, tickers, met
                 }}>
                   {index + 1}
                 </div>
-                <div style={{ flex: 1, overflow: 'hidden' }}>
+                <div 
+                  style={{ flex: 1, overflow: 'hidden', cursor: 'pointer' }}
+                  onClick={() => onSelectTicker(ticker)}
+                >
                   <div style={{ fontSize: '13px', fontWeight: 700, color: '#fff' }}>{ticker.symbol}</div>
                   <div style={{ fontSize: '11px', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {ticker.name}

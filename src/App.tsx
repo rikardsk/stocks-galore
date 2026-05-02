@@ -962,9 +962,10 @@ const App: React.FC = () => {
       />
 
       <RankingModal 
-        isOpen={isRankingOpen}
-        onClose={() => setIsRankingOpen(false)}
+        isOpen={isRankingOpen} 
+        onClose={() => setIsRankingOpen(false)} 
         tickers={allUniqueTickers}
+        onSelectTicker={setSelectedDetailTicker}
       />
 
       <StockDetailModal 
