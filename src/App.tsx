@@ -812,34 +812,6 @@ const App: React.FC = () => {
           unreadCount={notifications.filter(n => !n.isRead).length}
           activeFilterCount={countActiveFilters(globalFilters)}
         />
-
-        {isTableViewOpen && (
-          <TableView 
-            isOpen={isTableViewOpen}
-            onClose={() => setIsTableViewOpen(false)}
-            tickers={allUniqueTickers}
-            filters={globalFilters}
-            lists={lists}
-            groups={groups}
-            watchlistSymbols={watchlistSymbols}
-            onApplyFilters={setGlobalFilters}
-            onToggleWatchlist={handleToggleWatchlist}
-            onToggleOwned={(ticker) => {
-              const updatedTicker = { ...ticker, isOwned: !ticker.isOwned };
-              // We need to find a list that contains this ticker to update it
-              // Or just call handleUpdateList with a partial list update logic?
-              // handleUpdateList expects a full StockList.
-              // Let's find the first list containing this ticker.
-              const listWithTicker = lists.find(l => l.tickers.some(t => t.symbol === ticker.symbol));
-              if (listWithTicker) {
-                const updatedTickers = listWithTicker.tickers.map(t => 
-                  t.symbol === ticker.symbol ? { ...t, isOwned: !t.isOwned } : t
-                );
-                handleUpdateList({ ...listWithTicker, tickers: updatedTickers });
-              }
-            }}
-          />
-        )}
       </div>
 
       {/* Create List Modal */}
@@ -978,6 +950,7 @@ const App: React.FC = () => {
             handleUpdateList({ ...listWithTicker, tickers: updatedTickers });
           }
         }}
+        onSelectTicker={setSelectedDetailTicker}
       />
 
       <AnalyticsModal 
