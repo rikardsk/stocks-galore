@@ -94,7 +94,7 @@ body {
 /* Panel */
 .list-panel {
   position: absolute;
-  width: 320px;
+  width: 340px;
   background: var(--panel-bg);
   backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--border-color);

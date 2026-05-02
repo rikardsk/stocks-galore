@@ -47,6 +47,7 @@ const App: React.FC = () => {
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
   const [isRankingOpen, setIsRankingOpen] = useState(false);
   const [selectedDetailTicker, setSelectedDetailTicker] = useState<Ticker | null>(null);
+  const [shouldReopenNotifications, setShouldReopenNotifications] = useState(false);
   
   const [newListName, setNewListName] = useState('');
   const [newListColor, setNewListColor] = useState(COLORS[0]);
@@ -233,7 +234,8 @@ const App: React.FC = () => {
         storage.addNotification({
           alertId: alert.id,
           symbol: alert.symbol,
-          message
+          message,
+          type: alert.metric === 'price' ? 'price' : 'changePercent'
         });
         return { ...alert, isTriggered: true };
       }
@@ -278,7 +280,8 @@ const App: React.FC = () => {
             storage.addNotification({
               alertId: `cross-${ticker.symbol}-${period}`,
               symbol: ticker.symbol,
-              message
+              message,
+              type: 'crossover'
             });
           }
         }
@@ -971,7 +974,13 @@ const App: React.FC = () => {
       <StockDetailModal 
         isOpen={!!selectedDetailTicker}
         ticker={selectedDetailTicker}
-        onClose={() => setSelectedDetailTicker(null)}
+        onClose={() => {
+          setSelectedDetailTicker(null);
+          if (shouldReopenNotifications) {
+            setIsNotificationsModalOpen(true);
+            setShouldReopenNotifications(false);
+          }
+        }}
         onToggleOwned={(ticker) => {
           const isCurrentlyOwned = ticker.isOwned;
           setLists(prev => prev.map(l => ({
@@ -991,14 +1000,16 @@ const App: React.FC = () => {
           storage.clearNotifications();
           setNotifications([]);
         }}
-        onMarkRead={() => {
-          storage.markNotificationsRead();
-          setNotifications(storage.getNotifications());
-        }}
+        onMarkRead={storage.markNotificationsRead} 
         onOpenAlerts={() => {
           setIsNotificationsModalOpen(false);
           setIsAlertsModalOpen(true);
         }}
+        onSelectTicker={(ticker) => {
+          setSelectedDetailTicker(ticker);
+          setShouldReopenNotifications(true);
+        }}
+        allTickers={allUniqueTickers}
       />
 
       <AlertsModal 

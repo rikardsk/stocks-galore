@@ -113,6 +113,7 @@ export interface TickerNotification {
   symbol: string;
   message: string;
   timestamp: string;
+  type: 'price' | 'changePercent' | 'crossover';
   isRead: boolean;
 }
 

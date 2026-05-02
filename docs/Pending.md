@@ -28,4 +28,6 @@
 ~~- Flag icons & Country selection~~
 ~~- Collapsible groups/categories~~
 ~~- Error handling and stale data indicators~~
+~~- Ticker name wrapping (2 lines with ellipsis)~~
+~~- Actionable Notifications (Direct link to charts)~~
 ~~- Animations on refresh and UI transitions~~

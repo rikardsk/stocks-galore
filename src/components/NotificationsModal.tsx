@@ -1,6 +1,6 @@
 import React from 'react';
 import { X, Bell, Calendar, Search } from 'lucide-react';
-import type { TickerNotification } from '../types';
+import type { TickerNotification, Ticker } from '../types';
 
 interface NotificationsModalProps {
   isOpen: boolean;
@@ -9,6 +9,8 @@ interface NotificationsModalProps {
   onClear: () => void;
   onMarkRead: () => void;
   onOpenAlerts: () => void;
+  onSelectTicker: (ticker: Ticker) => void;
+  allTickers: Ticker[];
 }
 
 export const NotificationsModal: React.FC<NotificationsModalProps> = ({
@@ -17,9 +19,12 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   notifications,
   onClear,
   onMarkRead,
-  onOpenAlerts
+  onOpenAlerts,
+  onSelectTicker,
+  allTickers
 }) => {
   const [timeFilter, setTimeFilter] = React.useState<'today' | 'week' | 'all'>('all');
+  const [typeFilter, setTypeFilter] = React.useState<'all' | 'price' | 'changePercent' | 'crossover'>('all');
   const [searchQuery, setSearchQuery] = React.useState('');
 
   const filteredNotifications = React.useMemo(() => {
@@ -43,8 +48,27 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       filtered = filtered.filter(n => n.symbol.toUpperCase().includes(query));
     }
 
+    // Type filter
+    if (typeFilter !== 'all') {
+      filtered = filtered.filter(n => {
+        // Use the explicit type if available
+        if (n.type) return n.type === typeFilter;
+        
+        // Fallback for legacy notifications
+        const msg = n.message.toLowerCase();
+        const isCrossover = msg.includes('crossed');
+        const isPrice = msg.includes('price') && !isCrossover;
+        const isPercent = (msg.includes('change') || msg.includes('%')) && !isCrossover;
+
+        if (typeFilter === 'crossover') return isCrossover;
+        if (typeFilter === 'price') return isPrice;
+        if (typeFilter === 'changePercent') return isPercent;
+        return false;
+      });
+    }
+
     return filtered;
-  }, [notifications, timeFilter, searchQuery]);
+  }, [notifications, timeFilter, typeFilter, searchQuery]);
 
   const topTickers = React.useMemo(() => {
     const counts: Record<string, number> = {};
@@ -117,6 +141,29 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
           </div>
         </div>
 
+        <div style={{ display: 'flex', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '2px', border: '1px solid var(--border-color)', marginBottom: '16px' }}>
+          {(['all', 'price', 'changePercent', 'crossover'] as const).map(f => (
+            <button 
+              key={f}
+              onClick={() => setTypeFilter(f)}
+              style={{ 
+                flex: 1,
+                padding: '4px 2px', 
+                fontSize: '9px', 
+                borderRadius: '6px',
+                background: typeFilter === f ? 'rgba(255,255,255,0.1)' : 'transparent',
+                color: typeFilter === f ? 'white' : 'var(--text-secondary)',
+                border: 'none',
+                cursor: 'pointer',
+                textTransform: 'uppercase',
+                fontWeight: typeFilter === f ? 700 : 400
+              }}
+            >
+              {f === 'changePercent' ? '%' : f}
+            </button>
+          ))}
+        </div>
+
         {topTickers.length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '16px' }}>
             <span style={{ fontSize: '10px', color: 'var(--text-secondary)', width: '100%', marginBottom: '2px' }}>Frequent:</span>
@@ -168,15 +215,25 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {filteredNotifications.map(n => (
+               {filteredNotifications.map(n => (
                 <div 
                   key={n.id} 
+                  onClick={() => {
+                    const ticker = allTickers.find(t => t.symbol === n.symbol);
+                    if (ticker) {
+                      onSelectTicker(ticker);
+                      onClose();
+                    }
+                  }}
                   style={{ 
                     padding: '12px', 
                     background: n.isRead ? 'rgba(255,255,255,0.03)' : 'rgba(99, 102, 241, 0.1)', 
                     border: `1px solid ${n.isRead ? 'var(--border-color)' : 'rgba(99, 102, 241, 0.3)'}`,
-                    borderRadius: '8px'
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    transition: 'transform 0.2s, background 0.2s'
                   }}
+                  className="notification-card"
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                     <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{n.symbol}</span>
@@ -193,6 +250,12 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
             </div>
           )}
         </div>
+        <style>{`
+          .notification-card:hover {
+            background: rgba(255,255,255,0.08) !important;
+            transform: translateY(-2px);
+          }
+        `}</style>
       </div>
     </div>
   );

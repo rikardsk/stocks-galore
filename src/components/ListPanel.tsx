@@ -186,9 +186,10 @@ export const ListPanel: React.FC<ListPanelProps> = ({
               >
                 <div className="ticker-info">
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                     <button 
                       className="btn" 
-                      style={{ padding: '4px', color: ticker.isOwned ? '#f59e0b' : 'var(--text-secondary)', opacity: ticker.isOwned ? 1 : 0.3 }}
+                      style={{ padding: '2px', color: ticker.isOwned ? '#f59e0b' : 'var(--text-secondary)', opacity: ticker.isOwned ? 1 : 0.3 }}
                       onClick={(e) => {
                         e.stopPropagation();
                         const updatedTickers = list.tickers.map(t => 
@@ -198,15 +199,14 @@ export const ListPanel: React.FC<ListPanelProps> = ({
                       }}
                       title={ticker.isOwned ? "Remove from Portfolio" : "Add to Portfolio"}
                     >
-                      <Briefcase size={14} fill={ticker.isOwned ? "#f59e0b" : "none"} />
+                      <Briefcase size={12} fill={ticker.isOwned ? "#f59e0b" : "none"} />
                     </button>
                     <button 
                       className="btn" 
                       style={{ 
-                        padding: '4px', 
+                        padding: '2px', 
                         color: watchlistSymbols.has(ticker.symbol) ? '#6366f1' : 'var(--text-secondary)', 
                         opacity: watchlistSymbols.has(ticker.symbol) ? 1 : 0.3,
-                        marginLeft: '-4px'
                       }}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -214,30 +214,23 @@ export const ListPanel: React.FC<ListPanelProps> = ({
                       }}
                       title={watchlistSymbols.has(ticker.symbol) ? "Remove from Watchlist" : "Add to Watchlist"}
                     >
-                      <Star size={14} fill={watchlistSymbols.has(ticker.symbol) ? "#6366f1" : "none"} />
+                      <Star size={12} fill={watchlistSymbols.has(ticker.symbol) ? "#6366f1" : "none"} />
                     </button>
-                    <button 
-                      className="btn" 
-                      style={{ 
-                        padding: '4px', 
-                        color: expandedTickerDescriptionId === ticker.id ? 'var(--accent)' : 'var(--text-secondary)', 
-                        opacity: expandedTickerDescriptionId === ticker.id ? 1 : 0.3,
-                        marginLeft: '-4px'
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setExpandedTickerDescriptionId(prev => prev === ticker.id ? null : ticker.id);
-                      }}
-                      title="Company Info"
-                    >
-                      <Info size={14} />
-                    </button>
-                    <div onClick={() => onSelectTicker(ticker)} style={{ cursor: 'pointer' }}>
+                  </div>
+                    <div onClick={() => onSelectTicker(ticker)} style={{ cursor: 'pointer', flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
                       <div className="ticker-symbol" style={{ color: ticker.isOwned ? '#f59e0b' : '#fff' }}>{ticker.symbol}</div>
-                      <div className="ticker-name">{ticker.name}</div>
+                      <div className="ticker-name" style={{ 
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                        lineHeight: '1.2',
+                        maxHeight: '2.4em'
+                      }}>{ticker.name}</div>
                     </div>
+                    
                     {ticker.stats.sparkline && (
-                      <div style={{ marginLeft: '4px', opacity: 0.8 }}>
+                      <div style={{ marginLeft: '4px', opacity: 0.8, flexShrink: 0 }}>
                         <Sparkline 
                           data={ticker.stats.sparkline} 
                           color={parseFloat(ticker.stats.changePercent) >= 0 ? '#10b981' : '#ef4444'} 
@@ -245,25 +238,46 @@ export const ListPanel: React.FC<ListPanelProps> = ({
                       </div>
                     )}
                   </div>
+
                   {ticker.name !== 'Unknown Company' && (
-                    <div className="ticker-price-group">
+                    <div className="ticker-price-group" style={{ flexShrink: 0, marginLeft: '8px' }}>
                       <div style={{ fontWeight: 600 }}>${ticker.stats.price}</div>
                       <div className={parseFloat(ticker.stats.change) >= 0 ? 'positive' : 'negative'} style={{ fontSize: '11px' }}>
                         {parseFloat(ticker.stats.change) >= 0 ? '+' : ''}{ticker.stats.change} ({ticker.stats.changePercent})
                       </div>
                     </div>
                   )}
+
                   {ticker.name === 'Unknown Company' && (
-                    <div className="ticker-name" style={{ fontStyle: 'italic', opacity: 0.5 }}>Symbol not found</div>
+                    <div className="ticker-name" style={{ fontStyle: 'italic', opacity: 0.5, flex: 1 }}>Symbol not found</div>
                   )}
                   {ticker.stats.error && (
-                    <div className="negative" style={{ fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <div className="negative" style={{ fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px', flex: 1 }}>
                       <AlertCircle size={12} /> {ticker.stats.error}
                     </div>
                   )}
-                  <button className="btn" style={{ padding: '4px', marginLeft: '8px' }} onClick={() => onRemoveTicker(list.id, ticker.id)}>
-                    <Trash2 size={12} opacity={0.5} />
-                  </button>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginLeft: '8px' }}>
+                    <button className="btn" style={{ padding: '2px', flexShrink: 0 }} onClick={() => onRemoveTicker(list.id, ticker.id)}>
+                      <Trash2 size={12} opacity={0.5} />
+                    </button>
+                    <button 
+                      className="btn" 
+                      style={{ 
+                        padding: '2px', 
+                        color: expandedTickerDescriptionId === ticker.id ? 'var(--accent)' : 'var(--text-secondary)', 
+                        opacity: expandedTickerDescriptionId === ticker.id ? 1 : 0.3,
+                        flexShrink: 0
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setExpandedTickerDescriptionId(prev => prev === ticker.id ? null : ticker.id);
+                      }}
+                      title="Company Info"
+                    >
+                      <Info size={12} />
+                    </button>
+                  </div>
                 </div>
                 
                 {showStats && (
