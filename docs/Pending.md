@@ -1,5 +1,6 @@
 ## TODOs
-- Dark/Light mode
+~~- Dark/Light mode~~
+- In the sidbar in lightmode the text is white on a white background, i assume the text should be black instead
 - Zoom in/out with the mouse scroll wheel
 - Edit Lists/Categories
 - Database integration

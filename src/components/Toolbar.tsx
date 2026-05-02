@@ -22,7 +22,7 @@ interface ToolbarProps {
 export const Toolbar: React.FC<ToolbarProps> = ({ 
   onCreateList, onToggleSidebar, onRefreshAll, onClearWorkbench, isRefreshing, 
   searchQuery, onSearchQueryChange, onOpenFilter, onOpenSettings, onOpenTable, 
-  onOpenNotifications, onOpenAnalytics, onOpenRanking, unreadCount = 0, activeFilterCount = 0 
+  onOpenNotifications, onOpenAnalytics, onOpenRanking, unreadCount = 0, activeFilterCount = 0
 }) => {
   const [isSearchExpanded, setIsSearchExpanded] = React.useState(false);
 
@@ -95,7 +95,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             fontSize: '10px', fontWeight: 'bold', width: '14px', height: '14px', 
             display: 'flex', alignItems: 'center', justifyContent: 'center', 
             borderRadius: '50%',
-            border: '2px solid rgba(30, 30, 35, 1)'
+            border: '2px solid var(--toolbar-border-badge)'
           }}>
             {unreadCount}
           </span>

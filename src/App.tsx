@@ -48,6 +48,7 @@ const App: React.FC = () => {
   const [isRankingOpen, setIsRankingOpen] = useState(false);
   const [selectedDetailTicker, setSelectedDetailTicker] = useState<Ticker | null>(null);
   const [shouldReopenNotifications, setShouldReopenNotifications] = useState(false);
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => (localStorage.getItem('theme') as 'dark' | 'light') || 'dark');
   
   const [newListName, setNewListName] = useState('');
   const [newListColor, setNewListColor] = useState(COLORS[0]);
@@ -167,6 +168,12 @@ const App: React.FC = () => {
     setAlerts(storage.getAlerts());
     setNotifications(storage.getNotifications());
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
 
   // Compute available sectors across all lists for the filter modal
   const availableSectors = React.useMemo(() => {
@@ -730,7 +737,7 @@ const App: React.FC = () => {
   }, [lists]);
 
   return (
-    <div className="app-container">
+    <div className={`app-container ${theme === 'light' ? 'light-theme' : ''}`}>
       <Sidebar 
         lists={lists} 
         groups={groups}
@@ -932,6 +939,8 @@ const App: React.FC = () => {
         refreshInterval={refreshInterval} 
         onRefreshIntervalChange={setRefreshInterval}
         onImportData={handleImportData}
+        theme={theme}
+        onToggleTheme={toggleTheme}
       />
 
       <TableView 
@@ -954,6 +963,7 @@ const App: React.FC = () => {
           }
         }}
         onSelectTicker={setSelectedDetailTicker}
+        theme={theme}
       />
 
       <AnalyticsModal 
@@ -962,6 +972,7 @@ const App: React.FC = () => {
         tickers={allUniqueTickers}
         lists={lists}
         groups={groups}
+        theme={theme}
       />
 
       <RankingModal 
@@ -969,6 +980,7 @@ const App: React.FC = () => {
         onClose={() => setIsRankingOpen(false)} 
         tickers={allUniqueTickers}
         onSelectTicker={setSelectedDetailTicker}
+        theme={theme}
       />
 
       <StockDetailModal 
@@ -990,6 +1002,7 @@ const App: React.FC = () => {
         }}
         onToggleWatchlist={(ticker) => handleToggleWatchlist(ticker)}
         isWatchlisted={selectedDetailTicker ? watchlistSymbols.has(selectedDetailTicker.symbol) : false}
+        theme={theme}
       />
 
       <NotificationsModal 

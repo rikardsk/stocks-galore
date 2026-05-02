@@ -102,7 +102,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           padding: '8px 12px',
           borderRadius: '8px',
           cursor: 'pointer',
-          background: isBigGain ? 'rgba(16, 185, 129, 0.15)' : isBigLoss ? 'rgba(239, 68, 68, 0.15)' : 'rgba(255,255,255,0.03)',
+          background: isBigGain ? 'rgba(16, 185, 129, 0.15)' : isBigLoss ? 'rgba(239, 68, 68, 0.15)' : 'var(--surface-subtle)',
           border: '1px solid transparent',
           transition: 'all 0.2s',
           opacity: list.isVisible ? 1 : 0.5,
@@ -111,7 +111,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         onClick={() => onSelectListItem(list.id)}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          {!list.isProtected && <GripVertical size={12} style={{ color: 'rgba(255,255,255,0.2)' }} />}
+          {!list.isProtected && <GripVertical size={12} style={{ color: 'var(--text-secondary)', opacity: 0.4 }} />}
           <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: list.color }}></div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{ fontSize: '14px', fontWeight: 500 }}>
@@ -130,7 +130,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="item-actions" style={{ display: 'flex', gap: '4px' }}>
           {!list.isProtected && (
             <button className="btn" style={{ padding: '4px' }} onClick={(e) => { e.stopPropagation(); onDeleteList(list.id); }}>
-              <Trash2 size={14} color="rgba(255,255,255,0.4)" />
+              <Trash2 size={14} color="var(--text-secondary)" opacity={0.5} />
             </button>
           )}
         </div>
@@ -208,7 +208,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
             
             {!group.isCollapsed && (
-              <div className="group-content" style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px', borderLeft: '1px solid rgba(255,255,255,0.05)', marginLeft: '16px' }}>
+              <div className="group-content" style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px', borderLeft: '1px solid var(--surface-divider)', marginLeft: '16px' }}>
                 {group.listIds
                   .map(id => lists.find(l => l.id === id))
                   .filter((l): l is StockList => !!l)

@@ -15,6 +15,7 @@ interface TableViewProps {
   onToggleWatchlist: (ticker: Ticker) => void;
   onToggleOwned: (ticker: Ticker) => void;
   onSelectTicker: (ticker: Ticker) => void;
+  theme: 'dark' | 'light';
 }
 
 type SortConfig = {
@@ -33,8 +34,10 @@ export const TableView: React.FC<TableViewProps> = ({
   watchlistSymbols = new Set<string>(), 
   onToggleWatchlist, 
   onToggleOwned,
-  onSelectTicker
+  onSelectTicker,
+  theme = 'dark'
 }) => {
+  const isDark = theme === 'dark';
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'symbol', direction: 'asc' });
   const [selectedGroupId, setSelectedGroupId] = useState<string>('all');
   const [selectedListId, setSelectedListId] = useState<string>('all');
@@ -149,7 +152,8 @@ export const TableView: React.FC<TableViewProps> = ({
           height: '90vh', 
           display: 'flex', 
           flexDirection: 'column',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          background: 'var(--surface-modal)'
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '20px' }}>
@@ -167,7 +171,7 @@ export const TableView: React.FC<TableViewProps> = ({
                   setSelectedListId('all'); // Reset list when group changes
                 }}
                 className="btn"
-                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', padding: '4px 8px' }}
+                style={{ background: 'var(--surface-subtle)', border: '1px solid var(--border-color)', padding: '4px 8px' }}
               >
                 <option value="all">All Groups</option>
                 {groups.map(g => (
@@ -185,7 +189,7 @@ export const TableView: React.FC<TableViewProps> = ({
                   setSelectedGroupId('all'); // Reset group when list changes
                 }}
                 className="btn"
-                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', padding: '4px 8px' }}
+                style={{ background: 'var(--surface-subtle)', border: '1px solid var(--border-color)', padding: '4px 8px' }}
               >
                 <option value="all">All Lists</option>
                 {lists.map(l => (
@@ -201,7 +205,7 @@ export const TableView: React.FC<TableViewProps> = ({
                 fontSize: '12px', 
                 gap: '6px',
                 border: '1px solid var(--border-color)',
-                background: filters.ownedOnly ? 'var(--accent)' : 'rgba(255,255,255,0.05)'
+                background: filters.ownedOnly ? 'var(--accent)' : 'var(--surface-subtle)'
               }}
               onClick={() => {
                 const nextOwnedOnly = !filters.ownedOnly;
@@ -223,7 +227,7 @@ export const TableView: React.FC<TableViewProps> = ({
                 fontSize: '12px', 
                 gap: '6px',
                 border: '1px solid var(--border-color)',
-                background: filters.watchlistOnly ? '#6366f1' : 'rgba(255,255,255,0.05)'
+                background: filters.watchlistOnly ? 'var(--accent)' : 'var(--surface-subtle)'
               }}
               onClick={() => {
                 const nextWatchlistOnly = !filters.watchlistOnly;
@@ -245,7 +249,7 @@ export const TableView: React.FC<TableViewProps> = ({
                 fontSize: '12px', 
                 gap: '6px',
                 border: '1px solid var(--border-color)',
-                background: 'rgba(255,255,255,0.05)'
+                background: 'var(--surface-subtle)'
               }}
               onClick={() => window.print()}
               title="Print current table (first 6 columns)"
@@ -257,9 +261,9 @@ export const TableView: React.FC<TableViewProps> = ({
           <button className="btn no-print" onClick={onClose}><X /></button>
         </div>
 
-        <div style={{ flex: 1, overflow: 'auto', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+        <div style={{ flex: 1, overflow: 'auto', background: 'var(--surface-inset)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-            <thead style={{ position: 'sticky', top: 0, background: '#1c1c21', zIndex: 1 }}>
+            <thead style={{ position: 'sticky', top: 0, background: 'var(--surface-modal)', zIndex: 1 }}>
               <tr>
                 <th onClick={() => requestSort('symbol')} style={thStyle} className="print-col">Symbol {getSortIcon('symbol')}</th>
                 <th onClick={() => requestSort('name')} style={thStyle} className="print-col">Name {getSortIcon('name')}</th>
@@ -312,7 +316,7 @@ export const TableView: React.FC<TableViewProps> = ({
                         >
                           <Briefcase size={12} fill={ticker.isOwned ? "#f59e0b" : "none"} />
                         </button>
-                        <button 
+                         <button 
                           className="btn no-print" 
                           style={{ 
                             padding: '2px', 
@@ -325,7 +329,7 @@ export const TableView: React.FC<TableViewProps> = ({
                           <Star size={12} fill={watchlistSymbols.has(ticker.symbol) ? "#6366f1" : "none"} />
                         </button>
                         <strong 
-                          style={{ marginLeft: '4px', cursor: 'pointer', color: ticker.isOwned ? '#f59e0b' : '#fff' }}
+                          style={{ marginLeft: '4px', cursor: 'pointer', color: ticker.isOwned ? '#f59e0b' : 'var(--text-primary)' }}
                           onClick={() => onSelectTicker(ticker)}
                         >
                           {ticker.symbol}
@@ -375,6 +379,6 @@ const thStyle: React.CSSProperties = {
 
 const tdStyle: React.CSSProperties = {
   padding: '10px 16px',
-  borderBottom: '1px solid rgba(255,255,255,0.05)',
+  borderBottom: '1px solid var(--surface-divider)',
   whiteSpace: 'nowrap'
 };

@@ -9,6 +9,7 @@ interface AnalyticsModalProps {
   tickers: Ticker[];
   lists: StockList[];
   groups: ListGroup[];
+  theme?: 'dark' | 'light';
 }
 
 const BUCKETS = [
@@ -29,6 +30,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
   tickers,
   lists,
   groups,
+  theme = 'dark',
 }) => {
   const [selectedGroupId, setSelectedGroupId] = useState<string>('all');
   const [selectedListId, setSelectedListId] = useState<string>('all');
@@ -128,7 +130,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '1000px', width: '95%', maxHeight: '90vh', overflowY: 'auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', position: 'sticky', top: 0, background: '#1c1c21', zIndex: 10, paddingBottom: '10px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', position: 'sticky', top: 0, background: 'var(--surface-modal)', zIndex: 10, paddingBottom: '10px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <BarChart2 size={24} color="var(--accent)" />
             <h2 style={{ margin: 0 }}>Portfolio Analytics</h2>
@@ -146,7 +148,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                 setSelectedListId('all');
               }}
               className="btn"
-              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', padding: '6px 12px' }}
+              style={{ background: 'var(--surface-subtle)', border: '1px solid var(--border-color)', padding: '6px 12px' }}
             >
               <option value="all">All Groups</option>
               {groups.map(g => (
@@ -164,7 +166,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                 setSelectedGroupId('all');
               }}
               className="btn"
-              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', padding: '6px 12px' }}
+              style={{ background: 'var(--surface-subtle)', border: '1px solid var(--border-color)', padding: '6px 12px' }}
             >
               <option value="all">All Lists</option>
               {lists.map(l => (
@@ -208,11 +210,11 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                 <Info size={14} />
               </div>
             </h3>
-            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '30px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+            <div style={{ background: 'var(--surface-inset)', padding: '30px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
               <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', height: '200px', marginBottom: '40px', position: 'relative' }}>
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', pointerEvents: 'none' }}>
                   {[0, 0.2, 0.4, 0.6, 0.8, 1].map(p => (
-                    <div key={p} style={{ borderTop: '1px solid rgba(255,255,255,0.05)', width: '100%', position: 'relative' }}>
+                    <div key={p} style={{ borderTop: '1px solid var(--surface-divider)', width: '100%', position: 'relative' }}>
                       <span style={{ position: 'absolute', left: '-30px', top: '-7px', fontSize: '10px', color: 'var(--text-secondary)' }}>
                         {Math.round(chartMax * (1 - p))}
                       </span>
@@ -244,11 +246,11 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                 <PieChart size={16} />
               </div>
             </h3>
-            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '30px', borderRadius: '12px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '30px', minHeight: '312px' }}>
+            <div style={{ background: 'var(--surface-inset)', padding: '30px', borderRadius: '12px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '30px', minHeight: '312px' }}>
               <div style={{ position: 'relative', width: '180px', height: '180px', flexShrink: 0 }}>
                 <svg viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)', width: '100%', height: '100%' }}>
                   {sectorData.length === 0 ? (
-                    <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="12" />
+                    <circle cx="50" cy="50" r="40" fill="none" stroke="var(--surface-divider)" strokeWidth="12" />
                   ) : (
                     sectorData.map((s, i) => {
                       const totalPercentBefore = sectorData.slice(0, i).reduce((sum, item) => sum + item.percent, 0);
@@ -292,7 +294,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
 
         <style>{`
           .stat-card {
-            background: rgba(255,255,255,0.03);
+            background: var(--surface-subtle);
             padding: 16px;
             border-radius: 12px;
             border: 1px solid var(--border-color);
@@ -305,7 +307,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
           .histogram-bar:hover { opacity: 1 !important; filter: brightness(1.2); cursor: pointer; }
           .bar-value { position: absolute; top: -24px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: 600; color: var(--accent); }
           ::-webkit-scrollbar { width: 6px; }
-          ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+          ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 10px; }
         `}</style>
       </div>
     </div>

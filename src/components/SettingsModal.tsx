@@ -1,4 +1,4 @@
-import React from 'react';
+import { Sun, Moon } from 'lucide-react';
 
 export type RefreshInterval = 'manual' | '1m' | '5m' | '15m';
 
@@ -8,6 +8,8 @@ interface SettingsModalProps {
   refreshInterval: RefreshInterval;
   onRefreshIntervalChange: (interval: RefreshInterval) => void;
   onImportData: (data: any) => void;
+  theme: 'dark' | 'light';
+  onToggleTheme: () => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -15,7 +17,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onClose,
   refreshInterval,
   onRefreshIntervalChange,
-  onImportData
+  onImportData,
+  theme,
+  onToggleTheme
 }) => {
   if (!isOpen) return null;
 
@@ -40,15 +44,51 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
         </div>
 
-        <div className="input-group" style={{ marginTop: '24px', opacity: 0.5 }}>
-          <label>Theme Preferences (Coming Soon)</label>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', margin: 0 }}>
-              <input type="radio" checked readOnly/> Dark Mode
-            </label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'not-allowed', margin: 0 }}>
-              <input type="radio" disabled/> Light Mode
-            </label>
+        <div className="input-group" style={{ marginTop: '24px' }}>
+          <label style={{ marginBottom: '12px', display: 'block' }}>Theme Preferences</label>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button
+              onClick={() => theme !== 'dark' && onToggleTheme()}
+              style={{
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                padding: '10px',
+                borderRadius: '10px',
+                border: `2px solid ${theme === 'dark' ? 'var(--accent)' : 'var(--border-color)'}`,
+                background: theme === 'dark' ? 'rgba(99, 102, 241, 0.1)' : 'var(--surface-subtle)',
+                color: theme === 'dark' ? 'var(--accent)' : 'var(--text-secondary)',
+                cursor: 'pointer',
+                fontSize: '13px',
+                fontWeight: theme === 'dark' ? 700 : 400,
+                transition: 'all 0.2s'
+              }}
+            >
+              <Moon size={16} /> Dark
+            </button>
+            <button
+              onClick={() => theme !== 'light' && onToggleTheme()}
+              style={{
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                padding: '10px',
+                borderRadius: '10px',
+                border: `2px solid ${theme === 'light' ? 'var(--accent)' : 'var(--border-color)'}`,
+                background: theme === 'light' ? 'rgba(99, 102, 241, 0.1)' : 'var(--surface-subtle)',
+                color: theme === 'light' ? 'var(--accent)' : 'var(--text-secondary)',
+                cursor: 'pointer',
+                fontSize: '13px',
+                fontWeight: theme === 'light' ? 700 : 400,
+                transition: 'all 0.2s'
+              }}
+            >
+              <Sun size={16} /> Light
+            </button>
           </div>
         </div>
 

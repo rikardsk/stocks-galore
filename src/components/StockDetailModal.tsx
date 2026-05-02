@@ -13,6 +13,7 @@ interface StockDetailModalProps {
   onToggleOwned: (ticker: Ticker) => void;
   onToggleWatchlist: (ticker: Ticker) => void;
   isWatchlisted: boolean;
+  theme: 'dark' | 'light';
 }
 
 const TIMEFRAMES = [
@@ -31,26 +32,45 @@ const Candlestick = (props: any) => {
   const isPositive = close >= open;
   const color = isPositive ? '#10b981' : '#ef4444';
   
-  // Calculate relative positions within the 350px height chart
-  // This is a simplified version, recharts handles the mapping to y/height
-  // but we need to draw the wick relative to the body.
-  
   return (
     <g>
       <rect x={x} y={y} width={width} height={Math.max(height, 1)} fill={color} />
-      {/* We need to be careful with the wick, but for a fast implementation, the body shows the range */}
     </g>
   );
 };
 
 export const StockDetailModal: React.FC<StockDetailModalProps> = ({ 
-  ticker, isOpen, onClose, onToggleOwned, onToggleWatchlist, isWatchlisted 
+  ticker, isOpen, onClose, onToggleOwned, onToggleWatchlist, isWatchlisted, theme 
 }) => {
   const [history, setHistory] = useState<any[]>([]);
   const [timeframe, setTimeframe] = useState('1y');
   const [chartType, setChartType] = useState<'line' | 'candle'>('line');
   const [showVolume, setShowVolume] = useState(false);
+  const [indicators, setIndicators] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  const historyWithSMAs = useMemo(() => {
+    if (history.length === 0) return [];
+    
+    const calculateSMA = (data: any[], period: number) => {
+      const result = [...data];
+      for (let i = 0; i < result.length; i++) {
+        if (i < period - 1) {
+          result[i][`sma${period}`] = null;
+          continue;
+        }
+        const sum = result.slice(i - period + 1, i + 1).reduce((acc, curr) => acc + curr.price, 0);
+        result[i][`sma${period}`] = parseFloat((sum / period).toFixed(2));
+      }
+      return result;
+    };
+
+    let enriched = [...history];
+    enriched = calculateSMA(enriched, 20);
+    enriched = calculateSMA(enriched, 50);
+    enriched = calculateSMA(enriched, 200);
+    return enriched;
+  }, [history]);
 
   useEffect(() => {
     if (isOpen && ticker) {
@@ -81,14 +101,16 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
 
   if (!isOpen || !ticker) return null;
 
+  const isDark = theme === 'dark';
+
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal stock-detail-modal" onClick={e => e.stopPropagation()}>
+      <div className="modal stock-detail-modal" onClick={e => e.stopPropagation()} style={{ background: 'var(--surface-modal)' }}>
         {/* Header */}
         <div className="detail-header">
           <div className="header-left">
             <div className="symbol-row">
-              <h1 className="detail-symbol">{ticker.symbol}</h1>
+              <h1 className="detail-symbol" style={{ color: 'var(--text-primary)' }}>{ticker.symbol}</h1>
               <div className="header-actions">
                 <button 
                   className={`action-btn ${ticker.isOwned ? 'active' : ''}`}
@@ -109,7 +131,7 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
             <p className="detail-name">{ticker.name} • {ticker.stats.sector}</p>
           </div>
           <div className="header-right">
-            <div className="detail-price">${ticker.stats.price}</div>
+            <div className="detail-price" style={{ color: 'var(--text-primary)' }}>${ticker.stats.price}</div>
             <div className={`detail-change ${parseFloat(ticker.stats.change) >= 0 ? 'positive' : 'negative'}`}>
               {parseFloat(ticker.stats.change) >= 0 ? '+' : ''}{ticker.stats.change} ({ticker.stats.changePercent})
             </div>
@@ -132,7 +154,7 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
             {isLoading && <div className="loader-mini" />}
           </div>
           
-          <div className="type-selector">
+          <div className="type-selector" style={{ background: 'var(--surface-inset)' }}>
             <button 
               className={`type-btn ${chartType === 'line' ? 'active' : ''}`}
               onClick={() => setChartType('line')}
@@ -153,20 +175,31 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
             >
               {showVolume ? <Eye size={12} /> : <EyeOff size={12} />}
             </button>
+            <div style={{ width: '1px', background: 'var(--border-color)', margin: '4px 8px' }} />
+            {(['20', '50', '200'] as const).map(period => (
+              <button 
+                key={period}
+                className={`type-btn ${indicators.includes(period) ? 'active' : ''}`}
+                style={{ color: indicators.includes(period) ? (period === '20' ? '#6366f1' : period === '50' ? '#f59e0b' : '#8b5cf6') : 'var(--text-secondary)' }}
+                onClick={() => setIndicators(prev => prev.includes(period) ? prev.filter(p => p !== period) : [...prev, period])}
+              >
+                SMA{period}
+              </button>
+            ))}
           </div>
         </div>
 
         {/* Chart Area */}
         <div className="chart-container">
           <ResponsiveContainer width="100%" height={350}>
-            <ComposedChart data={history}>
+            <ComposedChart data={historyWithSMAs}>
               <defs>
                 <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor={chartColor} stopOpacity={0.3}/>
                   <stop offset="95%" stopColor={chartColor} stopOpacity={0}/>
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--surface-divider)" />
               <XAxis 
                 dataKey="date" 
                 axisLine={false} 
@@ -187,8 +220,8 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
                 hide={true}
               />
               <Tooltip 
-                contentStyle={{ background: '#1c1c21', border: '1px solid var(--border-color)', borderRadius: '8px' }}
-                itemStyle={{ color: '#fff', fontSize: '12px' }}
+                contentStyle={{ background: 'var(--surface-modal)', border: '1px solid var(--border-color)', borderRadius: '8px' }}
+                itemStyle={{ color: 'var(--text-primary)', fontSize: '12px' }}
                 labelStyle={{ color: 'var(--text-secondary)', marginBottom: '4px', fontSize: '10px' }}
               />
               {chartType === 'line' ? (
@@ -200,34 +233,38 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
                   shape={<Candlestick />}
                 />
               )}
-              {showVolume && <Bar yAxisId="volume" dataKey="volume" fill="rgba(255,255,255,0.1)" barSize={4} />}
+              {showVolume && <Bar yAxisId="volume" dataKey="volume" fill="var(--surface-hover)" barSize={4} />}
+              
+              {indicators.includes('20') && <Line yAxisId="price" type="monotone" dataKey="sma20" stroke="#6366f1" strokeWidth={1.5} dot={false} strokeDasharray="5 5" />}
+              {indicators.includes('50') && <Line yAxisId="price" type="monotone" dataKey="sma50" stroke="#f59e0b" strokeWidth={1.5} dot={false} />}
+              {indicators.includes('200') && <Line yAxisId="price" type="monotone" dataKey="sma200" stroke="#8b5cf6" strokeWidth={1.5} dot={false} />}
             </ComposedChart>
           </ResponsiveContainer>
         </div>
 
         {/* Stats Grid */}
         <div className="detail-stats-grid">
-          <div className="stat-box">
+          <div className="stat-box" style={{ background: 'var(--surface-subtle)' }}>
             <span className="stat-label">Market Cap</span>
-            <span className="stat-value">{ticker.stats.marketCap}</span>
+            <span className="stat-value" style={{ color: 'var(--text-primary)' }}>{ticker.stats.marketCap}</span>
           </div>
-          <div className="stat-box">
+          <div className="stat-box" style={{ background: 'var(--surface-subtle)' }}>
             <span className="stat-label">P/E Ratio</span>
-            <span className="stat-value">{ticker.stats.pe || 'N/A'}</span>
+            <span className="stat-value" style={{ color: 'var(--text-primary)' }}>{ticker.stats.pe || 'N/A'}</span>
           </div>
-          <div className="stat-box">
+          <div className="stat-box" style={{ background: 'var(--surface-subtle)' }}>
             <span className="stat-label">Avg Volume</span>
-            <span className="stat-value">{ticker.stats.avgVolume}</span>
+            <span className="stat-value" style={{ color: 'var(--text-primary)' }}>{ticker.stats.avgVolume}</span>
           </div>
-          <div className="stat-box">
+          <div className="stat-box" style={{ background: 'var(--surface-subtle)' }}>
             <span className="stat-label">Dividend Yield</span>
             <span className="stat-value" style={{ color: '#f59e0b' }}>{ticker.stats.dividendYield ? ticker.stats.dividendYield.toFixed(2) + '%' : '0.00%'}</span>
           </div>
-          <div className="stat-box" style={{ gridColumn: 'span 2' }}>
+          <div className="stat-box" style={{ gridColumn: 'span 2', background: 'var(--surface-subtle)' }}>
             <span className="stat-label">52 Week Range</span>
             <div className="range-bar-container">
               <span className="range-val">${ticker.stats.low52 || '0.00'}</span>
-              <div className="range-track">
+              <div className="range-track" style={{ background: 'var(--surface-hover)' }}>
                 {ticker.stats.low52 && ticker.stats.high52 && (
                   <div 
                     className="range-current" 
@@ -243,8 +280,8 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
         </div>
 
         {/* Description */}
-        <div className="detail-description">
-          <h3>About Company</h3>
+        <div className="detail-description" style={{ background: 'var(--surface-inset)' }}>
+          <h3 style={{ color: 'var(--text-primary)' }}>About Company</h3>
           <p>{ticker.stats.description}</p>
         </div>
 
@@ -255,7 +292,8 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
             max-height: 90vh;
             overflow-y: auto;
             padding: 0;
-            background: #15151a;
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
           }
           .detail-header {
             padding: 30px;
@@ -265,48 +303,48 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
             border-bottom: 1px solid var(--border-color);
             position: relative;
           }
-          .symbol-row { display: flex; alignItems: center; gap: 15px; margin-bottom: 8px; }
+          .symbol-row { display: flex; align-items: center; gap: 15px; margin-bottom: 8px; }
           .detail-symbol { font-size: 32px; font-weight: 800; margin: 0; letter-spacing: -1px; }
           .detail-name { color: var(--text-secondary); margin: 0; font-size: 14px; }
           .header-right { text-align: right; }
           .detail-price { font-size: 32px; font-weight: 700; margin-bottom: 4px; }
           .detail-change { font-size: 16px; font-weight: 600; }
           .close-btn { position: absolute; top: 20px; right: 20px; background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: 8px; border-radius: 50%; transition: all 0.2s; }
-          .close-btn:hover { background: rgba(255,255,255,0.05); color: #fff; }
+          .close-btn:hover { background: var(--surface-hover); color: var(--text-primary); }
           
           .header-actions { display: flex; gap: 8px; }
-          .action-btn { background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); color: var(--text-secondary); padding: 8px; border-radius: 8px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
-          .action-btn:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); }
+          .action-btn { background: var(--surface-subtle); border: 1px solid var(--border-color); color: var(--text-secondary); padding: 8px; border-radius: 8px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+          .action-btn:hover { background: var(--surface-hover); border-color: var(--border-color); }
           .action-btn.active { color: #f59e0b; border-color: rgba(245, 158, 11, 0.3); background: rgba(245, 158, 11, 0.05); }
           .action-btn.active-star { color: #6366f1; border-color: rgba(99, 102, 241, 0.3); background: rgba(99, 102, 241, 0.05); }
+          .type-btn.active { color: var(--text-primary) !important; background: var(--surface-hover) !important; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
 
-          .timeframe-selector { padding: 15px 30px; display: flex; gap: 10px; align-items: center; border-bottom: 1px solid var(--border-color); background: rgba(255,255,255,0.01); }
+          .timeframe-selector { padding: 15px 30px; display: flex; gap: 10px; align-items: center; border-bottom: 1px solid var(--border-color); background: var(--surface-subtle); }
           .tf-btn { background: none; border: 1px solid transparent; color: var(--text-secondary); padding: 4px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; }
-          .tf-btn:hover { color: #fff; background: rgba(255,255,255,0.05); }
-          .tf-btn.active { color: var(--accent); background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.2); }
+          .tf-btn:hover { color: var(--text-primary); background: var(--surface-hover); }
+          .tf-btn.active { color: var(--accent); background: rgba(99, 102, 241, 0.1); border-color: rgba(99, 102, 241, 0.2); }
 
-          .chart-controls { padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); background: rgba(255,255,255,0.01); }
-          .type-selector { display: flex; background: rgba(0,0,0,0.2); padding: 4px; border-radius: 8px; border: 1px solid var(--border-color); }
+          .chart-controls { padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); background: var(--surface-subtle); }
+          .type-selector { display: flex; padding: 4px; border-radius: 8px; border: 1px solid var(--border-color); }
           .type-btn { background: none; border: none; color: var(--text-secondary); padding: 4px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 600; transition: all 0.2s; }
-          .type-btn.active { color: #fff; background: rgba(255,255,255,0.1); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
 
           .chart-container { padding: 30px; }
           
           .detail-stats-grid { padding: 0 30px 30px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
-          .stat-box { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 4px; }
+          .stat-box { padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 4px; }
           .stat-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
-          .stat-value { font-size: 18px; font-weight: 600; color: #fff; }
+          .stat-value { font-size: 18px; font-weight: 600; }
 
           .range-bar-container { display: flex; align-items: center; gap: 10px; margin-top: 5px; }
           .range-val { font-size: 12px; color: var(--text-secondary); min-width: 50px; }
-          .range-track { flex: 1; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; position: relative; }
+          .range-track { flex: 1; height: 4px; border-radius: 2px; position: relative; }
           .range-current { position: absolute; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; top: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 8px var(--accent); }
 
-          .detail-description { padding: 30px; border-top: 1px solid var(--border-color); background: rgba(0,0,0,0.1); }
+          .detail-description { padding: 30px; border-top: 1px solid var(--border-color); }
           .detail-description h3 { margin: 0 0 15px; font-size: 16px; font-weight: 600; }
           .detail-description p { margin: 0; font-size: 14px; line-height: 1.6; color: var(--text-secondary); }
 
-          .loader-mini { width: 12px; height: 12px; border: 2px solid rgba(255,255,255,0.1); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
+          .loader-mini { width: 12px; height: 12px; border: 2px solid var(--surface-hover); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
           @keyframes spin { to { transform: rotate(360deg); } }
         `}</style>
       </div>

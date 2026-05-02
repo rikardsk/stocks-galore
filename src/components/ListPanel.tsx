@@ -218,7 +218,7 @@ export const ListPanel: React.FC<ListPanelProps> = ({
                     </button>
                   </div>
                     <div onClick={() => onSelectTicker(ticker)} style={{ cursor: 'pointer', flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-                      <div className="ticker-symbol" style={{ color: ticker.isOwned ? '#f59e0b' : '#fff' }}>{ticker.symbol}</div>
+                      <div className="ticker-symbol" style={{ color: ticker.isOwned ? '#f59e0b' : 'var(--text-primary)' }}>{ticker.symbol}</div>
                       <div className="ticker-name" style={{ 
                         display: '-webkit-box',
                         WebkitLineClamp: 2,
@@ -306,7 +306,7 @@ export const ListPanel: React.FC<ListPanelProps> = ({
                     </div>
                     {ticker.stats.sma10 !== undefined && (
                       <>
-                        <div className="stat-row" style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '4px' }}>
+                        <div className="stat-row" style={{ borderTop: '1px solid var(--surface-divider)', paddingTop: '4px' }}>
                           {[10, 20, 50, 100, 200].map(period => {
                             const smaKey = `sma${period}` as keyof typeof ticker.stats;
                             const smaVal = ticker.stats[smaKey] as number | undefined;
@@ -337,7 +337,7 @@ export const ListPanel: React.FC<ListPanelProps> = ({
                             );
                           })}
                         </div>
-                        <div className="stat-row" style={{ paddingBottom: '4px', borderTop: '1px solid rgba(255,255,255,0.02)', paddingTop: '4px' }}>
+                        <div className="stat-row" style={{ paddingBottom: '4px', borderTop: '1px solid var(--surface-divider)', paddingTop: '4px' }}>
                           {[10, 20, 50, 100, 200].map(period => {
                             const smaKey = `sma${period}` as keyof typeof ticker.stats;
                             const smaVal = ticker.stats[smaKey] as number | undefined;
@@ -386,7 +386,7 @@ export const ListPanel: React.FC<ListPanelProps> = ({
                     fontSize: '11px', 
                     lineHeight: '1.5', 
                     color: 'var(--text-secondary)', 
-                    background: 'rgba(0,0,0,0.2)', 
+                    background: 'var(--surface-inset)', 
                     borderRadius: '8px',
                     margin: '8px',
                     borderLeft: '2px solid var(--accent)'
@@ -402,17 +402,17 @@ export const ListPanel: React.FC<ListPanelProps> = ({
           </div>
         )}
 
-        <div style={{ display: 'flex', gap: '8px', padding: '8px', background: 'rgba(0,0,0,0.1)', borderTop: '1px solid rgba(255,255,255,0.05)', borderRadius: '0 0 12px 12px' }}>
+        <div style={{ display: 'flex', gap: '8px', padding: '8px', background: 'var(--surface-inset)', borderTop: '1px solid var(--surface-divider)', borderRadius: '0 0 12px 12px' }}>
           <button 
             className="btn" 
-            style={{ flex: 1, padding: '10px', color: 'var(--text-secondary)', gap: '8px', fontSize: '13px', background: 'rgba(255,255,255,0.03)' }}
+            style={{ flex: 1, padding: '10px', color: 'var(--text-secondary)', gap: '8px', fontSize: '13px', background: 'var(--surface-subtle)' }}
             onClick={() => onAddTicker(list.id)}
           >
             <Plus size={14} /> Add Ticker
           </button>
           <button 
             className="btn" 
-            style={{ padding: '10px', color: 'var(--text-secondary)', background: 'rgba(255,255,255,0.03)' }}
+            style={{ padding: '10px', color: 'var(--text-secondary)', background: 'var(--surface-subtle)' }}
             onClick={handleToggleCollapse}
             title={isCollapsed ? "Expand" : "Minimize"}
           >

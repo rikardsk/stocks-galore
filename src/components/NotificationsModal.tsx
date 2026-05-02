@@ -110,16 +110,16 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
               onChange={e => setSearchQuery(e.target.value)}
               style={{ 
                 width: '100%', 
-                background: 'rgba(255,255,255,0.05)', 
+                background: 'var(--surface-subtle)', 
                 border: '1px solid var(--border-color)', 
                 borderRadius: '8px',
                 padding: '8px 8px 8px 30px',
                 fontSize: '12px',
-                color: 'white'
+                color: 'var(--text-primary)'
               }}
             />
           </div>
-          <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', padding: '2px', border: '1px solid var(--border-color)' }}>
+          <div style={{ display: 'flex', background: 'var(--surface-subtle)', borderRadius: '8px', padding: '2px', border: '1px solid var(--border-color)' }}>
             {(['today', 'week', 'all'] as const).map(f => (
               <button 
                 key={f}
@@ -141,7 +141,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
           </div>
         </div>
 
-        <div style={{ display: 'flex', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '2px', border: '1px solid var(--border-color)', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', background: 'var(--surface-subtle)', borderRadius: '8px', padding: '2px', border: '1px solid var(--border-color)', marginBottom: '16px' }}>
           {(['all', 'price', 'changePercent', 'crossover'] as const).map(f => (
             <button 
               key={f}
@@ -151,8 +151,8 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                 padding: '4px 2px', 
                 fontSize: '9px', 
                 borderRadius: '6px',
-                background: typeFilter === f ? 'rgba(255,255,255,0.1)' : 'transparent',
-                color: typeFilter === f ? 'white' : 'var(--text-secondary)',
+                background: typeFilter === f ? 'var(--surface-hover)' : 'transparent',
+                color: typeFilter === f ? 'var(--text-primary)' : 'var(--text-secondary)',
                 border: 'none',
                 cursor: 'pointer',
                 textTransform: 'uppercase',
@@ -175,7 +175,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                   padding: '2px 8px',
                   fontSize: '10px',
                   borderRadius: '100px',
-                  background: searchQuery === symbol ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
+                  background: searchQuery === symbol ? 'var(--accent)' : 'var(--surface-subtle)',
                   border: `1px solid ${searchQuery === symbol ? 'var(--accent)' : 'var(--border-color)'}`,
                   color: searchQuery === symbol ? 'white' : 'var(--text-secondary)',
                   cursor: 'pointer',
@@ -227,7 +227,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                   }}
                   style={{ 
                     padding: '12px', 
-                    background: n.isRead ? 'rgba(255,255,255,0.03)' : 'rgba(99, 102, 241, 0.1)', 
+                    background: n.isRead ? 'var(--surface-subtle)' : 'rgba(99, 102, 241, 0.1)', 
                     border: `1px solid ${n.isRead ? 'var(--border-color)' : 'rgba(99, 102, 241, 0.3)'}`,
                     borderRadius: '8px',
                     cursor: 'pointer',
@@ -252,7 +252,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
         </div>
         <style>{`
           .notification-card:hover {
-            background: rgba(255,255,255,0.08) !important;
+            background: var(--surface-hover) !important;
             transform: translateY(-2px);
           }
         `}</style>

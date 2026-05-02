@@ -47,7 +47,7 @@ export const AlertsModal: React.FC<AlertsModalProps> = ({
           <button className="btn" onClick={onClose}><X size={20} /></button>
         </div>
 
-        <div className="input-group" style={{ background: 'rgba(255,255,255,0.03)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+        <div className="input-group" style={{ background: 'var(--surface-subtle)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
           <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
             <input 
               type="text" 
@@ -98,7 +98,7 @@ export const AlertsModal: React.FC<AlertsModalProps> = ({
                     justifyContent: 'space-between', 
                     alignItems: 'center', 
                     padding: '10px 12px', 
-                    background: 'rgba(255,255,255,0.02)', 
+                    background: 'var(--surface-subtle)', 
                     borderRadius: '8px',
                     border: '1px solid var(--border-color)'
                   }}
