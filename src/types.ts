@@ -29,6 +29,7 @@ export type Ticker = {
     avgVolume?: string;
   };
   isOwned?: boolean;
+  badges?: string[];
 };
 
 export type StockList = {

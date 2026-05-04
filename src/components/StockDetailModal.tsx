@@ -12,6 +12,7 @@ interface StockDetailModalProps {
   onClose: () => void;
   onToggleOwned: (ticker: Ticker) => void;
   onToggleWatchlist: (ticker: Ticker) => void;
+  onUpdateBadges?: (ticker: Ticker, badges: string[]) => void;
   isWatchlisted: boolean;
   theme: 'dark' | 'light';
 }
@@ -40,7 +41,7 @@ const Candlestick = (props: any) => {
 };
 
 export const StockDetailModal: React.FC<StockDetailModalProps> = ({ 
-  ticker, isOpen, onClose, onToggleOwned, onToggleWatchlist, isWatchlisted, theme 
+  ticker, isOpen, onClose, onToggleOwned, onToggleWatchlist, onUpdateBadges, isWatchlisted, theme 
 }) => {
   const [history, setHistory] = useState<any[]>([]);
   const [timeframe, setTimeframe] = useState('1y');
@@ -48,6 +49,33 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
   const [showVolume, setShowVolume] = useState(false);
   const [indicators, setIndicators] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [badges, setBadges] = useState<string[]>([]);
+  const [newBadge, setNewBadge] = useState('');
+
+  useEffect(() => {
+    if (ticker) {
+      setBadges(ticker.badges || []);
+    }
+  }, [ticker]);
+
+  const handleAddBadge = (e?: React.KeyboardEvent) => {
+    if (e && e.key !== 'Enter') return;
+    if (e) e.preventDefault();
+    if (newBadge.trim()) {
+      const updated = [...badges, newBadge.trim().toUpperCase()];
+      setBadges(updated);
+      setNewBadge('');
+      if (onUpdateBadges && ticker) onUpdateBadges(ticker, updated);
+    }
+  };
+
+
+
+  const handleRemoveBadge = (badgeToRemove: string) => {
+    const updated = badges.filter(b => b !== badgeToRemove);
+    setBadges(updated);
+    if (onUpdateBadges && ticker) onUpdateBadges(ticker, updated);
+  };
 
   const historyWithSMAs = useMemo(() => {
     if (history.length === 0) return [];
@@ -279,10 +307,55 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
           </div>
         </div>
 
-        {/* Description */}
+        {/* Description & Badges */}
         <div className="detail-description" style={{ background: 'var(--surface-inset)' }}>
           <h3 style={{ color: 'var(--text-primary)' }}>About Company</h3>
           <p>{ticker.stats.description}</p>
+          
+          <div style={{ marginTop: '24px' }}>
+            <h3 style={{ color: 'var(--text-primary)', fontSize: '14px', marginBottom: '12px' }}>Custom Badges (Press Enter to add)</h3>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+              {badges.map((badge, idx) => (
+                <div key={idx} style={{ 
+                  display: 'flex', alignItems: 'center', gap: '6px', 
+                  background: 'var(--accent)', color: 'white', 
+                  padding: '4px 10px', borderRadius: '100px', fontSize: '11px', fontWeight: 600 
+                }}>
+                  {badge}
+                  <button 
+                    onClick={() => handleRemoveBadge(badge)}
+                    style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', opacity: 0.8, padding: 0 }}
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              ))}
+              <div style={{ display: 'flex', gap: '4px' }}>
+                <input 
+                  type="text" 
+                  value={newBadge}
+                  onChange={e => setNewBadge(e.target.value)}
+                  onKeyDown={handleAddBadge}
+                  placeholder="Add tag... (e.g. EB, EM)"
+                  style={{ 
+                    background: 'var(--surface-subtle)', border: '1px solid var(--border-color)', 
+                    color: 'var(--text-primary)', padding: '6px 12px', borderRadius: '100px', 
+                    fontSize: '12px', outline: 'none', width: '150px' 
+                  }}
+                />
+                <button 
+                  onClick={() => handleAddBadge()}
+                  style={{ 
+                    background: 'var(--surface-hover)', border: '1px solid var(--border-color)', 
+                    color: 'var(--text-primary)', padding: '6px 12px', borderRadius: '100px', 
+                    fontSize: '12px', cursor: 'pointer', fontWeight: 600
+                  }}
+                >
+                  Add
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <style>{`

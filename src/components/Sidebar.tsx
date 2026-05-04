@@ -75,7 +75,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0, overflow: 'hidden' }}>
           <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: list.color, flexShrink: 0 }}></div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0, flex: 1, overflow: 'hidden' }}>
-            <span style={{ fontSize: '14px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <span 
+              style={{ fontSize: '14px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+              title={list.name}
+            >
               {list.country && COUNTRY_FLAGS[list.country]} {list.name}
             </span>
             <span style={{ opacity: 0.5, fontSize: '12px', flexShrink: 0 }}>({list.tickers.length})</span>

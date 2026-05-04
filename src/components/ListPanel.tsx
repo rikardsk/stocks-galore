@@ -236,8 +236,25 @@ export const ListPanel: React.FC<ListPanelProps> = ({
                       <Star size={12} fill={watchlistSymbols.has(ticker.symbol) ? "#6366f1" : "none"} />
                     </button>
                   </div>
-                    <div onClick={() => onSelectTicker(ticker)} style={{ cursor: 'pointer', flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-                      <div className="ticker-symbol" style={{ color: ticker.isOwned ? '#f59e0b' : 'var(--text-primary)' }}>{ticker.symbol}</div>
+                    <div onClick={() => onSelectTicker(ticker)} style={{ cursor: 'pointer', flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', position: 'relative' }}>
+                      {ticker.badges && ticker.badges.length > 0 && (
+                        <div style={{ position: 'absolute', top: '-10px', left: '0', display: 'flex', gap: '3px', zIndex: 1 }}>
+                          {ticker.badges.map((badge, idx) => (
+                            <span key={idx} style={{ 
+                              background: 'var(--accent)', color: 'white', 
+                              padding: '1px 4px', borderRadius: '4px', 
+                              fontSize: '8px', fontWeight: 700,
+                              boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                              letterSpacing: '0.5px'
+                            }} title="Custom tag">
+                              {badge}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      <div className="ticker-symbol" style={{ color: ticker.isOwned ? '#f59e0b' : 'var(--text-primary)' }}>
+                        {ticker.symbol}
+                      </div>
                       <div className="ticker-name" style={{ 
                         display: '-webkit-box',
                         WebkitLineClamp: 2,

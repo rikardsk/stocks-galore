@@ -1022,6 +1022,13 @@ const App: React.FC = () => {
           })));
         }}
         onToggleWatchlist={(ticker) => handleToggleWatchlist(ticker)}
+        onUpdateBadges={(ticker, badges) => {
+          setLists(prevLists => prevLists.map(l => ({
+            ...l,
+            tickers: l.tickers.map(t => t.symbol === ticker.symbol ? { ...t, badges } : t)
+          })));
+          setSelectedDetailTicker(prev => prev && prev.symbol === ticker.symbol ? { ...prev, badges } : prev);
+        }}
         isWatchlisted={selectedDetailTicker ? watchlistSymbols.has(selectedDetailTicker.symbol) : false}
         theme={theme}
       />
