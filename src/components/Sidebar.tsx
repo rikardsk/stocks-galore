@@ -72,33 +72,35 @@ export const Sidebar: React.FC<SidebarProps> = ({
         }}
         onClick={() => onSelectListItem(list.id)}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: list.color }}></div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '14px', fontWeight: 500 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0, overflow: 'hidden' }}>
+          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: list.color, flexShrink: 0 }}></div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0, flex: 1, overflow: 'hidden' }}>
+            <span style={{ fontSize: '14px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {list.country && COUNTRY_FLAGS[list.country]} {list.name}
             </span>
-            <span style={{ opacity: 0.5, fontSize: '12px' }}>({list.tickers.length})</span>
-            <span style={{ 
-              fontSize: '12px', 
-              fontWeight: 600, 
-              color: avgGain >= 0 ? '#10b981' : '#ef4444' 
-            }}>
-              {avgGain >= 0 ? '+' : ''}{avgGain.toFixed(2)}%
-            </span>
+            <span style={{ opacity: 0.5, fontSize: '12px', flexShrink: 0 }}>({list.tickers.length})</span>
           </div>
         </div>
-        <div className="item-actions" style={{ display: 'flex', gap: '4px' }}>
-          {!list.isProtected && (
-            <>
-              <button className="btn" style={{ padding: '4px' }} onClick={(e) => { e.stopPropagation(); onAssignList(list.id); }} title="Assign to Group">
-                <Plus size={14} color="var(--text-secondary)" opacity={0.5} />
-              </button>
-              <button className="btn" style={{ padding: '4px' }} onClick={(e) => { e.stopPropagation(); onDeleteList(list.id); }}>
-                <Trash2 size={14} color="var(--text-secondary)" opacity={0.5} />
-              </button>
-            </>
-          )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+          <span style={{ 
+            fontSize: '12px', 
+            fontWeight: 600, 
+            color: avgGain >= 0 ? '#10b981' : '#ef4444' 
+          }}>
+            {avgGain >= 0 ? '+' : ''}{avgGain.toFixed(2)}%
+          </span>
+          <div className="item-actions" style={{ display: 'flex', gap: '4px' }}>
+            {!list.isProtected && (
+              <>
+                <button className="btn" style={{ padding: '4px' }} onClick={(e) => { e.stopPropagation(); onAssignList(list.id); }} title="Assign to Group">
+                  <Plus size={14} color="var(--text-secondary)" opacity={0.5} />
+                </button>
+                <button className="btn" style={{ padding: '4px' }} onClick={(e) => { e.stopPropagation(); onDeleteList(list.id); }}>
+                  <Trash2 size={14} color="var(--text-secondary)" opacity={0.5} />
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
     );
