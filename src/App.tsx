@@ -15,6 +15,7 @@ import { AlertsModal } from './components/AlertsModal';
 import { AnalyticsModal } from './components/AnalyticsModal';
 import { RankingModal } from './components/RankingModal';
 import { StockDetailModal } from './components/StockDetailModal';
+import { AssignGroupModal } from './components/AssignGroupModal';
 import './index.css';
 
 const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
@@ -58,6 +59,9 @@ const App: React.FC = () => {
   const [groups, setGroups] = useState<ListGroup[]>([]);
   const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
+  
+  const [isAssignGroupModalOpen, setIsAssignGroupModalOpen] = useState(false);
+  const [listToAssign, setListToAssign] = useState<string | null>(null);
 
   // Auto-dismiss toast after 5 seconds
   useEffect(() => {
@@ -338,6 +342,24 @@ const App: React.FC = () => {
       return updated;
     });
     setGroups(updatedGroups);
+  };
+
+  const handleOpenAssignModal = (listId: string) => {
+    setListToAssign(listId);
+    setIsAssignGroupModalOpen(true);
+  };
+
+  const handleAssignListToGroup = (groupId: string | null) => {
+    if (listToAssign) {
+      handleMoveListToGroup(listToAssign, groupId);
+    }
+    setIsAssignGroupModalOpen(false);
+    setListToAssign(null);
+  };
+
+  const handleCreateGroupFromAssign = () => {
+    setIsAssignGroupModalOpen(false);
+    setIsCreateGroupModalOpen(true);
   };
 
   const handleReorderList = (draggedId: string, targetId: string) => {
@@ -757,8 +779,7 @@ const App: React.FC = () => {
           if (list) handleHideList(id, !list.isVisible);
         }}
         onMoveListToGroup={handleMoveListToGroup}
-        onReorderList={handleReorderList}
-        onReorderGroup={handleReorderGroup}
+        onAssignList={handleOpenAssignModal}
       />
       
       <div style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -1037,6 +1058,14 @@ const App: React.FC = () => {
           storage.deleteAlert(id);
           setAlerts(storage.getAlerts());
         }}
+      />
+
+      <AssignGroupModal 
+        groups={groups}
+        isOpen={isAssignGroupModalOpen}
+        onClose={() => setIsAssignGroupModalOpen(false)}
+        onAssign={handleAssignListToGroup}
+        onCreateGroup={handleCreateGroupFromAssign}
       />
 
       {/* Toast Notification */}

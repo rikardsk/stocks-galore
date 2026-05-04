@@ -14,8 +14,7 @@ interface SidebarProps {
   onToggleGroup: (id: string) => void;
   onSelectListItem: (id: string) => void;
   onMoveListToGroup: (listId: string, groupId: string | null) => void;
-  onReorderList: (draggedId: string, targetId: string) => void;
-  onReorderGroup: (draggedId: string, targetId: string) => void;
+  onAssignList: (listId: string) => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -29,8 +28,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onToggleGroup,
   onSelectListItem,
   onMoveListToGroup,
-  onReorderList,
-  onReorderGroup
+  onAssignList
 }) => {
   const calculateAverageGain = (list: StockList) => {
     if (!list || !list.tickers || list.tickers.length === 0) return 0;
@@ -48,22 +46,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     .filter(list => !groups.some(g => g.listIds.includes(list.id)))
     .sort((a, b) => calculateAverageGain(b) - calculateAverageGain(a));
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-  };
 
-  const handleDropOnGroup = (e: React.DragEvent, targetGroupId: string | null) => {
-    e.preventDefault();
-    const listId = e.dataTransfer.getData('listId');
-    const groupId = e.dataTransfer.getData('groupId');
-
-    if (listId) {
-      onMoveListToGroup(listId, targetGroupId);
-    } else if (groupId && targetGroupId && groupId !== targetGroupId) {
-      onReorderGroup(groupId, targetGroupId);
-    }
-  };
 
   const renderListItem = (list: StockList) => {
     const avgGain = calculateAverageGain(list);
@@ -74,27 +57,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div 
         key={list.id} 
         className="sidebar-item" 
-        draggable={!list.isProtected}
-        onDragStart={(e) => {
-          if (list.isProtected) return;
-          e.dataTransfer.setData('listId', list.id);
-          e.dataTransfer.effectAllowed = 'move';
-        }}
-        onDragOver={(e) => {
-          if (list.isProtected) return;
-          e.preventDefault();
-          e.stopPropagation();
-          e.dataTransfer.dropEffect = 'move';
-        }}
-        onDrop={(e) => {
-          if (list.isProtected) return;
-          e.preventDefault();
-          e.stopPropagation();
-          const draggedId = e.dataTransfer.getData('listId');
-          if (draggedId && draggedId !== list.id) {
-            onReorderList(draggedId, list.id);
-          }
-        }}
         style={{ 
           display: 'flex', 
           alignItems: 'center', 
@@ -111,7 +73,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
         onClick={() => onSelectListItem(list.id)}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          {!list.isProtected && <GripVertical size={12} style={{ color: 'var(--text-secondary)', opacity: 0.4 }} />}
           <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: list.color }}></div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{ fontSize: '14px', fontWeight: 500 }}>
@@ -129,9 +90,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
         <div className="item-actions" style={{ display: 'flex', gap: '4px' }}>
           {!list.isProtected && (
-            <button className="btn" style={{ padding: '4px' }} onClick={(e) => { e.stopPropagation(); onDeleteList(list.id); }}>
-              <Trash2 size={14} color="var(--text-secondary)" opacity={0.5} />
-            </button>
+            <>
+              <button className="btn" style={{ padding: '4px' }} onClick={(e) => { e.stopPropagation(); onAssignList(list.id); }} title="Assign to Group">
+                <Plus size={14} color="var(--text-secondary)" opacity={0.5} />
+              </button>
+              <button className="btn" style={{ padding: '4px' }} onClick={(e) => { e.stopPropagation(); onDeleteList(list.id); }}>
+                <Trash2 size={14} color="var(--text-secondary)" opacity={0.5} />
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -173,17 +139,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div 
             key={group.id} 
             className="sidebar-group" 
-            onDragOver={handleDragOver}
-            onDrop={(e) => handleDropOnGroup(e, group.id)}
             style={{ marginBottom: '12px' }}
           >
             <div 
               className="group-header"
-              draggable
-              onDragStart={(e) => {
-                e.dataTransfer.setData('groupId', group.id);
-                e.dataTransfer.effectAllowed = 'move';
-              }}
               style={{ 
                 display: 'flex', 
                 alignItems: 'center', 
@@ -225,11 +184,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         ))}
 
-        {/* Ungrouped Lists */}
         <div 
           className="ungrouped-section"
-          onDragOver={handleDragOver}
-          onDrop={(e) => handleDropOnGroup(e, null)}
           style={{ minHeight: '100px' }}
         >
           <div className="sidebar-section-label" style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: '16px 0 8px 0', textTransform: 'uppercase', letterSpacing: '1px' }}>
