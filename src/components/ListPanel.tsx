@@ -121,30 +121,41 @@ export const ListPanel: React.FC<ListPanelProps> = ({
           cursor: list.isProtected ? 'default' : 'grab'
         }}
         >
-          <div className="panel-title" style={{ color: isBigGain ? '#10b981' : isBigLoss ? '#ef4444' : list.color, display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div className="panel-title" style={{ color: isBigGain ? '#10b981' : isBigLoss ? '#ef4444' : list.color, display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
             <div 
               className="status-bullet" 
-              style={{ background: hasData ? (isFresh ? '#10b981' : '#ef4444') : 'transparent', border: hasData ? 'none' : '1px solid rgba(255,255,255,0.2)' }}
+              style={{ background: hasData ? (isFresh ? '#10b981' : '#ef4444') : 'transparent', border: hasData ? 'none' : '1px solid rgba(255,255,255,0.2)', flexShrink: 0 }}
               title={hasData ? (isFresh ? 'Updated in last 24h' : 'Stale data (>24h)') : 'No data fetched yet'}
             />
-            {list.isProtected && <Lock size={12} opacity={0.6} />}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '13px', whiteSpace: 'nowrap' }}>
+            {list.isProtected && <Lock size={12} opacity={0.6} style={{ flexShrink: 0 }} />}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1, minWidth: 0 }}>
+              <span style={{ 
+                fontSize: '13px', 
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                lineHeight: '1.2',
+                hyphens: 'auto'
+              }}>
                 {list.country && COUNTRY_FLAGS[list.country]} {list.name}
               </span>
-              <span style={{ opacity: 0.6, fontSize: '11px', fontWeight: 400 }}>
+              <span style={{ opacity: 0.6, fontSize: '11px', fontWeight: 400, whiteSpace: 'nowrap', flexShrink: 0 }}>
                 ({filteredTickers.length})
               </span>
               <span style={{ 
                 fontSize: '11px', 
                 fontWeight: 700, 
-                color: avgGain >= 0 ? '#10b981' : '#ef4444' 
+                color: avgGain >= 0 ? '#10b981' : '#ef4444',
+                whiteSpace: 'nowrap',
+                flexShrink: 0
               }}>
                 {avgGain >= 0 ? '+' : ''}{avgGain.toFixed(2)}%
               </span>
             </div>
           </div>
-          <div className="panel-actions">
+          <div className="panel-actions" style={{ flexShrink: 0 }}>
             <button className="btn" onClick={handleToggleSort} title={`Sort: ${list.sortOrder}`}>
               {list.sortOrder === 'asc' && <ArrowUpAZ size={16} />}
               {list.sortOrder === 'desc' && <ArrowDownAZ size={16} />}
