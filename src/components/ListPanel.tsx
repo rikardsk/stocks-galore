@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import Draggable from 'react-draggable';
-import { X, ChevronDown, ChevronUp, Eye, EyeOff, Plus, Trash2, ArrowUpDown, ArrowUpAZ, ArrowDownAZ, Lock, AlertCircle, Briefcase, Star, Info } from 'lucide-react';
+import { X, ChevronDown, ChevronUp, Eye, EyeOff, Plus, Trash2, ArrowUpDown, ArrowUpAZ, ArrowDownAZ, Lock, AlertCircle, Briefcase, Star, Info, Copy, Check } from 'lucide-react';
 import { Sparkline } from './Sparkline';
 import type { StockList, StockFilters } from '../types';
 import { COUNTRY_FLAGS, tickerMatchesFilters, formatMarketCap } from '../types';
@@ -33,6 +33,7 @@ export const ListPanel: React.FC<ListPanelProps> = ({
   const [isCollapsed, setIsCollapsed] = useState(list.isCollapsed);
   const [showStats, setShowStats] = useState(list.showStats);
   const [expandedTickerDescriptionId, setExpandedTickerDescriptionId] = useState<string | null>(null);
+  const [isCopied, setIsCopied] = useState(false);
   const nodeRef = useRef(null);
 
   const handleToggleCollapse = () => {
@@ -43,6 +44,13 @@ export const ListPanel: React.FC<ListPanelProps> = ({
   const handleToggleStats = () => {
     setShowStats(!showStats);
     onUpdate({ ...list, showStats: !showStats });
+  };
+
+  const handleCopyTickers = () => {
+    const symbols = list.tickers.map(t => t.symbol).join(', ');
+    navigator.clipboard.writeText(symbols);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
   };
 
   const handleToggleSort = () => {
@@ -420,6 +428,14 @@ export const ListPanel: React.FC<ListPanelProps> = ({
             onClick={() => onAddTicker(list.id)}
           >
             <Plus size={14} /> Add Ticker
+          </button>
+          <button 
+            className="btn" 
+            style={{ padding: '10px', color: isCopied ? '#10b981' : 'var(--text-secondary)', background: 'var(--surface-subtle)' }}
+            onClick={handleCopyTickers}
+            title="Copy Tickers"
+          >
+            {isCopied ? <Check size={16} /> : <Copy size={16} />}
           </button>
           <button 
             className="btn" 
