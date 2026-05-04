@@ -21,9 +21,9 @@ export const AssignGroupModal: React.FC<AssignGroupModalProps> = ({
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={e => e.stopPropagation()} style={{ width: '300px' }}>
-        <div className="modal-header">
-          <h2 style={{ fontSize: '1.2rem', fontWeight: 600 }}>Assign to Group</h2>
+      <div className="modal" onClick={e => e.stopPropagation()} style={{ width: '300px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h2 style={{ fontSize: '1.2rem', fontWeight: 600, margin: 0 }}>Assign to Group</h2>
           <button className="btn" onClick={onClose} style={{ padding: '4px' }}>
             <X size={20} />
           </button>
