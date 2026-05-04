@@ -73,6 +73,7 @@ body {
   height: 100%;
   width: 100%;
   position: relative;
+  color: var(--text-primary);
 }
 
 /* Workbench Area */
