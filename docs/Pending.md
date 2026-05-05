@@ -9,7 +9,7 @@
 ~~- In the sidbar in lightmode the text is white on a white background, i assume the text should be black instead~~
 - Sometimes the notifications are not marked as read after clicking on them in the notifications tab (THULE.ST, VIT-B.ST, CORT).
 ~~- Is it possible to add custom info badges on lists in the workbench that shows general info about the stocks in the list. (Eg. EB or EM for earnings beat or earnings miss, Prod. for new product etc. Or a custom tag for the list. Basically a reason for the latest price movement). The badges would be managed in the "deep dive" panel~~
-- I want to do a scatter plot of stock companies with market cap on x-axis and 1-year gains on y-axis
+~~- I want to do a scatter plot of stock companies with market cap on x-axis and 1-year gains on y-axis and put it in the analytics dashboard. Maybe with trendlines for each sector? and a way to hover over the dots to see the ticker symbol and company name, and click on the dot to open the stock deep dive modal~~
 - Zoom in/out with the mouse scroll wheel
 - Edit Lists/Categories 
 - Database integration

@@ -1042,7 +1042,10 @@ const App: React.FC = () => {
           storage.clearNotifications();
           setNotifications([]);
         }}
-        onMarkRead={storage.markNotificationsRead} 
+        onMarkRead={() => {
+          storage.markNotificationsRead();
+          setNotifications(storage.getNotifications());
+        }}
         onOpenAlerts={() => {
           setIsNotificationsModalOpen(false);
           setIsAlertsModalOpen(true);

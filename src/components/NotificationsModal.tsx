@@ -220,10 +220,13 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                   key={n.id} 
                   onClick={() => {
                     const ticker = allTickers.find(t => t.symbol === n.symbol);
-                    if (ticker) {
-                      onSelectTicker(ticker);
-                      onClose();
-                    }
+                    onSelectTicker(ticker || { 
+                      id: n.symbol, 
+                      symbol: n.symbol, 
+                      name: n.symbol, 
+                      stats: { price: '0', change: '0', changePercent: '0', volume: '0', marketCap: '0' } 
+                    } as any);
+                    onClose();
                   }}
                   style={{ 
                     padding: '12px', 
