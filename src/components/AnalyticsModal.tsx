@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { X, BarChart2, PieChart, Info } from 'lucide-react';
+import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, ReferenceLine, Legend } from 'recharts';
 import type { Ticker, StockList, ListGroup } from '../types';
 import { parseMarketCap, formatMarketCap } from '../types';
 
@@ -10,6 +11,7 @@ interface AnalyticsModalProps {
   lists: StockList[];
   groups: ListGroup[];
   theme?: 'dark' | 'light';
+  onSelectTicker?: (ticker: Ticker) => void;
 }
 
 const BUCKETS = [
@@ -31,6 +33,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
   lists,
   groups,
   theme = 'dark',
+  onSelectTicker
 }) => {
   const [selectedGroupId, setSelectedGroupId] = useState<string>('all');
   const [selectedListId, setSelectedListId] = useState<string>('all');
@@ -122,6 +125,55 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
       .sort((a, b) => b.count - a.count);
   }, [filteredTickers]);
 
+  const scatterData = useMemo(() => {
+    const dataBySector: Record<string, any[]> = {};
+    filteredTickers.forEach(t => {
+      const cap = parseMarketCap(t.stats.marketCap);
+      const gain = t.stats.perf1Y;
+      const sector = t.stats.sector && t.stats.sector !== 'N/A' ? t.stats.sector : 'Unknown';
+      if (cap !== null && gain !== undefined) {
+        if (!dataBySector[sector]) dataBySector[sector] = [];
+        dataBySector[sector].push({
+          ticker: t,
+          symbol: t.symbol,
+          name: t.name,
+          x: cap,
+          y: gain
+        });
+      }
+    });
+    
+    const colors = [
+      '#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', 
+      '#ec4899', '#06b6d4', '#f97316', '#84cc16', '#14b8a6'
+    ];
+    
+    return Object.entries(dataBySector).map(([sector, points], i) => {
+      let trendline = null;
+      if (points.length > 1) {
+        let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+        points.forEach(p => {
+          sumX += p.x; sumY += p.y; sumXY += p.x * p.y; sumX2 += p.x * p.x;
+        });
+        const n = points.length;
+        const denominator = n * sumX2 - sumX * sumX;
+        if (denominator !== 0) {
+          const m = (n * sumXY - sumX * sumY) / denominator;
+          const b = (sumY - m * sumX) / n;
+          const minX = Math.min(...points.map(p => p.x));
+          const maxX = Math.max(...points.map(p => p.x));
+          trendline = [{ x: minX, y: m * minX + b }, { x: maxX, y: m * maxX + b }];
+        }
+      }
+      return {
+        sector,
+        points,
+        color: colors[i % colors.length],
+        trendline
+      };
+    });
+  }, [filteredTickers]);
+
   const maxCount = Math.max(...marketCapData.buckets.map(b => b.count), 1);
   const chartMax = Math.ceil(maxCount * 1.25);
 
@@ -130,49 +182,51 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '1000px', width: '95%', maxHeight: '90vh', overflowY: 'auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', position: 'sticky', top: 0, background: 'var(--surface-modal)', zIndex: 10, paddingBottom: '10px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <BarChart2 size={24} color="var(--accent)" />
-            <h2 style={{ margin: 0 }}>Portfolio Analytics</h2>
-          </div>
-          <button className="btn" onClick={onClose}><X /></button>
-        </div>
-
-        <div style={{ display: 'flex', gap: '12px', marginBottom: '32px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Group:</span>
-            <select 
-              value={selectedGroupId} 
-              onChange={(e) => {
-                setSelectedGroupId(e.target.value);
-                setSelectedListId('all');
-              }}
-              className="btn"
-              style={{ background: 'var(--surface-subtle)', border: '1px solid var(--border-color)', padding: '6px 12px' }}
-            >
-              <option value="all">All Groups</option>
-              {groups.map(g => (
-                <option key={g.id} value={g.id}>{g.name}</option>
-              ))}
-            </select>
+        <div style={{ position: 'sticky', top: 0, background: 'var(--surface-modal)', zIndex: 10, paddingBottom: '20px', borderBottom: '1px solid var(--border-color)', marginBottom: '24px', paddingTop: '20px', marginTop: '-20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <BarChart2 size={24} color="var(--accent)" />
+              <h2 style={{ margin: 0 }}>Portfolio Analytics</h2>
+            </div>
+            <button className="btn" onClick={onClose}><X /></button>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>List:</span>
-            <select 
-              value={selectedListId} 
-              onChange={(e) => {
-                setSelectedListId(e.target.value);
-                setSelectedGroupId('all');
-              }}
-              className="btn"
-              style={{ background: 'var(--surface-subtle)', border: '1px solid var(--border-color)', padding: '6px 12px' }}
-            >
-              <option value="all">All Lists</option>
-              {lists.map(l => (
-                <option key={l.id} value={l.id}>{l.name}</option>
-              ))}
-            </select>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Group:</span>
+              <select 
+                value={selectedGroupId} 
+                onChange={(e) => {
+                  setSelectedGroupId(e.target.value);
+                  setSelectedListId('all');
+                }}
+                className="btn"
+                style={{ background: 'var(--surface-subtle)', border: '1px solid var(--border-color)', padding: '6px 12px' }}
+              >
+                <option value="all">All Groups</option>
+                {groups.map(g => (
+                  <option key={g.id} value={g.id}>{g.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>List:</span>
+              <select 
+                value={selectedListId} 
+                onChange={(e) => {
+                  setSelectedListId(e.target.value);
+                  setSelectedGroupId('all');
+                }}
+                className="btn"
+                style={{ background: 'var(--surface-subtle)', border: '1px solid var(--border-color)', padding: '6px 12px' }}
+              >
+                <option value="all">All Lists</option>
+                {lists.map(l => (
+                  <option key={l.id} value={l.id}>{l.name}</option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
@@ -288,6 +342,82 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+
+          {/* Scatter Plot Section */}
+          <div style={{ gridColumn: '1 / -1', marginTop: '20px' }}>
+            <h3 style={{ marginBottom: '24px', fontSize: '16px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              Market Cap vs 1-Year Performance
+              <div title="Scatter plot showing the relationship between company size and 1-year returns." style={{ cursor: 'help', opacity: 0.5 }}>
+                <Info size={14} />
+              </div>
+            </h3>
+            <div style={{ background: 'var(--surface-inset)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)', height: '500px' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-divider)" />
+                  <XAxis 
+                    type="number" 
+                    dataKey="x" 
+                    name="Market Cap" 
+                    tickFormatter={(val) => formatMarketCap(val)} 
+                    stroke="var(--text-secondary)"
+                    tick={{ fontSize: 11 }}
+                    domain={['auto', 'auto']}
+                  />
+                  <YAxis 
+                    type="number" 
+                    dataKey="y" 
+                    name="1Y Gain" 
+                    tickFormatter={(val) => `${val > 0 ? '+' : ''}${val.toFixed(1)}%`}
+                    stroke="var(--text-secondary)"
+                    tick={{ fontSize: 11 }}
+                    domain={['auto', 'auto']}
+                  />
+                  <RechartsTooltip 
+                    cursor={{ strokeDasharray: '3 3' }}
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0].payload;
+                        return (
+                          <div style={{ background: 'var(--surface-modal)', padding: '12px', border: '1px solid var(--border-color)', borderRadius: '8px', boxShadow: 'var(--shadow-lg)' }}>
+                            <div style={{ fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>{data.symbol} - {data.name}</div>
+                            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '2px' }}>Sector: {data.ticker.stats.sector || 'Unknown'}</div>
+                            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '2px' }}>Market Cap: {formatMarketCap(data.x)}</div>
+                            <div style={{ fontSize: '12px', color: data.y >= 0 ? '#10b981' : '#ef4444' }}>1Y Perf: {data.y > 0 ? '+' : ''}{data.y.toFixed(2)}%</div>
+                            <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginTop: '8px', fontStyle: 'italic' }}>Click to view details</div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: '12px' }} />
+                  {scatterData.map(s => (
+                    <React.Fragment key={s.sector}>
+                      <Scatter 
+                        name={s.sector} 
+                        data={s.points} 
+                        fill={s.color} 
+                        onClick={(data: any) => {
+                          const ticker = data?.ticker || data?.payload?.ticker;
+                          if (onSelectTicker && ticker) onSelectTicker(ticker);
+                        }}
+                        style={{ cursor: 'pointer' }}
+                      />
+                      {s.trendline && (
+                        <ReferenceLine 
+                          segment={s.trendline} 
+                          stroke={s.color} 
+                          strokeOpacity={0.5} 
+                          strokeDasharray="3 3"
+                        />
+                      )}
+                    </React.Fragment>
+                  ))}
+                </ScatterChart>
+              </ResponsiveContainer>
             </div>
           </div>
         </div>

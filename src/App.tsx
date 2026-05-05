@@ -994,6 +994,7 @@ const App: React.FC = () => {
         lists={lists}
         groups={groups}
         theme={theme}
+        onSelectTicker={setSelectedDetailTicker}
       />
 
       <RankingModal 
