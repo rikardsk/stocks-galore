@@ -94,8 +94,10 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
     };
 
     let enriched = [...history];
+    enriched = calculateSMA(enriched, 10);
     enriched = calculateSMA(enriched, 20);
     enriched = calculateSMA(enriched, 50);
+    enriched = calculateSMA(enriched, 100);
     enriched = calculateSMA(enriched, 200);
     return enriched;
   }, [history]);
@@ -204,16 +206,19 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
               {showVolume ? <Eye size={12} /> : <EyeOff size={12} />}
             </button>
             <div style={{ width: '1px', background: 'var(--border-color)', margin: '4px 8px' }} />
-            {(['20', '50', '200'] as const).map(period => (
-              <button 
-                key={period}
-                className={`type-btn ${indicators.includes(period) ? 'active' : ''}`}
-                style={{ color: indicators.includes(period) ? (period === '20' ? '#6366f1' : period === '50' ? '#f59e0b' : '#8b5cf6') : 'var(--text-secondary)' }}
-                onClick={() => setIndicators(prev => prev.includes(period) ? prev.filter(p => p !== period) : [...prev, period])}
-              >
-                SMA{period}
-              </button>
-            ))}
+            {(['10', '20', '50', '100', '200'] as const).map(period => {
+              const colorMap: Record<string, string> = { '10': '#3b82f6', '20': '#6366f1', '50': '#f59e0b', '100': '#ec4899', '200': '#8b5cf6' };
+              return (
+                <button 
+                  key={period}
+                  className={`type-btn ${indicators.includes(period) ? 'active' : ''}`}
+                  style={{ color: indicators.includes(period) ? colorMap[period] : 'var(--text-secondary)' }}
+                  onClick={() => setIndicators(prev => prev.includes(period) ? prev.filter(p => p !== period) : [...prev, period])}
+                >
+                  SMA{period}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -263,8 +268,10 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
               )}
               {showVolume && <Bar yAxisId="volume" dataKey="volume" fill="var(--surface-hover)" barSize={4} />}
               
+              {indicators.includes('10') && <Line yAxisId="price" type="monotone" dataKey="sma10" stroke="#3b82f6" strokeWidth={1.5} dot={false} strokeDasharray="3 3" />}
               {indicators.includes('20') && <Line yAxisId="price" type="monotone" dataKey="sma20" stroke="#6366f1" strokeWidth={1.5} dot={false} strokeDasharray="5 5" />}
               {indicators.includes('50') && <Line yAxisId="price" type="monotone" dataKey="sma50" stroke="#f59e0b" strokeWidth={1.5} dot={false} />}
+              {indicators.includes('100') && <Line yAxisId="price" type="monotone" dataKey="sma100" stroke="#ec4899" strokeWidth={1.5} dot={false} />}
               {indicators.includes('200') && <Line yAxisId="price" type="monotone" dataKey="sma200" stroke="#8b5cf6" strokeWidth={1.5} dot={false} />}
             </ComposedChart>
           </ResponsiveContainer>

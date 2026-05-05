@@ -30,6 +30,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onMoveListToGroup,
   onAssignList
 }) => {
+  const [isEditMode, setIsEditMode] = React.useState(false);
+  const [isUngroupedEditMode, setIsUngroupedEditMode] = React.useState(false);
   const calculateAverageGain = (list: StockList) => {
     if (!list || !list.tickers || list.tickers.length === 0) return 0;
     const total = list.tickers.reduce((sum, t) => {
@@ -48,7 +50,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
 
 
-  const renderListItem = (list: StockList) => {
+  const renderListItem = (list: StockList, isEditing: boolean = false) => {
     const avgGain = calculateAverageGain(list);
     const isBigGain = avgGain > 5;
     const isBigLoss = avgGain < -5;
@@ -93,7 +95,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {avgGain >= 0 ? '+' : ''}{avgGain.toFixed(2)}%
           </span>
           <div className="item-actions" style={{ display: 'flex', gap: '4px' }}>
-            {!list.isProtected && (
+            {!list.isProtected && isEditing && (
               <>
                 <button className="btn" style={{ padding: '4px' }} onClick={(e) => { e.stopPropagation(); onAssignList(list.id); }} title="Assign to Group">
                   <Plus size={14} color="var(--text-secondary)" opacity={0.5} />
@@ -134,12 +136,34 @@ export const Sidebar: React.FC<SidebarProps> = ({
               Pinned
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              {protectedLists.map(renderListItem)}
+              {protectedLists.map(l => renderListItem(l))}
             </div>
           </div>
         )}
 
         {/* Groups */}
+        {groups.length > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '16px 0 8px 0', paddingRight: '8px' }}>
+            <div className="sidebar-section-label" style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>
+              Groups
+            </div>
+            <button 
+              className="btn" 
+              style={{ 
+                fontSize: '11px', 
+                padding: '2px 8px', 
+                color: isEditMode ? 'var(--accent)' : 'var(--text-secondary)', 
+                background: isEditMode ? 'rgba(59, 130, 246, 0.1)' : 'transparent', 
+                borderRadius: '4px',
+                border: isEditMode ? '1px solid rgba(59, 130, 246, 0.2)' : '1px solid transparent'
+              }}
+              onClick={() => setIsEditMode(!isEditMode)}
+            >
+              {isEditMode ? 'Done' : 'Edit'}
+            </button>
+          </div>
+        )}
+
         {groups.map(group => (
           <div 
             key={group.id} 
@@ -166,9 +190,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <span style={{ marginLeft: '4px', opacity: 0.5, fontWeight: 400 }}>({group.listIds.length})</span>
                 </span>
               </div>
-              <button className="btn" style={{ padding: '4px' }} onClick={(e) => { e.stopPropagation(); onDeleteGroup(group.id); }}>
-                <Trash2 size={12} color="rgba(255,255,255,0.3)" />
-              </button>
+              {isEditMode && (
+                <button className="btn" style={{ padding: '4px' }} onClick={(e) => { e.stopPropagation(); onDeleteGroup(group.id); }}>
+                  <Trash2 size={12} color="rgba(255,255,255,0.3)" />
+                </button>
+              )}
             </div>
             
             {!group.isCollapsed && (
@@ -177,7 +203,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   .map(id => lists.find(l => l.id === id))
                   .filter((l): l is StockList => !!l)
                   .sort((a, b) => calculateAverageGain(b) - calculateAverageGain(a))
-                  .map(renderListItem)
+                  .map(l => renderListItem(l, isEditMode))
                 }
                 {group.listIds.length === 0 && (
                   <div style={{ padding: '8px 12px', fontSize: '11px', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
@@ -193,11 +219,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
           className="ungrouped-section"
           style={{ minHeight: '100px' }}
         >
-          <div className="sidebar-section-label" style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: '16px 0 8px 0', textTransform: 'uppercase', letterSpacing: '1px' }}>
-            Ungrouped
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '16px 0 8px 0', paddingRight: '8px' }}>
+            <div className="sidebar-section-label" style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>
+              Ungrouped
+            </div>
+            {ungroupedLists.length > 0 && (
+              <button 
+                className="btn" 
+                style={{ 
+                  fontSize: '11px', 
+                  padding: '2px 8px', 
+                  color: isUngroupedEditMode ? 'var(--accent)' : 'var(--text-secondary)', 
+                  background: isUngroupedEditMode ? 'rgba(59, 130, 246, 0.1)' : 'transparent', 
+                  borderRadius: '4px',
+                  border: isUngroupedEditMode ? '1px solid rgba(59, 130, 246, 0.2)' : '1px solid transparent'
+                }}
+                onClick={() => setIsUngroupedEditMode(!isUngroupedEditMode)}
+              >
+                {isUngroupedEditMode ? 'Done' : 'Edit'}
+              </button>
+            )}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            {ungroupedLists.map(renderListItem)}
+            {ungroupedLists.map(l => renderListItem(l, isUngroupedEditMode))}
             {ungroupedLists.length === 0 && groups.length === 0 && (
               <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '13px' }}>
                 No lists created yet.
