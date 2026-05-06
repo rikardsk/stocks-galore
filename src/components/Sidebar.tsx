@@ -32,6 +32,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const [isEditMode, setIsEditMode] = React.useState(false);
   const [isUngroupedEditMode, setIsUngroupedEditMode] = React.useState(false);
+  const [isGroupsSectionCollapsed, setIsGroupsSectionCollapsed] = React.useState(false);
+  const [isUngropedSectionCollapsed, setIsUngropedSectionCollapsed] = React.useState(false);
+  const [isPinnedSectionCollapsed, setIsPinnedSectionCollapsed] = React.useState(false);
   const calculateAverageGain = (list: StockList) => {
     if (!list || !list.tickers || list.tickers.length === 0) return 0;
     const total = list.tickers.reduce((sum, t) => {
@@ -132,20 +135,54 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Static Section: Watchlist & Portfolio */}
         {protectedLists.length > 0 && (
           <div style={{ marginBottom: '24px' }}>
-            <div className="sidebar-section-label" style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: '0 0 8px 0', textTransform: 'uppercase', letterSpacing: '1px' }}>
-              Pinned
+            <div 
+              className="sidebar-section-label" 
+              style={{ 
+                fontSize: '11px', 
+                color: 'var(--text-secondary)', 
+                margin: '0 0 8px 0', 
+                textTransform: 'uppercase', 
+                letterSpacing: '1px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                cursor: 'pointer',
+                userSelect: 'none'
+              }}
+              onClick={() => setIsPinnedSectionCollapsed(!isPinnedSectionCollapsed)}
+            >
+              {isPinnedSectionCollapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
+              Pinned ({protectedLists.length})
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              {protectedLists.map(l => renderListItem(l))}
-            </div>
+            {!isPinnedSectionCollapsed && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {protectedLists.map(l => renderListItem(l))}
+              </div>
+            )}
           </div>
         )}
 
         {/* Groups */}
         {groups.length > 0 && (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '16px 0 8px 0', paddingRight: '8px' }}>
-            <div className="sidebar-section-label" style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>
-              Groups
+            <div 
+              className="sidebar-section-label" 
+              style={{ 
+                fontSize: '11px', 
+                color: 'var(--text-secondary)', 
+                textTransform: 'uppercase', 
+                letterSpacing: '1px', 
+                margin: 0,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                cursor: 'pointer',
+                userSelect: 'none'
+              }}
+              onClick={() => setIsGroupsSectionCollapsed(!isGroupsSectionCollapsed)}
+            >
+              {isGroupsSectionCollapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
+              Groups ({groups.length})
             </div>
             <button 
               className="btn" 
@@ -164,7 +201,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         )}
 
-        {groups.map(group => (
+        {!isGroupsSectionCollapsed && groups.map(group => (
           <div 
             key={group.id} 
             className="sidebar-group" 
@@ -220,8 +257,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
           style={{ minHeight: '100px' }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '16px 0 8px 0', paddingRight: '8px' }}>
-            <div className="sidebar-section-label" style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>
-              Ungrouped
+            <div 
+              className="sidebar-section-label" 
+              style={{ 
+                fontSize: '11px', 
+                color: 'var(--text-secondary)', 
+                textTransform: 'uppercase', 
+                letterSpacing: '1px', 
+                margin: 0,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                cursor: 'pointer',
+                userSelect: 'none'
+              }}
+              onClick={() => setIsUngropedSectionCollapsed(!isUngropedSectionCollapsed)}
+            >
+              {isUngropedSectionCollapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
+              Ungroped ({ungroupedLists.length})
             </div>
             {ungroupedLists.length > 0 && (
               <button 
@@ -240,14 +293,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </button>
             )}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            {ungroupedLists.map(l => renderListItem(l, isUngroupedEditMode))}
-            {ungroupedLists.length === 0 && groups.length === 0 && (
-              <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '13px' }}>
-                No lists created yet.
-              </div>
-            )}
-          </div>
+          {!isUngropedSectionCollapsed && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              {ungroupedLists.map(l => renderListItem(l, isUngroupedEditMode))}
+              {ungroupedLists.length === 0 && groups.length === 0 && (
+                <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '13px' }}>
+                  No lists created yet.
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </aside>
