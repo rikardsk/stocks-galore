@@ -917,18 +917,27 @@ const App: React.FC = () => {
         onSelectListItem={(id) => {
           const list = lists.find(l => l.id === id);
           if (list) {
-            // Ensure list is visible
-            if (!list.isVisible) {
-              handleHideList(id, true);
-            }
+            const wasVisible = list.isVisible;
+            handleHideList(id, !wasVisible);
             
-            // Scroll to it after a short delay to allow for rendering if it was hidden
-            setTimeout(() => {
-              const element = document.getElementById(`list-panel-${id}`);
-              if (element) {
-                element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
-              }
-            }, 100);
+            if (!wasVisible) {
+              setTimeout(() => {
+                const element = document.getElementById(`list-panel-${id}`);
+                if (element) {
+                  const rect = element.getBoundingClientRect();
+                  const isVisible = (
+                    rect.top >= 0 &&
+                    rect.left >= 0 &&
+                    rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+                    rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+                  );
+
+                  if (!isVisible) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                  }
+                }
+              }, 100);
+            }
           }
         }}
         onMoveListToGroup={handleMoveListToGroup}
