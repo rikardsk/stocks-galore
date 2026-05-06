@@ -115,6 +115,7 @@ export const ListPanel: React.FC<ListPanelProps> = ({
     >
       <div 
         className="list-panel" 
+        id={`list-panel-${list.id}`}
         ref={nodeRef}
         onDragOver={handleDragOver}
         onDrop={handleDrop}

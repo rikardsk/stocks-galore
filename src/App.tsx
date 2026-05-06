@@ -776,7 +776,20 @@ const App: React.FC = () => {
         onToggleGroup={handleToggleGroup}
         onSelectListItem={(id) => {
           const list = lists.find(l => l.id === id);
-          if (list) handleHideList(id, !list.isVisible);
+          if (list) {
+            // Ensure list is visible
+            if (!list.isVisible) {
+              handleHideList(id, true);
+            }
+            
+            // Scroll to it after a short delay to allow for rendering if it was hidden
+            setTimeout(() => {
+              const element = document.getElementById(`list-panel-${id}`);
+              if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+              }
+            }, 100);
+          }
         }}
         onMoveListToGroup={handleMoveListToGroup}
         onAssignList={handleOpenAssignModal}
