@@ -246,7 +246,8 @@ export const ListPanel: React.FC<ListPanelProps> = ({
                               padding: '1px 4px', borderRadius: '4px', 
                               fontSize: '8px', fontWeight: 700,
                               boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
-                              letterSpacing: '0.5px'
+                              letterSpacing: '0.5px',
+                              whiteSpace: 'nowrap'
                             }} title="Custom tag">
                               {badge}
                             </span>

@@ -819,8 +819,13 @@ const App: React.FC = () => {
         <main className="workbench">
           <div className="canvas">
             {lists.filter(list => {
-              if (!searchQuery.trim()) return list.isVisible;
-              return list.tickers.some(t => t.symbol.toLowerCase().includes(searchQuery.trim().toLowerCase()));
+              const query = searchQuery.trim().toLowerCase();
+              if (query.length < 3) return list.isVisible;
+              
+              return list.tickers.some(t => 
+                t.symbol.toLowerCase().includes(query) || 
+                (t.badges && t.badges.some(b => b.toLowerCase().includes(query)))
+              );
             }).map(list => (
               <ListPanel 
                 key={list.id} 

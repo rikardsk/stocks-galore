@@ -77,6 +77,21 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
     if (onUpdateBadges && ticker) onUpdateBadges(ticker, updated);
   };
 
+  const toggleQuickBadge = (badge: string) => {
+    const opposing = badge === 'EARNINGS BEAT' ? 'EARNINGS MISS' : (badge === 'EARNINGS MISS' ? 'EARNINGS BEAT' : null);
+    let updated = [...badges];
+    
+    if (updated.includes(badge)) {
+      updated = updated.filter(b => b !== badge);
+    } else {
+      if (opposing) updated = updated.filter(b => b !== opposing);
+      updated.push(badge);
+    }
+    
+    setBadges(updated);
+    if (onUpdateBadges && ticker) onUpdateBadges(ticker, updated);
+  };
+
   const historyWithSMAs = useMemo(() => {
     if (history.length === 0) return [];
     
@@ -320,7 +335,35 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
           <p>{ticker.stats.description}</p>
           
           <div style={{ marginTop: '24px' }}>
-            <h3 style={{ color: 'var(--text-primary)', fontSize: '14px', marginBottom: '12px' }}>Custom Badges (Press Enter to add)</h3>
+            <h3 style={{ color: 'var(--text-primary)', fontSize: '14px', marginBottom: '12px' }}>Custom Badges</h3>
+            
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+              <button 
+                onClick={() => toggleQuickBadge('EARNINGS BEAT')}
+                style={{ 
+                  background: badges.includes('EARNINGS BEAT') ? '#10b981' : 'var(--surface-subtle)', 
+                  color: badges.includes('EARNINGS BEAT') ? 'white' : 'var(--text-secondary)',
+                  border: '1px solid ' + (badges.includes('EARNINGS BEAT') ? '#10b981' : 'var(--border-color)'),
+                  padding: '6px 16px', borderRadius: '100px', fontSize: '12px', fontWeight: 700, cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                Earnings Beat
+              </button>
+              <button 
+                onClick={() => toggleQuickBadge('EARNINGS MISS')}
+                style={{ 
+                  background: badges.includes('EARNINGS MISS') ? '#ef4444' : 'var(--surface-subtle)', 
+                  color: badges.includes('EARNINGS MISS') ? 'white' : 'var(--text-secondary)',
+                  border: '1px solid ' + (badges.includes('EARNINGS MISS') ? '#ef4444' : 'var(--border-color)'),
+                  padding: '6px 16px', borderRadius: '100px', fontSize: '12px', fontWeight: 700, cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                Earnings Miss
+              </button>
+            </div>
+
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
               {badges.map((badge, idx) => (
                 <div key={idx} style={{ 

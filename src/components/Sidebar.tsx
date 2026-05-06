@@ -243,9 +243,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   .map(l => renderListItem(l, isEditMode))
                 }
                 {group.listIds.length === 0 && (
-                  <div style={{ padding: '8px 12px', fontSize: '11px', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
-                    Drop lists here
-                  </div>
+                  <div style={{ height: '8px' }} />
                 )}
               </div>
             )}

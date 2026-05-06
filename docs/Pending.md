@@ -3,10 +3,10 @@
 - ~~Present the number of groups in the label "GROUPS" and number of lists in the label "UNGROPED". (eg. GROUPS (2) and UNGROPED (1)).~~
 - Possibility to rename groups or lists in edit mode and change theme color for lists.
 - Make the buttons for frequent notifications reflect the timeframe (Today, Week, All). Example: If you click today it shows the 5-6 most frequent tickers from today's notifications with a count > 1. If you click week it shows the 5-6 most frequent tickers from the last week with a count > 1. If you click all it shows the 5-6 most frequent tickers from all notifications with a count > 1.
-- Remove the section "drop lists here" when creating a new group. Since it is not possible to move an existing list to a group (only to move lists between groups), the section is not needed.
+- ~~Remove the section "drop lists here" when creating a new group. Since it is not possible to move an existing list to a group (only to move lists between groups), the section is not needed.~~
 - ~~When you click on a list in the sidebar and it's showing up in the workbench, could you scroll to the right list in the workbench so that the list is visible.~~
-- Only start search if 3 characters has been entered. Ie. an Enter press should not trigger a search if the ticker is less than 3 characters long and also be able to search for tags.
-- Toggle buttons for Earning Beat/Miss tags in the "deep dive" panel.
+- ~~Only start search if 3 characters has been entered. Ie. an Enter press should not trigger a search if the ticker is less than 3 characters long and also be able to search for tags.~~
+- ~~Toggle buttons for Earning Beat/Miss tags in the "deep dive" panel.~~
 - Top 10 Today in the ranking modal
 - Is it possible to just write the company name in the "add ticker" section at the bottom of the list, then the app tries to find the company via the company name. If there is only one result it adds it, if there is more than one result it opens a modal to choose the correct company from the results. Same logic could apply to the "Add Ticker" button in the top right corner.
 - ~~Hide/Show the whole group section when you click the label GROUPS.~~
