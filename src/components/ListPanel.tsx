@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import Draggable from 'react-draggable';
-import { X, ChevronDown, ChevronUp, Eye, EyeOff, Plus, Trash2, ArrowUpDown, ArrowUpAZ, ArrowDownAZ, Lock, AlertCircle, Briefcase, Star, Info, Copy, Check } from 'lucide-react';
+import { X, ChevronDown, ChevronUp, Eye, EyeOff, Plus, RefreshCw, Trash2, ArrowUpDown, ArrowUpAZ, ArrowDownAZ, Lock, AlertCircle, Briefcase, Star, Info, Copy, Check } from 'lucide-react';
 import { Sparkline } from './Sparkline';
 import type { StockList, StockFilters } from '../types';
 import { COUNTRY_FLAGS, tickerMatchesFilters, formatMarketCap } from '../types';
@@ -16,6 +16,7 @@ interface ListPanelProps {
   watchlistSymbols: Set<string>;
   onToggleWatchlist: (ticker: any) => void;
   onSelectTicker: (ticker: any) => void;
+  onRefresh?: (listId: string) => void;
 }
 
 export const ListPanel: React.FC<ListPanelProps> = ({
@@ -28,12 +29,14 @@ export const ListPanel: React.FC<ListPanelProps> = ({
   globalFilters,
   watchlistSymbols,
   onToggleWatchlist,
-  onSelectTicker
+  onSelectTicker,
+  onRefresh
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(list.isCollapsed);
   const [showStats, setShowStats] = useState(list.showStats);
   const [expandedTickerDescriptionId, setExpandedTickerDescriptionId] = useState<string | null>(null);
   const [isCopied, setIsCopied] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const nodeRef = useRef(null);
 
   const handleToggleCollapse = () => {
@@ -447,6 +450,21 @@ export const ListPanel: React.FC<ListPanelProps> = ({
             onClick={() => onAddTicker(list.id)}
           >
             <Plus size={14} /> Add Ticker
+          </button>
+          <button 
+            className="btn" 
+            style={{ padding: '10px', color: 'var(--text-secondary)', background: 'var(--surface-subtle)' }}
+            onClick={async () => {
+              if (onRefresh) {
+                setIsRefreshing(true);
+                await onRefresh(list.id);
+                setIsRefreshing(false);
+              }
+            }}
+            title="Refresh List"
+            disabled={isRefreshing}
+          >
+            <RefreshCw size={14} className={isRefreshing ? 'spinning' : ''} />
           </button>
           <button 
             className="btn" 

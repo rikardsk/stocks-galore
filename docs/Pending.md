@@ -12,7 +12,7 @@
 - ~~Hide/Show the whole group section when you click the label GROUPS.~~
 - ~~Hide/Show the whole lists section when you click the label UNGROPED.~~
 - Possibility to disable a group or list so it's not refreshed in the global refresh
-- A refresh button in the list next to the + Add Ticker button. The refresh button should only refresh the list in question.
+- ~~A refresh button in the list next to the + Add Ticker button. The refresh button should only refresh the list in question.~~
 - Add a portfolio button that opens up a portfolio modal to manage Quantity and Average Price per ticker. The modal should also include  the Gain/Loss in numbers and percentages.
 - Earnings dates (for tracking upcoming earnings in the deep dive panel)
 - Zoom in/out with the mouse scroll wheel

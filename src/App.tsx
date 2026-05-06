@@ -595,6 +595,30 @@ const App: React.FC = () => {
     }
   };
 
+  const refreshSymbols = async (symbols: string[], onProgress?: (progress: number) => void) => {
+    if (symbols.length === 0) return [];
+
+    const CHUNK_SIZE = 15;
+    const chunks = [];
+    for (let i = 0; i < symbols.length; i += CHUNK_SIZE) {
+      chunks.push(symbols.slice(i, i + CHUNK_SIZE));
+    }
+
+    let allFreshData: any[] = [];
+    let processedCount = 0;
+
+    for (const chunk of chunks) {
+      const response = await fetch(`${API_BASE_URL}/batch?symbols=${chunk.join(',')}`);
+      if (!response.ok) throw new Error('Backend unavailable');
+      const data = await response.json();
+      allFreshData = [...allFreshData, ...data];
+      
+      processedCount += chunk.length;
+      if (onProgress) onProgress(Math.round((processedCount / symbols.length) * 100));
+    }
+    return allFreshData;
+  };
+
   const handleRefreshAll = async () => {
     const allSymbols = [...new Set(lists.flatMap(l => l.tickers.map(t => t.symbol)))];
     if (allSymbols.length === 0) return;
@@ -602,25 +626,8 @@ const App: React.FC = () => {
     setIsRefreshing(true);
     setRefreshProgress(0);
     
-    const CHUNK_SIZE = 15;
-    const chunks = [];
-    for (let i = 0; i < allSymbols.length; i += CHUNK_SIZE) {
-      chunks.push(allSymbols.slice(i, i + CHUNK_SIZE));
-    }
-
-    let allFreshData: any[] = [];
-    let processedCount = 0;
-
     try {
-      for (const chunk of chunks) {
-        const response = await fetch(`${API_BASE_URL}/batch?symbols=${chunk.join(',')}`);
-        if (!response.ok) throw new Error('Backend unavailable');
-        const data = await response.json();
-        allFreshData = [...allFreshData, ...data];
-        
-        processedCount += chunk.length;
-        setRefreshProgress(Math.round((processedCount / allSymbols.length) * 100));
-      }
+      const allFreshData = await refreshSymbols(allSymbols, setRefreshProgress);
       
       const updatedLists = lists.map(list => ({
         ...list,
@@ -668,6 +675,7 @@ const App: React.FC = () => {
       // Check alerts for all refreshed tickers
       const allRefreshedTickers = updatedLists.flatMap(l => l.tickers);
       checkAlerts(allRefreshedTickers);
+      showToast('Market data refreshed!', 'success');
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
       console.error('Failed to refresh data:', error);
@@ -675,6 +683,70 @@ const App: React.FC = () => {
     } finally {
       setIsRefreshing(false);
       setTimeout(() => setRefreshProgress(0), 1000);
+    }
+  };
+
+  const handleRefreshList = async (listId: string) => {
+    const list = lists.find(l => l.id === listId);
+    if (!list || list.tickers.length === 0) return;
+
+    const symbols = list.tickers.map(t => t.symbol);
+    
+    try {
+      const freshDataList = await refreshSymbols(symbols);
+      
+      const updatedList = {
+        ...list,
+        tickers: list.tickers.map(ticker => {
+          const freshData = freshDataList.find((d: any) => d.symbol === ticker.symbol);
+          if (freshData) {
+            return {
+              ...ticker,
+              name: freshData.name,
+              stats: {
+                ...ticker.stats,
+                price: freshData.price.toString(),
+                change: freshData.change.toString(),
+                changePercent: freshData.changePercent,
+                volume: freshData.volume,
+                marketCap: freshData.marketCap,
+                sector: freshData.sector,
+                sma10: freshData.sma10,
+                sma20: freshData.sma20,
+                sma50: freshData.sma50,
+                sma100: freshData.sma100,
+                sma200: freshData.sma200,
+                perf1M: freshData.perf1M,
+                perf3M: freshData.perf3M,
+                perf1Y: freshData.perf1Y,
+                dividendYield: freshData.dividendYield,
+                lastUpdated: new Date().toISOString(),
+                sparkline: freshData.sparkline,
+                description: freshData.description,
+                pe: freshData.pe,
+                high52: freshData.high52,
+                low52: freshData.low52,
+                avgVolume: freshData.avgVolume,
+                error: undefined
+              }
+            };
+          }
+          return ticker;
+        })
+      };
+
+      // Update lists state
+      const updatedLists = lists.map(l => l.id === listId ? updatedList : l);
+      setLists(updatedLists);
+      storage.saveLists(updatedLists);
+      
+      // Check alerts for refreshed tickers in this list
+      checkAlerts(updatedList.tickers);
+      showToast(`List "${list.name}" refreshed!`, 'success');
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      console.error(`Failed to refresh list ${listId}:`, error);
+      showToast(`Failed to refresh list: ${errorMsg}`);
     }
   };
 
@@ -839,6 +911,7 @@ const App: React.FC = () => {
                 onTransferTicker={handleTransferTicker}
                 onToggleWatchlist={handleToggleWatchlist}
                 onSelectTicker={setSelectedDetailTicker}
+                onRefresh={handleRefreshList}
               />
             ))}
           </div>
