@@ -44,6 +44,7 @@ export type StockList = {
   isVisible: boolean;
   sortOrder: 'asc' | 'desc' | 'none';
   isProtected?: boolean;
+  lastUpdated?: string;
 };
 
 export const COUNTRY_FLAGS: Record<string, string> = {

@@ -153,6 +153,11 @@ export const ListPanel: React.FC<ListPanelProps> = ({
               }}>
                 {list.country && COUNTRY_FLAGS[list.country]} {list.name}
               </span>
+              {list.lastUpdated && (
+                <span style={{ fontSize: '9px', opacity: 0.5, fontWeight: 400, marginLeft: '4px' }} title={`Full update: ${new Date(list.lastUpdated).toLocaleString()}`}>
+                  {new Date(list.lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              )}
               <span style={{ opacity: 0.6, fontSize: '11px', fontWeight: 400, whiteSpace: 'nowrap', flexShrink: 0 }}>
                 ({filteredTickers.length})
               </span>

@@ -71,15 +71,30 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   }, [notifications, timeFilter, typeFilter, searchQuery]);
 
   const topTickers = React.useMemo(() => {
+    // We only filter by time for the "Frequent" calculation
+    let timeFiltered = notifications;
+    if (timeFilter !== 'all') {
+      const now = new Date();
+      const cutoff = new Date();
+      if (timeFilter === 'today') {
+        cutoff.setHours(0, 0, 0, 0);
+      } else if (timeFilter === 'week') {
+        cutoff.setDate(now.getDate() - 7);
+      }
+      timeFiltered = timeFiltered.filter(n => new Date(n.timestamp) >= cutoff);
+    }
+
     const counts: Record<string, number> = {};
-    notifications.forEach(n => {
+    timeFiltered.forEach(n => {
       counts[n.symbol] = (counts[n.symbol] || 0) + 1;
     });
+
     return Object.entries(counts)
+      .filter(([_, count]) => count > 1) // Only show if frequent (count > 1)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 6)
       .map(([symbol]) => symbol);
-  }, [notifications]);
+  }, [notifications, timeFilter]);
 
   React.useEffect(() => {
     if (isOpen && notifications.some(n => !n.isRead)) {

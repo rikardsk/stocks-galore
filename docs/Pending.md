@@ -10,19 +10,19 @@
 - ~~Is it possible to just write the company name in the "add ticker" section at the bottom of the list, then the app tries to find the company via the company name. If there is only one result it adds it, if there is more than one result it opens a modal to choose the correct company from the results. Same logic could apply to the "Add Ticker" button in the top right corner.~~
 - ~~Hide/Show the whole group section when you click the label GROUPS.~~
 - ~~Hide/Show the whole lists section when you click the label UNGROPED.~~
-- Possibility to disable a group or list so it's not refreshed in the global refresh
 - ~~A refresh button in the list next to the + Add Ticker button. The refresh button should only refresh the list in question.~~
 - Add a portfolio button that opens up a portfolio modal to manage Quantity and Average Price per ticker. The modal should also include  the Gain/Loss in numbers and percentages.
-~~- Database integration~~
 
 ## Later maybe
 - Make bullets in UNGROUPED and GROUPED either red or green depending on wheter they have been refreshed or not within 24h. Green if they have been refreshed, Red if they have not been refreshed.
+- Possibility to disable a group or list so it's not refreshed in the global refresh
 ~~- Group that is named "Not Refreshed" and lists within that group should be excluded from the global refresh. They will be updated   manually when I click on the list in the sidebar.~~
-- Make the buttons for frequent notifications reflect the timeframe (Today, Week, All). Example: If you click today it shows the 5-6 most frequent tickers from today's notifications with a count > 1. If you click week it shows the 5-6 most frequent tickers from the last week with a count > 1. If you click all it shows the 5-6 most frequent tickers from all notifications with a count > 1.
+- ~~Make the buttons for frequent notifications reflect the timeframe (Today, Week, All). Example: If you click today it shows the 5-6 most frequent tickers from today's notifications with a count > 1. If you click week it shows the 5-6 most frequent tickers from the last week with a count > 1. If you click all it shows the 5-6 most frequent tickers from all notifications with a count > 1.~~
 - Earnings dates (for tracking upcoming earnings in the deep dive panel)
 - Zoom in/out with the mouse scroll wheel
 - Earnings winners/dates
 - Newsfeed?
+~~- Database integration~~
 
 ## Done
 ~~- Stock Deep Dive Modal (Interactive charts & fundamentals)~~

@@ -580,6 +580,7 @@ const App: React.FC = () => {
         
         if (response.status === 404 && symbols.length === 1 && !symbolToUse) {
           // Fallback to search if it was a single input that failed
+          showToast(`Ticker "${symbol}" not found, searching for company name...`, 'warning');
           const searchResponse = await fetch(`${API_BASE_URL}/search?query=${encodeURIComponent(symbol)}`);
           if (searchResponse.ok) {
             const results = await searchResponse.json();
@@ -648,7 +649,9 @@ const App: React.FC = () => {
           showToast(`Ticker "${symbol}" not found, added placeholder`, 'warning');
         }
       } catch (err) {
-        console.error('Fetch failed, using mock data');
+        console.error('Fetch failed', err);
+        showToast(`Failed to add "${symbol}". Please check your connection or try again.`, 'error');
+        // Still add placeholder so the UI doesn't just hang
         storage.addTickerToList(activeListId, symbol);
         setLists(storage.getLists());
       }
@@ -691,6 +694,7 @@ const App: React.FC = () => {
       
       const updatedLists = lists.map(list => ({
         ...list,
+        lastUpdated: new Date().toISOString(),
         tickers: list.tickers.map(ticker => {
           const freshData = allFreshData.find((d: any) => d.symbol === ticker.symbol);
           if (freshData) {
@@ -757,6 +761,7 @@ const App: React.FC = () => {
       
       const updatedList = {
         ...list,
+        lastUpdated: new Date().toISOString(),
         tickers: list.tickers.map(ticker => {
           const freshData = freshDataList.find((d: any) => d.symbol === ticker.symbol);
           if (freshData) {

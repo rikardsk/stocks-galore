@@ -153,18 +153,19 @@ async def search_ticker(query: str):
     import requests
     try:
         url = f"https://query2.finance.yahoo.com/v1/finance/search?q={query}"
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+        headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
         response = requests.get(url, headers=headers)
         if response.ok:
             data = response.json()
             quotes = data.get('quotes', [])
+            print(f"[search] Query '{query}' returned {len(quotes)} quotes")
             return [
                 {
                     "symbol": q['symbol'], 
                     "name": q.get('longname') or q.get('shortname') or q['symbol'], 
                     "exchange": q.get('exchange'),
                     "type": q.get('quoteType')
-                } for q in quotes if q.get('quoteType') in ['EQUITY', 'ETF']
+                } for q in quotes if q.get('quoteType') in ['EQUITY', 'ETF', 'MUTUALFUND', 'INDEX']
             ]
         return []
     except Exception as e:
