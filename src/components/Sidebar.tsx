@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Trash2, ChevronDown, ChevronRight, FolderPlus, Folder, GripVertical } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronUp, ChevronRight, FolderPlus, Folder, GripVertical } from 'lucide-react';
 import type { StockList, ListGroup } from '../types';
 import { COUNTRY_FLAGS } from '../types';
 
@@ -13,7 +13,10 @@ interface SidebarProps {
   onDeleteGroup: (id: string) => void;
   onToggleGroup: (id: string) => void;
   onSelectListItem: (id: string) => void;
+  onMoveGroup?: (groupId: string, direction: 'up' | 'down') => void;
   onMoveListToGroup: (listId: string, groupId: string | null) => void;
+  onRenameGroup: (groupId: string, newName: string) => void;
+  onRenameList: (listId: string, newName: string, color?: string) => void;
   onAssignList: (listId: string) => void;
 }
 
@@ -27,14 +30,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onDeleteGroup,
   onToggleGroup,
   onSelectListItem,
+  onMoveGroup,
   onMoveListToGroup,
+  onRenameGroup,
+  onRenameList,
   onAssignList
 }) => {
   const [isEditMode, setIsEditMode] = React.useState(false);
   const [isUngroupedEditMode, setIsUngroupedEditMode] = React.useState(false);
   const [isGroupsSectionCollapsed, setIsGroupsSectionCollapsed] = React.useState(false);
-  const [isUngropedSectionCollapsed, setIsUngropedSectionCollapsed] = React.useState(false);
+  const [isUngroupedSectionCollapsed, setIsUngroupedSectionCollapsed] = React.useState(false);
   const [isPinnedSectionCollapsed, setIsPinnedSectionCollapsed] = React.useState(false);
+  
+  const [editingGroupId, setEditingGroupId] = React.useState<string | null>(null);
+  const [editingListId, setEditingListId] = React.useState<string | null>(null);
+  const [editValue, setEditValue] = React.useState('');
   const calculateAverageGain = (list: StockList) => {
     if (!list || !list.tickers || list.tickers.length === 0) return 0;
     const total = list.tickers.reduce((sum, t) => {
@@ -53,10 +63,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
 
 
-  const renderListItem = (list: StockList, isEditing: boolean = false) => {
+  const renderListItem = (list: StockList, isEditingMode: boolean = false) => {
     const avgGain = calculateAverageGain(list);
     const isBigGain = avgGain > 5;
     const isBigLoss = avgGain < -5;
+    const isEditing = editingListId === list.id;
 
     return (
       <div 
@@ -70,35 +81,95 @@ export const Sidebar: React.FC<SidebarProps> = ({
           borderRadius: '8px',
           cursor: 'pointer',
           background: isBigGain ? 'rgba(16, 185, 129, 0.15)' : isBigLoss ? 'rgba(239, 68, 68, 0.15)' : 'var(--surface-subtle)',
-          border: '1px solid transparent',
+          border: isEditing ? '1px solid var(--accent)' : '1px solid transparent',
           transition: 'all 0.2s',
           opacity: list.isVisible ? 1 : 0.5,
           marginLeft: '4px'
         }}
-        onClick={() => onSelectListItem(list.id)}
+        onClick={() => !isEditing && onSelectListItem(list.id)}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0, overflow: 'hidden' }}>
-          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: list.color, flexShrink: 0 }}></div>
+          <div 
+            style={{ 
+              width: '10px', 
+              height: '10px', 
+              borderRadius: '50%', 
+              background: list.color, 
+              flexShrink: 0,
+              cursor: isEditingMode && !list.isProtected ? 'pointer' : 'default',
+              border: '1px solid rgba(255,255,255,0.1)'
+            }} 
+            onClick={(e) => {
+              if (isEditingMode && !list.isProtected) {
+                e.stopPropagation();
+                const colors = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+                const currentIndex = colors.indexOf(list.color);
+                const nextColor = colors[(currentIndex + 1) % colors.length];
+                onRenameList(list.id, list.name, nextColor);
+              }
+            }}
+          />
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0, flex: 1, overflow: 'hidden' }}>
-            <span 
-              style={{ fontSize: '14px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
-              title={list.name}
-            >
-              {list.country && COUNTRY_FLAGS[list.country]} {list.name}
-            </span>
+            {isEditing ? (
+              <input 
+                autoFocus
+                value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    onRenameList(list.id, editValue);
+                    setEditingListId(null);
+                  } else if (e.key === 'Escape') {
+                    setEditingListId(null);
+                  }
+                }}
+                onBlur={() => {
+                  onRenameList(list.id, editValue);
+                  setEditingListId(null);
+                }}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  background: 'var(--surface-input)',
+                  border: 'none',
+                  borderRadius: '4px',
+                  color: 'var(--text-primary)',
+                  fontSize: '14px',
+                  padding: '2px 6px',
+                  width: '100%',
+                  outline: 'none',
+                  fontWeight: 500
+                }}
+              />
+            ) : (
+              <span 
+                style={{ fontSize: '14px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                title={list.name}
+                onClick={(e) => {
+                  if (isEditingMode && !list.isProtected) {
+                    e.stopPropagation();
+                    setEditingListId(list.id);
+                    setEditValue(list.name);
+                  }
+                }}
+              >
+                {list.country && COUNTRY_FLAGS[list.country]} {list.name}
+              </span>
+            )}
             <span style={{ opacity: 0.5, fontSize: '12px', flexShrink: 0 }}>({list.tickers.length})</span>
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-          <span style={{ 
-            fontSize: '12px', 
-            fontWeight: 600, 
-            color: avgGain >= 0 ? '#10b981' : '#ef4444' 
-          }}>
-            {avgGain >= 0 ? '+' : ''}{avgGain.toFixed(2)}%
-          </span>
+          {!isEditing && (
+            <span style={{ 
+              fontSize: '12px', 
+              fontWeight: 600, 
+              color: avgGain >= 0 ? '#10b981' : '#ef4444' 
+            }}>
+              {avgGain >= 0 ? '+' : ''}{avgGain.toFixed(2)}%
+            </span>
+          )}
           <div className="item-actions" style={{ display: 'flex', gap: '4px' }}>
-            {!list.isProtected && isEditing && (
+            {!list.isProtected && isEditingMode && (
               <>
                 <button className="btn" style={{ padding: '4px' }} onClick={(e) => { e.stopPropagation(); onAssignList(list.id); }} title="Assign to Group">
                   <Plus size={14} color="var(--text-secondary)" opacity={0.5} />
@@ -201,7 +272,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         )}
 
-        {!isGroupsSectionCollapsed && groups.map(group => (
+        {!isGroupsSectionCollapsed && groups.map((group, index) => (
           <div 
             key={group.id} 
             className="sidebar-group" 
@@ -219,18 +290,76 @@ export const Sidebar: React.FC<SidebarProps> = ({
               }}
               onClick={() => onToggleGroup(group.id)}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, overflow: 'hidden' }}>
                 {group.isCollapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
                 <Folder size={16} color="var(--accent)" />
-                <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                  {group.name} 
-                  <span style={{ marginLeft: '4px', opacity: 0.5, fontWeight: 400 }}>({group.listIds.length})</span>
-                </span>
+                {isEditMode && editingGroupId === group.id ? (
+                  <input 
+                    autoFocus
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        onRenameGroup(group.id, editValue);
+                        setEditingGroupId(null);
+                      } else if (e.key === 'Escape') {
+                        setEditingGroupId(null);
+                      }
+                    }}
+                    onBlur={() => {
+                      onRenameGroup(group.id, editValue);
+                      setEditingGroupId(null);
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                      background: 'var(--surface-input)',
+                      border: '1px solid var(--accent)',
+                      borderRadius: '4px',
+                      color: 'var(--text-primary)',
+                      fontSize: '13px',
+                      padding: '2px 6px',
+                      width: '100%',
+                      outline: 'none'
+                    }}
+                  />
+                ) : (
+                  <span 
+                    style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                    onClick={(e) => {
+                      if (isEditMode) {
+                        e.stopPropagation();
+                        setEditingGroupId(group.id);
+                        setEditValue(group.name);
+                      }
+                    }}
+                  >
+                    {group.name} 
+                    <span style={{ marginLeft: '4px', opacity: 0.5, fontWeight: 400 }}>({group.listIds.length})</span>
+                  </span>
+                )}
               </div>
               {isEditMode && (
-                <button className="btn" style={{ padding: '4px' }} onClick={(e) => { e.stopPropagation(); onDeleteGroup(group.id); }}>
-                  <Trash2 size={12} color="rgba(255,255,255,0.3)" />
-                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <button 
+                    className="btn" 
+                    style={{ padding: '2px', opacity: index === 0 ? 0.3 : 0.7 }}
+                    onClick={(e) => { e.stopPropagation(); onMoveGroup?.(group.id, 'up'); }}
+                    disabled={index === 0}
+                  >
+                    <ChevronUp size={14} />
+                  </button>
+                  <button 
+                    className="btn" 
+                    style={{ padding: '2px', opacity: index === groups.length - 1 ? 0.3 : 0.7 }}
+                    onClick={(e) => { e.stopPropagation(); onMoveGroup?.(group.id, 'down'); }}
+                    disabled={index === groups.length - 1}
+                  >
+                    <ChevronDown size={14} />
+                  </button>
+                  <button className="btn" style={{ padding: '4px' }} onClick={(e) => { e.stopPropagation(); onDeleteGroup(group.id); }}>
+                    <Trash2 size={12} color="rgba(255,255,255,0.3)" />
+                  </button>
+                </div>
               )}
             </div>
             
@@ -269,10 +398,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 cursor: 'pointer',
                 userSelect: 'none'
               }}
-              onClick={() => setIsUngropedSectionCollapsed(!isUngropedSectionCollapsed)}
+              onClick={() => setIsUngroupedSectionCollapsed(!isUngroupedSectionCollapsed)}
             >
-              {isUngropedSectionCollapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
-              Ungroped ({ungroupedLists.length})
+              {isUngroupedSectionCollapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
+              Ungrouped ({ungroupedLists.length})
             </div>
             {ungroupedLists.length > 0 && (
               <button 
@@ -291,7 +420,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </button>
             )}
           </div>
-          {!isUngropedSectionCollapsed && (
+          {!isUngroupedSectionCollapsed && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               {ungroupedLists.map(l => renderListItem(l, isUngroupedEditMode))}
               {ungroupedLists.length === 0 && groups.length === 0 && (

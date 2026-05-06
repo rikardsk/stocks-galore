@@ -16,6 +16,14 @@ export const RankingModal: React.FC<RankingModalProps> = ({ isOpen, onClose, tic
   const rankings = useMemo(() => {
     const validTickers = tickers.filter(t => t.name !== 'Unknown Company');
 
+    const topToday = [...validTickers]
+      .sort((a, b) => {
+        const valA = parseFloat(a.stats.changePercent.replace('%', '')) || 0;
+        const valB = parseFloat(b.stats.changePercent.replace('%', '')) || 0;
+        return valB - valA;
+      })
+      .slice(0, 10);
+
     const top1M = [...validTickers]
       .sort((a, b) => (b.stats.perf1M || 0) - (a.stats.perf1M || 0))
       .slice(0, 10);
@@ -28,7 +36,7 @@ export const RankingModal: React.FC<RankingModalProps> = ({ isOpen, onClose, tic
       .sort((a, b) => (b.stats.perf1Y || 0) - (a.stats.perf1Y || 0))
       .slice(0, 10);
 
-    return { top1M, top3M, top1Y };
+    return { topToday, top1M, top3M, top1Y };
   }, [tickers]);
 
   if (!isOpen) return null;
@@ -44,7 +52,17 @@ export const RankingModal: React.FC<RankingModalProps> = ({ isOpen, onClose, tic
           <button className="btn" onClick={onClose}><X /></button>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
+          {/* Top Today */}
+          <RankingColumn 
+            title="Today" 
+            icon={<TrendingUp size={18} color="#10b981" />} 
+            tickers={rankings.topToday} 
+            metric="changePercent" 
+            onSelectTicker={onSelectTicker}
+            theme={theme}
+          />
+
           {/* Top 1M */}
           <RankingColumn 
             title="1 Month" 
@@ -84,7 +102,7 @@ interface RankingColumnProps {
   title: string;
   icon: React.ReactNode;
   tickers: Ticker[];
-  metric: 'perf1M' | 'perf3M' | 'perf1Y';
+  metric: 'perf1M' | 'perf3M' | 'perf1Y' | 'changePercent';
   onSelectTicker: (ticker: Ticker) => void;
   theme: 'dark' | 'light';
 }
@@ -104,7 +122,10 @@ const RankingColumn: React.FC<RankingColumnProps> = ({ title, icon, tickers, met
           </div>
         ) : (
           tickers.map((ticker, index) => {
-            const val = ticker.stats[metric] || 0;
+            const rawVal = ticker.stats[metric];
+            const val = typeof rawVal === 'string' 
+              ? parseFloat(rawVal.replace('%', '')) 
+              : (rawVal || 0);
             return (
               <div 
                 key={ticker.id} 

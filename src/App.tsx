@@ -15,6 +15,7 @@ import { AlertsModal } from './components/AlertsModal';
 import { AnalyticsModal } from './components/AnalyticsModal';
 import { RankingModal } from './components/RankingModal';
 import { StockDetailModal } from './components/StockDetailModal';
+import { SearchChoiceModal } from './components/SearchChoiceModal';
 import { AssignGroupModal } from './components/AssignGroupModal';
 import './index.css';
 
@@ -32,7 +33,7 @@ const App: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshProgress, setRefreshProgress] = useState(0);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [toastType, setToastType] = useState<'error' | 'success'>('error');
+  const [toastType, setToastType] = useState<'error' | 'success' | 'warning'>('error');
   const [searchQuery, setSearchQuery] = useState('');
   
   const [globalFilters, setGlobalFilters] = useState<StockFilters>(EMPTY_FILTERS);
@@ -47,6 +48,11 @@ const App: React.FC = () => {
   const [isAlertsModalOpen, setIsAlertsModalOpen] = useState(false);
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
   const [isRankingOpen, setIsRankingOpen] = useState(false);
+  
+  // Search Fallback state
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [pendingSearchQuery, setPendingSearchQuery] = useState('');
   const [selectedDetailTicker, setSelectedDetailTicker] = useState<Ticker | null>(null);
   const [shouldReopenNotifications, setShouldReopenNotifications] = useState(false);
   const [theme, setTheme] = useState<'dark' | 'light'>(() => (localStorage.getItem('theme') as 'dark' | 'light') || 'dark');
@@ -71,7 +77,7 @@ const App: React.FC = () => {
     }
   }, [toastMessage]);
 
-  const showToast = (message: string, type: 'error' | 'success' = 'error') => {
+  const showToast = (message: string, type: 'error' | 'success' | 'warning' = 'error') => {
     setToastType(type);
     setToastMessage(message);
   };
@@ -320,6 +326,13 @@ const App: React.FC = () => {
     }
   };
 
+  const handleRenameGroup = (id: string, newName: string) => {
+    if (!newName.trim()) return;
+    const updated = groups.map(g => g.id === id ? { ...g, name: newName } : g);
+    setGroups(updated);
+    storage.saveGroups(updated);
+  };
+
   const handleToggleGroup = (id: string) => {
     const group = groups.find(g => g.id === id);
     if (group) {
@@ -424,6 +437,21 @@ const App: React.FC = () => {
     storage.saveGroups(newGroups);
   };
 
+  const handleMoveGroup = (groupId: string, direction: 'up' | 'down') => {
+    const index = groups.findIndex(g => g.id === groupId);
+    if (index === -1) return;
+    
+    if (direction === 'up' && index === 0) return;
+    if (direction === 'down' && index === groups.length - 1) return;
+    
+    const newGroups = [...groups];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    [newGroups[index], newGroups[targetIndex]] = [newGroups[targetIndex], newGroups[index]];
+    
+    setGroups(newGroups);
+    storage.saveGroups(newGroups);
+  };
+
   const handleCreateList = () => {
     if (!newListName.trim()) return;
     const newList = storage.createList(newListName, newListColor, newCountry);
@@ -437,6 +465,14 @@ const App: React.FC = () => {
     const list = lists.find(l => l.id === id);
     if (list) {
       handleUpdateList({ ...list, isVisible });
+    }
+  };
+
+  const handleRenameList = (id: string, newName: string, color?: string) => {
+    if (!newName.trim()) return;
+    const list = lists.find(l => l.id === id);
+    if (list) {
+      handleUpdateList({ ...list, name: newName, color: color || list.color });
     }
   };
 
@@ -524,17 +560,43 @@ const App: React.FC = () => {
     setIsAddTickerModalOpen(true);
   };
 
-  const performAddTicker = async () => {
-    if (!activeListId || !newTickerSymbol.trim()) return;
+  const performAddTicker = async (symbolToUse?: string) => {
+    if (!activeListId) return;
     
-    const symbols = newTickerSymbol.split(',').map(s => s.trim().toUpperCase()).filter(s => s);
+    // Use either the selected symbol from modal OR the input text
+    const query = symbolToUse || newTickerSymbol.trim().toUpperCase();
+    if (!query) return;
+
+    // Handle comma-separated list if not coming from selection modal
+    const symbols = symbolToUse ? [symbolToUse] : query.split(',').map(s => s.trim().toUpperCase()).filter(s => s);
     
     setIsAddTickerModalOpen(false);
+    setIsSearchModalOpen(false);
     setNewTickerSymbol('');
 
     for (const symbol of symbols) {
       try {
         const response = await fetch(`${API_BASE_URL}/stock/${symbol}`);
+        
+        if (response.status === 404 && symbols.length === 1 && !symbolToUse) {
+          // Fallback to search if it was a single input that failed
+          const searchResponse = await fetch(`${API_BASE_URL}/search?query=${encodeURIComponent(symbol)}`);
+          if (searchResponse.ok) {
+            const results = await searchResponse.json();
+            if (results.length === 0) {
+              showToast(`Ticker or company "${symbol}" not found`, 'error');
+            } else if (results.length === 1) {
+              performAddTicker(results[0].symbol);
+              return;
+            } else {
+              setSearchResults(results);
+              setPendingSearchQuery(symbol);
+              setIsSearchModalOpen(true);
+            }
+          }
+          continue;
+        }
+
         if (response.ok) {
           const data = await response.json();
           const newTicker = {
@@ -576,16 +638,14 @@ const App: React.FC = () => {
               return l;
             });
             storage.saveLists(updated);
-            
-            // Check alerts for the newly added ticker
             checkAlerts([newTicker]);
-            
             return updated;
           });
+          showToast(`${symbol} added successfully!`, 'success');
         } else {
-          // Fallback to mock if backend is down or symbol not found
           storage.addTickerToList(activeListId, symbol);
           setLists(storage.getLists());
+          showToast(`Ticker "${symbol}" not found, added placeholder`, 'warning');
         }
       } catch (err) {
         console.error('Fetch failed, using mock data');
@@ -846,6 +906,9 @@ const App: React.FC = () => {
         }}
         onDeleteGroup={handleDeleteGroup}
         onToggleGroup={handleToggleGroup}
+        onMoveGroup={handleMoveGroup}
+        onRenameGroup={handleRenameGroup}
+        onRenameList={handleRenameList}
         onSelectListItem={(id) => {
           const list = lists.find(l => l.id === id);
           if (list) {
@@ -1003,7 +1066,7 @@ const App: React.FC = () => {
               />
             </div>
             <div style={{ display: 'flex', gap: '12px', marginTop: '30px' }}>
-              <button className="btn btn-primary" style={{ flex: 1 }} onClick={performAddTicker}>Add to List</button>
+              <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => performAddTicker()}>Add to List</button>
               <button className="btn" style={{ flex: 1, border: '1px solid var(--border-color)' }} onClick={() => setIsAddTickerModalOpen(false)}>Cancel</button>
             </div>
             <div style={{ marginTop: '20px', fontSize: '12px', color: 'var(--text-secondary)' }}>
@@ -1092,8 +1155,19 @@ const App: React.FC = () => {
         isOpen={isRankingOpen} 
         onClose={() => setIsRankingOpen(false)} 
         tickers={allUniqueTickers}
-        onSelectTicker={setSelectedDetailTicker}
+        onSelectTicker={(ticker) => {
+          setSelectedDetailTicker(ticker);
+          setIsRankingOpen(false);
+        }}
         theme={theme}
+      />
+
+      <SearchChoiceModal 
+        isOpen={isSearchModalOpen}
+        onClose={() => setIsSearchModalOpen(false)}
+        query={pendingSearchQuery}
+        results={searchResults}
+        onSelect={(symbol) => performAddTicker(symbol)}
       />
 
       <StockDetailModal 

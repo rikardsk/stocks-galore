@@ -1,28 +1,28 @@
 ## TODOs
-- Some way to rearrenge the groups. Up/Down arrows for moving groups up or down in edit mode
+- ~~Some way to rearrenge the groups. Up/Down arrows for moving groups up or down in edit mode~~
 - ~~Present the number of groups in the label "GROUPS" and number of lists in the label "UNGROPED". (eg. GROUPS (2) and UNGROPED (1)).~~
-- Possibility to rename groups or lists in edit mode and change theme color for lists.
-- Make the buttons for frequent notifications reflect the timeframe (Today, Week, All). Example: If you click today it shows the 5-6 most frequent tickers from today's notifications with a count > 1. If you click week it shows the 5-6 most frequent tickers from the last week with a count > 1. If you click all it shows the 5-6 most frequent tickers from all notifications with a count > 1.
+- ~~Possibility to rename groups or lists in edit mode and change theme color for lists.~~
 - ~~Remove the section "drop lists here" when creating a new group. Since it is not possible to move an existing list to a group (only to move lists between groups), the section is not needed.~~
 - ~~When you click on a list in the sidebar and it's showing up in the workbench, could you scroll to the right list in the workbench so that the list is visible.~~
 - ~~Only start search if 3 characters has been entered. Ie. an Enter press should not trigger a search if the ticker is less than 3 characters long and also be able to search for tags.~~
 - ~~Toggle buttons for Earning Beat/Miss tags in the "deep dive" panel.~~
-- Top 10 Today in the ranking modal
-- Is it possible to just write the company name in the "add ticker" section at the bottom of the list, then the app tries to find the company via the company name. If there is only one result it adds it, if there is more than one result it opens a modal to choose the correct company from the results. Same logic could apply to the "Add Ticker" button in the top right corner.
+- ~~Top 10 Today in the ranking modal~~
+- ~~Is it possible to just write the company name in the "add ticker" section at the bottom of the list, then the app tries to find the company via the company name. If there is only one result it adds it, if there is more than one result it opens a modal to choose the correct company from the results. Same logic could apply to the "Add Ticker" button in the top right corner.~~
 - ~~Hide/Show the whole group section when you click the label GROUPS.~~
 - ~~Hide/Show the whole lists section when you click the label UNGROPED.~~
 - Possibility to disable a group or list so it's not refreshed in the global refresh
 - ~~A refresh button in the list next to the + Add Ticker button. The refresh button should only refresh the list in question.~~
 - Add a portfolio button that opens up a portfolio modal to manage Quantity and Average Price per ticker. The modal should also include  the Gain/Loss in numbers and percentages.
-- Earnings dates (for tracking upcoming earnings in the deep dive panel)
-- Zoom in/out with the mouse scroll wheel
-- Earnings winners/dates
-- Newsfeed?
 ~~- Database integration~~
 
 ## Later maybe
 - Make bullets in UNGROUPED and GROUPED either red or green depending on wheter they have been refreshed or not within 24h. Green if they have been refreshed, Red if they have not been refreshed.
 ~~- Group that is named "Not Refreshed" and lists within that group should be excluded from the global refresh. They will be updated   manually when I click on the list in the sidebar.~~
+- Make the buttons for frequent notifications reflect the timeframe (Today, Week, All). Example: If you click today it shows the 5-6 most frequent tickers from today's notifications with a count > 1. If you click week it shows the 5-6 most frequent tickers from the last week with a count > 1. If you click all it shows the 5-6 most frequent tickers from all notifications with a count > 1.
+- Earnings dates (for tracking upcoming earnings in the deep dive panel)
+- Zoom in/out with the mouse scroll wheel
+- Earnings winners/dates
+- Newsfeed?
 
 ## Done
 ~~- Stock Deep Dive Modal (Interactive charts & fundamentals)~~

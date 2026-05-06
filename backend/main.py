@@ -148,6 +148,29 @@ async def get_stock_history(symbol: str, period: str = "1y"):
         print(f"Error fetching history for {symbol}: {e}")
         return []
 
+@app.get("/search")
+async def search_ticker(query: str):
+    import requests
+    try:
+        url = f"https://query2.finance.yahoo.com/v1/finance/search?q={query}"
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+        response = requests.get(url, headers=headers)
+        if response.ok:
+            data = response.json()
+            quotes = data.get('quotes', [])
+            return [
+                {
+                    "symbol": q['symbol'], 
+                    "name": q.get('longname') or q.get('shortname') or q['symbol'], 
+                    "exchange": q.get('exchange'),
+                    "type": q.get('quoteType')
+                } for q in quotes if q.get('quoteType') in ['EQUITY', 'ETF']
+            ]
+        return []
+    except Exception as e:
+        print(f"Search error: {e}")
+        return []
+
 @app.get("/batch")
 async def get_batch(symbols: str = Query(..., description="Comma-separated symbols")):
     symbol_list = [s.strip().upper() for s in symbols.split(",") if s.strip()]
