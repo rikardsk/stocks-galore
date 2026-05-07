@@ -174,7 +174,7 @@ export const TableView: React.FC<TableViewProps> = ({
                 style={{ background: 'var(--surface-subtle)', border: '1px solid var(--border-color)', padding: '4px 8px' }}
               >
                 <option value="all">All Groups</option>
-                {groups.map(g => (
+                {[...groups].sort((a, b) => a.name.localeCompare(b.name)).map(g => (
                   <option key={g.id} value={g.id}>{g.name}</option>
                 ))}
               </select>
@@ -192,7 +192,7 @@ export const TableView: React.FC<TableViewProps> = ({
                 style={{ background: 'var(--surface-subtle)', border: '1px solid var(--border-color)', padding: '4px 8px' }}
               >
                 <option value="all">All Lists</option>
-                {lists.map(l => (
+                {[...lists].filter(l => !l.isProtected && !l.isArchived).sort((a, b) => a.name.localeCompare(b.name)).map(l => (
                   <option key={l.id} value={l.id}>{l.name}</option>
                 ))}
               </select>
