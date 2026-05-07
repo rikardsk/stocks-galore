@@ -38,6 +38,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const [isEditMode, setIsEditMode] = React.useState(false);
   const [isUngroupedEditMode, setIsUngroupedEditMode] = React.useState(false);
+  const [isArchiveEditMode, setIsArchiveEditMode] = React.useState(false);
   const [isGroupsSectionCollapsed, setIsGroupsSectionCollapsed] = React.useState(false);
   const [isUngroupedSectionCollapsed, setIsUngroupedSectionCollapsed] = React.useState(false);
   const [isArchiveSectionCollapsed, setIsArchiveSectionCollapsed] = React.useState(true);
@@ -440,29 +441,47 @@ export const Sidebar: React.FC<SidebarProps> = ({
           className="archive-section"
           style={{ marginTop: '16px' }}
         >
-          <div 
-            className="sidebar-section-label" 
-            style={{ 
-              fontSize: '11px', 
-              color: 'var(--text-secondary)', 
-              textTransform: 'uppercase', 
-              letterSpacing: '1px', 
-              margin: '0 0 8px 0',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              cursor: 'pointer',
-              userSelect: 'none',
-              opacity: archivedLists.length === 0 ? 0.5 : 1
-            }}
-            onClick={() => archivedLists.length > 0 && setIsArchiveSectionCollapsed(!isArchiveSectionCollapsed)}
-          >
-            {isArchiveSectionCollapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
-            Archive ({archivedLists.length})
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 0 8px 0', paddingRight: '8px' }}>
+            <div 
+              className="sidebar-section-label" 
+              style={{ 
+                fontSize: '11px', 
+                color: 'var(--text-secondary)', 
+                textTransform: 'uppercase', 
+                letterSpacing: '1px', 
+                margin: 0,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                cursor: 'pointer',
+                userSelect: 'none',
+                opacity: archivedLists.length === 0 ? 0.5 : 1
+              }}
+              onClick={() => archivedLists.length > 0 && setIsArchiveSectionCollapsed(!isArchiveSectionCollapsed)}
+            >
+              {isArchiveSectionCollapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
+              Archive ({archivedLists.length})
+            </div>
+            {archivedLists.length > 0 && (
+              <button 
+                className="btn" 
+                style={{ 
+                  fontSize: '11px', 
+                  padding: '2px 8px', 
+                  color: isArchiveEditMode ? 'var(--accent)' : 'var(--text-secondary)', 
+                  background: isArchiveEditMode ? 'rgba(59, 130, 246, 0.1)' : 'transparent', 
+                  borderRadius: '4px',
+                  border: isArchiveEditMode ? '1px solid rgba(59, 130, 246, 0.2)' : '1px solid transparent'
+                }}
+                onClick={() => setIsArchiveEditMode(!isArchiveEditMode)}
+              >
+                {isArchiveEditMode ? 'Done' : 'Edit'}
+              </button>
+            )}
           </div>
           {!isArchiveSectionCollapsed && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              {archivedLists.map(l => renderListItem(l, false))}
+              {archivedLists.map(l => renderListItem(l, isArchiveEditMode))}
             </div>
           )}
         </div>
