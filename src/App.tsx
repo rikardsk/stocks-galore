@@ -55,6 +55,8 @@ const App: React.FC = () => {
   const [pendingSearchQuery, setPendingSearchQuery] = useState('');
   const [selectedDetailTicker, setSelectedDetailTicker] = useState<Ticker | null>(null);
   const [shouldReopenNotifications, setShouldReopenNotifications] = useState(false);
+  const [shouldReopenRanking, setShouldReopenRanking] = useState(false);
+  const [shouldReopenAnalytics, setShouldReopenAnalytics] = useState(false);
   const [theme, setTheme] = useState<'dark' | 'light'>(() => (localStorage.getItem('theme') as 'dark' | 'light') || 'dark');
   
   const [newListName, setNewListName] = useState('');
@@ -1175,7 +1177,11 @@ const App: React.FC = () => {
         lists={lists}
         groups={groups}
         theme={theme}
-        onSelectTicker={setSelectedDetailTicker}
+        onSelectTicker={(ticker) => {
+          setSelectedDetailTicker(ticker);
+          setIsAnalyticsOpen(false);
+          setShouldReopenAnalytics(true);
+        }}
       />
 
       <RankingModal 
@@ -1185,6 +1191,7 @@ const App: React.FC = () => {
         onSelectTicker={(ticker) => {
           setSelectedDetailTicker(ticker);
           setIsRankingOpen(false);
+          setShouldReopenRanking(true);
         }}
         theme={theme}
       />
@@ -1205,6 +1212,14 @@ const App: React.FC = () => {
           if (shouldReopenNotifications) {
             setIsNotificationsModalOpen(true);
             setShouldReopenNotifications(false);
+          }
+          if (shouldReopenRanking) {
+            setIsRankingOpen(true);
+            setShouldReopenRanking(false);
+          }
+          if (shouldReopenAnalytics) {
+            setIsAnalyticsOpen(true);
+            setShouldReopenAnalytics(false);
           }
         }}
         onToggleOwned={(ticker) => {

@@ -2,9 +2,6 @@
 - Add a portfolio button that opens up a portfolio modal to manage Quantity and Average Price per ticker. The modal should also include  the Gain/Loss in numbers and percentages.
 
 ## Later maybe
-- Possibility to disable a group or list so it's not refreshed in the global refresh
-~~- Group that is named "Not Refreshed" and lists within that group should be excluded from the global refresh. They will be updated   manually when I click on the list in the sidebar.~~
-- ~~Make the buttons for frequent notifications reflect the timeframe (Today, Week, All). Example: If you click today it shows the 5-6 most frequent tickers from today's notifications with a count > 1. If you click week it shows the 5-6 most frequent tickers from the last week with a count > 1. If you click all it shows the 5-6 most frequent tickers from all notifications with a count > 1.~~
 - Earnings dates (for tracking upcoming earnings in the deep dive panel)
 - Zoom in/out with the mouse scroll wheel
 - Earnings winners/dates
