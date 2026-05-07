@@ -40,6 +40,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [isUngroupedEditMode, setIsUngroupedEditMode] = React.useState(false);
   const [isGroupsSectionCollapsed, setIsGroupsSectionCollapsed] = React.useState(false);
   const [isUngroupedSectionCollapsed, setIsUngroupedSectionCollapsed] = React.useState(false);
+  const [isArchiveSectionCollapsed, setIsArchiveSectionCollapsed] = React.useState(true);
   const [isPinnedSectionCollapsed, setIsPinnedSectionCollapsed] = React.useState(false);
   
   const [editingGroupId, setEditingGroupId] = React.useState<string | null>(null);
@@ -57,7 +58,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const protectedLists = lists.filter(list => list.isProtected);
   const regularLists = lists.filter(list => !list.isProtected);
-  const ungroupedLists = regularLists
+  
+  const archivedLists = regularLists
+    .filter(list => list.isArchived)
+    .sort((a, b) => calculateAverageGain(b) - calculateAverageGain(a));
+
+  const activeLists = regularLists.filter(list => !list.isArchived);
+  
+  const ungroupedLists = activeLists
     .filter(list => !groups.some(g => g.listIds.includes(list.id)))
     .sort((a, b) => calculateAverageGain(b) - calculateAverageGain(a));
 
@@ -381,7 +389,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         <div 
           className="ungrouped-section"
-          style={{ minHeight: '100px' }}
+          style={{ minHeight: '40px' }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '16px 0 8px 0', paddingRight: '8px' }}>
             <div 
@@ -423,14 +431,47 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {!isUngroupedSectionCollapsed && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               {ungroupedLists.map(l => renderListItem(l, isUngroupedEditMode))}
-              {ungroupedLists.length === 0 && groups.length === 0 && (
-                <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '13px' }}>
-                  No lists created yet.
-                </div>
-              )}
             </div>
           )}
         </div>
+
+        {/* Archive Section */}
+        <div 
+          className="archive-section"
+          style={{ marginTop: '16px' }}
+        >
+          <div 
+            className="sidebar-section-label" 
+            style={{ 
+              fontSize: '11px', 
+              color: 'var(--text-secondary)', 
+              textTransform: 'uppercase', 
+              letterSpacing: '1px', 
+              margin: '0 0 8px 0',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              cursor: 'pointer',
+              userSelect: 'none',
+              opacity: archivedLists.length === 0 ? 0.5 : 1
+            }}
+            onClick={() => archivedLists.length > 0 && setIsArchiveSectionCollapsed(!isArchiveSectionCollapsed)}
+          >
+            {isArchiveSectionCollapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
+            Archive ({archivedLists.length})
+          </div>
+          {!isArchiveSectionCollapsed && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              {archivedLists.map(l => renderListItem(l, false))}
+            </div>
+          )}
+        </div>
+
+        {activeLists.length === 0 && groups.length === 0 && archivedLists.length === 0 && (
+          <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '13px' }}>
+            No lists created yet.
+          </div>
+        )}
       </div>
     </aside>
   );

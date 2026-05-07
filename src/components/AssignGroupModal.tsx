@@ -36,6 +36,14 @@ export const AssignGroupModal: React.FC<AssignGroupModalProps> = ({
           >
             Ungrouped (Remove from group)
           </button>
+
+          <button 
+            className="btn" 
+            style={{ width: '100%', padding: '10px', justifyContent: 'flex-start', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}
+            onClick={() => onAssign('archive')}
+          >
+            📦 Archive (Exclude from refresh)
+          </button>
           
           {groups.length > 0 && (
             <div style={{ margin: '8px 0 4px', fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px' }}>

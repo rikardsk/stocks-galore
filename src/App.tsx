@@ -343,11 +343,20 @@ const App: React.FC = () => {
   };
 
   const handleMoveListToGroup = (listId: string, groupId: string | null) => {
+    // Update the list's isArchived status
+    const isArchiving = groupId === 'archive';
+    const targetGroupId = isArchiving ? null : groupId;
+
+    const list = lists.find(l => l.id === listId);
+    if (list) {
+      handleUpdateList({ ...list, isArchived: isArchiving });
+    }
+
     const updatedGroups = groups.map(group => {
       // Remove from any existing group
       let listIds = group.listIds.filter(id => id !== listId);
       // Add to target group
-      if (group.id === groupId) {
+      if (group.id === targetGroupId) {
         listIds.push(listId);
       }
       const updated = { ...group, listIds };
@@ -683,7 +692,8 @@ const App: React.FC = () => {
   };
 
   const handleRefreshAll = async () => {
-    const allSymbols = [...new Set(lists.flatMap(l => l.tickers.map(t => t.symbol)))];
+    const activeListsForRefresh = lists.filter(l => !l.isArchived);
+    const allSymbols = [...new Set(activeListsForRefresh.flatMap(l => l.tickers.map(t => t.symbol)))];
     if (allSymbols.length === 0) return;
 
     setIsRefreshing(true);
@@ -692,10 +702,12 @@ const App: React.FC = () => {
     try {
       const allFreshData = await refreshSymbols(allSymbols, setRefreshProgress);
       
-      const updatedLists = lists.map(list => ({
-        ...list,
-        lastUpdated: new Date().toISOString(),
-        tickers: list.tickers.map(ticker => {
+      const updatedLists = lists.map(list => {
+        if (list.isArchived) return list;
+        return {
+          ...list,
+          lastUpdated: new Date().toISOString(),
+          tickers: list.tickers.map(ticker => {
           const freshData = allFreshData.find((d: any) => d.symbol === ticker.symbol);
           if (freshData) {
             return {
@@ -731,7 +743,8 @@ const App: React.FC = () => {
           }
           return ticker;
         })
-      }));
+      };
+    });
       
       setLists(updatedLists);
       storage.saveLists(updatedLists);
