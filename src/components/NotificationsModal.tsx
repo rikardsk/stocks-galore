@@ -300,7 +300,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
           {(['all', 'price', 'changePercent', 'crossover'] as const).map(f => (
             <button 
               key={f}
-              onClick={() => setTypeFilter(f)}
+              onClick={() => setTypeFilter(typeFilter === f ? 'all' : f)}
               style={{ 
                 flex: 1,
                 padding: '4px 2px', 
@@ -329,7 +329,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
             {(['all', 'above', 'below'] as const).map(f => (
               <button 
                 key={f}
-                onClick={() => setDirectionFilter(f)}
+                onClick={() => setDirectionFilter(directionFilter === f ? 'all' : f)}
                 style={{ 
                   flex: 1,
                   padding: '4px 2px', 
@@ -360,7 +360,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
           {(['sma10', 'sma20', 'sma50', 'sma100', 'sma200'] as const).map(f => (
             <button 
               key={f}
-              onClick={() => setTypeFilter(f)}
+              onClick={() => setTypeFilter(typeFilter === f ? 'all' : f)}
               style={{ 
                 flex: 1,
                 padding: '4px 2px', 
