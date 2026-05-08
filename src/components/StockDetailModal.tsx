@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { X, TrendingUp, TrendingDown, Clock, Calendar, BarChart3, Info, Briefcase, Star, Eye, EyeOff } from 'lucide-react';
+import { X, TrendingUp, TrendingDown, Clock, Calendar, BarChart3, Info, Briefcase, Star, Eye, EyeOff, Bell } from 'lucide-react';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, 
-  ResponsiveContainer, AreaChart, Area, BarChart, Bar, ComposedChart
+  ResponsiveContainer, AreaChart, Area, BarChart, Bar, ComposedChart, ReferenceLine
 } from 'recharts';
-import type { Ticker } from '../types';
+import type { Ticker, StockAlert } from '../types';
 
 interface StockDetailModalProps {
   ticker: Ticker | null;
@@ -14,6 +14,10 @@ interface StockDetailModalProps {
   onToggleWatchlist: (ticker: Ticker) => void;
   onUpdateBadges?: (ticker: Ticker, badges: string[]) => void;
   isWatchlisted: boolean;
+  alerts: StockAlert[];
+  onAddAlert: (alert: Omit<StockAlert, 'id' | 'isTriggered'>) => void;
+  onDeleteAlert: (id: string) => void;
+  onUpdateAlert: (updated: StockAlert) => void;
   theme: 'dark' | 'light';
 }
 
@@ -41,7 +45,8 @@ const Candlestick = (props: any) => {
 };
 
 export const StockDetailModal: React.FC<StockDetailModalProps> = ({ 
-  ticker, isOpen, onClose, onToggleOwned, onToggleWatchlist, onUpdateBadges, isWatchlisted, theme 
+  ticker, isOpen, onClose, onToggleOwned, onToggleWatchlist, onUpdateBadges, isWatchlisted, 
+  alerts, onAddAlert, onDeleteAlert, onUpdateAlert, theme 
 }) => {
   const [history, setHistory] = useState<any[]>([]);
   const [timeframe, setTimeframe] = useState('1y');
@@ -51,6 +56,9 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [badges, setBadges] = useState<string[]>([]);
   const [newBadge, setNewBadge] = useState('');
+  
+  // Alert input state
+  const [newAlertVal, setNewAlertVal] = useState('');
 
   useEffect(() => {
     if (ticker) {
@@ -143,6 +151,20 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
     if (history.length < 2) return '#10b981';
     return history[history.length - 1].price >= history[0].price ? '#10b981' : '#ef4444';
   }, [history]);
+
+  const { minPrice, maxPrice } = useMemo(() => {
+    if (history.length === 0) return { minPrice: 0, maxPrice: 100 };
+    const prices = history.map(h => h.price);
+    const min = Math.min(...prices);
+    const max = Math.max(...prices);
+    const padding = (max - min) * 0.15;
+    return { minPrice: Math.max(0, min - padding), maxPrice: max + padding };
+  }, [history]);
+
+  const tickerAlerts = useMemo(() => {
+    if (!ticker) return [];
+    return alerts.filter(a => a.symbol === ticker.symbol && a.metric === 'price');
+  }, [alerts, ticker]);
 
   if (!isOpen || !ticker) return null;
 
@@ -257,11 +279,12 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
               />
               <YAxis 
                 yAxisId="price"
-                domain={['auto', 'auto']} 
+                domain={[minPrice, maxPrice]} 
                 orientation="right" 
                 axisLine={false} 
                 tickLine={false} 
                 tick={{fill: 'var(--text-secondary)', fontSize: 10}}
+                tickFormatter={(val) => Math.round(val).toString()}
               />
               <YAxis 
                 yAxisId="volume"
@@ -288,6 +311,23 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
               {indicators.includes('50') && <Line yAxisId="price" type="monotone" dataKey="sma50" stroke="#f59e0b" strokeWidth={1.5} dot={false} />}
               {indicators.includes('100') && <Line yAxisId="price" type="monotone" dataKey="sma100" stroke="#ec4899" strokeWidth={1.5} dot={false} />}
               {indicators.includes('200') && <Line yAxisId="price" type="monotone" dataKey="sma200" stroke="#8b5cf6" strokeWidth={1.5} dot={false} />}
+
+              {tickerAlerts.map(alert => (
+                <ReferenceLine 
+                  key={alert.id}
+                  yAxisId="price"
+                  y={alert.value} 
+                  stroke={alert.isTriggered ? 'var(--text-secondary)' : 'var(--accent)'} 
+                  strokeDasharray="3 3"
+                  label={{ 
+                    position: 'insideRight', 
+                    value: `$${alert.value}`, 
+                    fill: alert.isTriggered ? 'var(--text-secondary)' : 'var(--accent)',
+                    fontSize: 10,
+                    fontWeight: 'bold'
+                  }}
+                />
+              ))}
             </ComposedChart>
           </ResponsiveContainer>
         </div>
@@ -326,6 +366,116 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
               </div>
               <span className="range-val">${ticker.stats.high52 || '0.00'}</span>
             </div>
+          </div>
+        </div>
+
+        {/* Alert Management */}
+        <div style={{ padding: '30px', borderTop: '1px solid var(--border-color)', background: 'var(--surface-subtle)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <h3 style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '10px', margin: 0, fontSize: '18px' }}>
+              <Bell size={20} color="var(--accent)" />
+              Price Alerts
+            </h3>
+            <div style={{ padding: '4px 10px', background: 'var(--surface-hover)', borderRadius: '6px', fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>
+              Current: ${ticker.stats.price}
+            </div>
+          </div>
+          
+          <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', alignItems: 'stretch' }}>
+             <div style={{ position: 'relative', flex: 1, height: '52px' }}>
+               <div style={{ 
+                 position: 'absolute', left: '18px', top: '50%', transform: 'translateY(-50%)', 
+                 color: 'var(--text-secondary)', fontSize: '20px', fontWeight: 600, zIndex: 1,
+                 pointerEvents: 'none'
+               }}>$</div>
+               <input 
+                 type="number"
+                 step="any"
+                 value={newAlertVal}
+                 onChange={e => setNewAlertVal(e.target.value)}
+                 onKeyDown={e => {
+                   if (e.key === 'Enter' && newAlertVal) {
+                     const currentPrice = parseFloat(ticker.stats.price);
+                     const targetPrice = parseFloat(newAlertVal);
+                     onAddAlert({
+                       symbol: ticker.symbol,
+                       metric: 'price',
+                       operator: targetPrice > currentPrice ? 'above' : 'below',
+                       value: targetPrice
+                     });
+                     setNewAlertVal('');
+                   }
+                 }}
+                 placeholder="Enter target price..."
+                 style={{ 
+                   width: '100%', height: '100%', background: 'var(--surface-modal)', 
+                   border: '1px solid var(--border-color)', color: 'var(--text-primary)', 
+                   padding: '0 20px 0 40px', borderRadius: '14px', outline: 'none', 
+                   fontSize: '18px', fontWeight: 700, display: 'block'
+                 }}
+               />
+             </div>
+             <button 
+               className="btn btn-primary"
+               onClick={() => {
+                 if (newAlertVal) {
+                   const currentPrice = parseFloat(ticker.stats.price);
+                   const targetPrice = parseFloat(newAlertVal);
+                   onAddAlert({
+                     symbol: ticker.symbol,
+                     metric: 'price',
+                     operator: targetPrice > currentPrice ? 'above' : 'below',
+                       value: targetPrice
+                   });
+                   setNewAlertVal('');
+                 }
+               }}
+               style={{ flex: '0 0 auto', padding: '0 32px', borderRadius: '14px', fontWeight: 700, fontSize: '15px', height: '52px' }}
+             >
+               Set Alert
+             </button>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px' }}>
+            {tickerAlerts.map(alert => (
+              <div key={alert.id} style={{ 
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
+                padding: '14px 18px', background: 'var(--surface-modal)', 
+                borderRadius: '12px', border: `1px solid ${alert.isTriggered ? 'var(--border-color)' : 'rgba(99, 102, 241, 0.3)'}`,
+                boxShadow: alert.isTriggered ? 'none' : '0 4px 12px rgba(99, 102, 241, 0.1)',
+                transition: 'all 0.2s'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                   <div style={{ 
+                     width: '28px', height: '28px', borderRadius: '8px', 
+                     background: alert.operator === 'above' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                     display: 'flex', alignItems: 'center', justifyContent: 'center'
+                   }}>
+                     {alert.operator === 'above' ? <TrendingUp size={16} color="#10b981" /> : <TrendingDown size={16} color="#ef4444" />}
+                   </div>
+                   <div>
+                     <div style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.2 }}>${alert.value}</div>
+                     <div style={{ fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.5px' }}>{alert.operator}</div>
+                   </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {alert.isTriggered && <span style={{ fontSize: '9px', fontWeight: 900, color: 'var(--text-secondary)', background: 'var(--surface-divider)', padding: '3px 8px', borderRadius: '6px' }}>FIRED</span>}
+                  <button 
+                    onClick={() => onDeleteAlert(alert.id)}
+                    style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', opacity: 0.5, padding: '6px' }}
+                    className="alert-delete-btn"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              </div>
+            ))}
+            {tickerAlerts.length === 0 && (
+              <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', color: 'var(--text-secondary)', fontSize: '14px', border: '2px dashed var(--border-color)', borderRadius: '16px', background: 'rgba(255,255,255,0.02)' }}>
+                <Bell size={28} style={{ opacity: 0.15, marginBottom: '12px' }} />
+                <div style={{ fontWeight: 500 }}>No active alerts. Use the form above to track price targets.</div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -408,7 +558,9 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
           </div>
         </div>
 
+
         <style>{`
+          .alert-delete-btn:hover { opacity: 1 !important; color: #ef4444 !important; }
           .stock-detail-modal {
             max-width: 900px;
             width: 95%;

@@ -198,6 +198,11 @@ export const storage = {
     storage.saveAlerts(alerts.filter(a => a.id !== id));
   },
 
+  updateAlert: (updated: StockAlert) => {
+    const alerts = storage.getAlerts();
+    storage.saveAlerts(alerts.map(a => a.id === updated.id ? updated : a));
+  },
+
   // --- Notifications ---
   getNotifications: (): TickerNotification[] => {
     const data = localStorage.getItem(NOTIFICATIONS_KEY);

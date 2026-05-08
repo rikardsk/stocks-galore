@@ -1245,6 +1245,19 @@ const App: React.FC = () => {
           setSelectedDetailTicker(prev => prev && prev.symbol === ticker.symbol ? { ...prev, badges } : prev);
         }}
         isWatchlisted={selectedDetailTicker ? watchlistSymbols.has(selectedDetailTicker.symbol) : false}
+        alerts={alerts}
+        onAddAlert={(a) => {
+          storage.addAlert(a);
+          setAlerts(storage.getAlerts());
+        }}
+        onDeleteAlert={(id) => {
+          storage.deleteAlert(id);
+          setAlerts(storage.getAlerts());
+        }}
+        onUpdateAlert={(updated) => {
+          storage.updateAlert(updated);
+          setAlerts(storage.getAlerts());
+        }}
         theme={theme}
       />
 
