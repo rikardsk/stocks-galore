@@ -641,7 +641,8 @@ const App: React.FC = () => {
               pe: data.pe,
               high52: data.high52,
               low52: data.low52,
-              avgVolume: data.avgVolume
+              avgVolume: data.avgVolume,
+              earningsDate: data.earningsDate
             }
           };
           
@@ -743,6 +744,7 @@ const App: React.FC = () => {
                 high52: freshData.high52,
                 low52: freshData.low52,
                 avgVolume: freshData.avgVolume,
+                earningsDate: freshData.earningsDate,
                 error: undefined
               }
             };
@@ -811,6 +813,7 @@ const App: React.FC = () => {
                 high52: freshData.high52,
                 low52: freshData.low52,
                 avgVolume: freshData.avgVolume,
+                earningsDate: freshData.earningsDate,
                 error: undefined
               }
             };

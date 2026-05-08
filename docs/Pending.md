@@ -60,5 +60,7 @@
 - ~~Hide/Show the whole group section when you click the label GROUPS.~~
 - ~~Hide/Show the whole lists section when you click the label UNGROPED.~~
 - ~~A refresh button in the list next to the + Add Ticker button. The refresh button should only refresh the list in question.~~
+- ~~Add Alert management (Add/Delete) directly in the "Deep Dive" panel.~~
+- ~~Add Earnings Date to Market Overview table and Deep Dive panel.~~
 
 

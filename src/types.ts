@@ -27,6 +27,7 @@ export type Ticker = {
     high52?: number;
     low52?: number;
     avgVolume?: string;
+    earningsDate?: string;
   };
   isOwned?: boolean;
   badges?: string[];

@@ -105,6 +105,41 @@ def calculate_stats(symbol: str, info: Dict, hist: pd.DataFrame) -> Dict[str, An
         "avgVolume": f"{info.get('averageVolume', 0) / 1e6:.1f}M" if info.get('averageVolume') else "N/A"
     }
 
+def get_earnings_date(ticker: yf.Ticker, info: Dict) -> str:
+    """Attempt to get next earnings date."""
+    import datetime
+    
+    # 1. Try info.earningsTimestamp (most reliable for some tickers)
+    try:
+        ts = info.get('earningsTimestamp')
+        if ts:
+            return datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d')
+    except:
+        pass
+
+    # 2. Try ticker.calendar
+    try:
+        cal = ticker.calendar
+        if cal is not None:
+            if isinstance(cal, dict) and 'Earnings Date' in cal:
+                dates = cal['Earnings Date']
+                if dates and len(dates) > 0:
+                    # The first date in the list is usually the next one
+                    d = dates[0]
+                    if hasattr(d, 'strftime'):
+                        return d.strftime('%Y-%m-%d')
+                    return str(d)
+            elif isinstance(cal, pd.DataFrame) and not cal.empty:
+                if 'Earnings Date' in cal.index:
+                    val = cal.loc['Earnings Date'].iloc[0]
+                    if hasattr(val, 'strftime'):
+                        return val.strftime('%Y-%m-%d')
+                    return str(val)
+    except Exception as e:
+        print(f"Earnings date error for {ticker.ticker}: {e}")
+        
+    return "N/A"
+
 @app.get("/stock/{symbol}")
 async def get_stock(symbol: str):
     try:
@@ -115,7 +150,10 @@ async def get_stock(symbol: str):
         if hist.empty:
             raise HTTPException(status_code=404, detail="Stock not found")
             
-        return calculate_stats(symbol, info, hist)
+        stats = calculate_stats(symbol, info, hist)
+        if stats:
+            stats['earningsDate'] = get_earnings_date(ticker, info)
+        return stats
     except HTTPException:
         raise
     except Exception as e:
@@ -211,7 +249,10 @@ async def get_batch(symbols: str = Query(..., description="Comma-separated symbo
             # Fetch info individually (needed for name, sector, marketCap, volume)
             ticker = yf.Ticker(symbol)
             info = ticker.info
-            results.append(calculate_stats(symbol, info, hist))
+            stats = calculate_stats(symbol, info, hist)
+            if stats:
+                stats['earningsDate'] = get_earnings_date(ticker, info)
+            results.append(stats)
         except Exception as e:
             print(f"[batch] Error processing {symbol}: {e}")
             continue

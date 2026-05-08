@@ -346,11 +346,15 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
             <span className="stat-label">Avg Volume</span>
             <span className="stat-value" style={{ color: 'var(--text-primary)' }}>{ticker.stats.avgVolume}</span>
           </div>
-          <div className="stat-box" style={{ background: 'var(--surface-subtle)' }}>
+          <div style={{ background: 'var(--surface-subtle)' }} className="stat-box">
             <span className="stat-label">Dividend Yield</span>
             <span className="stat-value" style={{ color: '#f59e0b' }}>{ticker.stats.dividendYield ? ticker.stats.dividendYield.toFixed(2) + '%' : '0.00%'}</span>
           </div>
-          <div className="stat-box" style={{ gridColumn: 'span 2', background: 'var(--surface-subtle)' }}>
+          <div style={{ background: 'var(--surface-subtle)' }} className="stat-box">
+            <span className="stat-label">Earnings Date</span>
+            <span className="stat-value" style={{ color: 'var(--accent)' }}>{ticker.stats.earningsDate || 'N/A'}</span>
+          </div>
+          <div style={{ gridColumn: 'span 2', background: 'var(--surface-subtle)' }} className="stat-box">
             <span className="stat-label">52 Week Range</span>
             <div className="range-bar-container">
               <span className="range-val">${ticker.stats.low52 || '0.00'}</span>

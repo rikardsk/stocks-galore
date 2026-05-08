@@ -109,6 +109,9 @@ export const TableView: React.FC<TableViewProps> = ({
       } else if (sortConfig.key.startsWith('perf')) {
         aVal = a.stats[sortConfig.key as keyof typeof a.stats] || 0;
         bVal = b.stats[sortConfig.key as keyof typeof b.stats] || 0;
+      } else if (sortConfig.key === 'earningsDate') {
+        aVal = a.stats.earningsDate || '9999-99-99'; // Put N/A at the end
+        bVal = b.stats.earningsDate || '9999-99-99';
       } else if (sortConfig.key === 'dividendYield') {
         aVal = a.stats.dividendYield || 0;
         bVal = b.stats.dividendYield || 0;
@@ -278,6 +281,7 @@ export const TableView: React.FC<TableViewProps> = ({
                 <th onClick={() => requestSort('perf3M')} style={thStyle} className="no-print">3M % {getSortIcon('perf3M')}</th>
                 <th onClick={() => requestSort('perf1Y')} style={thStyle} className="no-print">1Y % {getSortIcon('perf1Y')}</th>
                 <th onClick={() => requestSort('dividendYield')} style={thStyle} className="no-print">Yield % {getSortIcon('dividendYield')}</th>
+                <th onClick={() => requestSort('earningsDate')} style={thStyle} className="no-print">Earnings {getSortIcon('earningsDate')}</th>
               </tr>
             </thead>
             <tbody>
@@ -357,6 +361,7 @@ export const TableView: React.FC<TableViewProps> = ({
                     <td style={{ ...tdStyle, color: (ticker.stats?.perf3M || 0) >= 0 ? '#10b981' : '#ef4444' }} className="no-print">{ticker.stats?.perf3M || 0}%</td>
                     <td style={{ ...tdStyle, color: (ticker.stats?.perf1Y || 0) >= 0 ? '#10b981' : '#ef4444' }} className="no-print">{ticker.stats?.perf1Y || 0}%</td>
                     <td style={{ ...tdStyle, color: '#f59e0b' }} className="no-print">{yieldStr}</td>
+                    <td style={{ ...tdStyle, color: 'var(--accent)' }} className="no-print">{ticker.stats.earningsDate || 'N/A'}</td>
                   </tr>
                 );
               })}
