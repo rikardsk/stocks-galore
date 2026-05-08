@@ -3,6 +3,7 @@
 
 ## Later maybe
 - Earnings dates (for tracking upcoming earnings in the deep dive panel)
+- IPO dates
 - Zoom in/out with the mouse scroll wheel
 - Earnings winners/dates
 - Newsfeed?

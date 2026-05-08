@@ -133,11 +133,15 @@ export const storage = {
   exportData: () => {
     const lists = storage.getLists();
     const groups = storage.getGroups();
+    const alerts = storage.getAlerts();
+    const notifications = storage.getNotifications();
     const data = {
       version: '1.0',
       timestamp: new Date().toISOString(),
       lists,
-      groups
+      groups,
+      alerts,
+      notifications
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -158,6 +162,12 @@ export const storage = {
     }
     if (jsonData.groups && Array.isArray(jsonData.groups)) {
       storage.saveGroups(jsonData.groups);
+    }
+    if (jsonData.alerts && Array.isArray(jsonData.alerts)) {
+      storage.saveAlerts(jsonData.alerts);
+    }
+    if (jsonData.notifications && Array.isArray(jsonData.notifications)) {
+      storage.saveNotifications(jsonData.notifications);
     }
     return true;
   },

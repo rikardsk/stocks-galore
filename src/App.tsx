@@ -902,6 +902,8 @@ const App: React.FC = () => {
     if (storage.importData(data)) {
       setLists(storage.getLists());
       setGroups(storage.getGroups());
+      setAlerts(storage.getAlerts());
+      setNotifications(storage.getNotifications());
       showToast('Data imported successfully!', 'success');
       setIsSettingsModalOpen(false);
     } else {
