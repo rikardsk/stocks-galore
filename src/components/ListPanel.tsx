@@ -153,11 +153,6 @@ export const ListPanel: React.FC<ListPanelProps> = ({
               }}>
                 {list.country && COUNTRY_FLAGS[list.country]} {list.name}
               </span>
-              {list.lastUpdated && (
-                <span style={{ fontSize: '9px', opacity: 0.5, fontWeight: 400, marginLeft: '4px' }} title={`Full update: ${new Date(list.lastUpdated).toLocaleString()}`}>
-                  {new Date(list.lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </span>
-              )}
               <span style={{ opacity: 0.6, fontSize: '11px', fontWeight: 400, whiteSpace: 'nowrap', flexShrink: 0 }}>
                 ({filteredTickers.length})
               </span>
@@ -448,45 +443,52 @@ export const ListPanel: React.FC<ListPanelProps> = ({
           </div>
         )}
 
-        <div style={{ display: 'flex', gap: '8px', padding: '8px', background: 'var(--surface-inset)', borderTop: '1px solid var(--surface-divider)', borderRadius: '0 0 12px 12px' }}>
-          <button 
-            className="btn" 
-            style={{ flex: 1, padding: '10px', color: 'var(--text-secondary)', gap: '8px', fontSize: '13px', background: 'var(--surface-subtle)' }}
-            onClick={() => onAddTicker(list.id)}
-          >
-            <Plus size={14} /> Add Ticker
-          </button>
-          <button 
-            className="btn" 
-            style={{ padding: '10px', color: 'var(--text-secondary)', background: 'var(--surface-subtle)' }}
-            onClick={async () => {
-              if (onRefresh) {
-                setIsRefreshing(true);
-                await onRefresh(list.id);
-                setIsRefreshing(false);
-              }
-            }}
-            title="Refresh List"
-            disabled={isRefreshing}
-          >
-            <RefreshCw size={14} className={isRefreshing ? 'spinning' : ''} />
-          </button>
-          <button 
-            className="btn" 
-            style={{ padding: '10px', color: isCopied ? '#10b981' : 'var(--text-secondary)', background: 'var(--surface-subtle)' }}
-            onClick={handleCopyTickers}
-            title="Copy Tickers"
-          >
-            {isCopied ? <Check size={16} /> : <Copy size={16} />}
-          </button>
-          <button 
-            className="btn" 
-            style={{ padding: '10px', color: 'var(--text-secondary)', background: 'var(--surface-subtle)' }}
-            onClick={handleToggleCollapse}
-            title={isCollapsed ? "Expand" : "Minimize"}
-          >
-            {isCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
-          </button>
+        <div style={{ background: 'var(--surface-inset)', borderTop: '1px solid var(--surface-divider)', borderRadius: '0 0 12px 12px' }}>
+          {list.lastUpdated && (
+            <div style={{ fontSize: '9px', opacity: 0.4, textAlign: 'center', padding: '4px 0', borderBottom: '1px solid var(--surface-divider)' }}>
+              Last updated: {new Date(list.lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </div>
+          )}
+          <div style={{ display: 'flex', gap: '8px', padding: '8px' }}>
+            <button 
+              className="btn" 
+              style={{ flex: 1, padding: '10px', color: 'var(--text-secondary)', gap: '8px', fontSize: '13px', background: 'var(--surface-subtle)' }}
+              onClick={() => onAddTicker(list.id)}
+            >
+              <Plus size={14} /> Add Ticker
+            </button>
+            <button 
+              className="btn" 
+              style={{ padding: '10px', color: 'var(--text-secondary)', background: 'var(--surface-subtle)' }}
+              onClick={async () => {
+                if (onRefresh) {
+                  setIsRefreshing(true);
+                  await onRefresh(list.id);
+                  setIsRefreshing(false);
+                }
+              }}
+              title="Refresh List"
+              disabled={isRefreshing}
+            >
+              <RefreshCw size={14} className={isRefreshing ? 'spinning' : ''} />
+            </button>
+            <button 
+              className="btn" 
+              style={{ padding: '10px', color: isCopied ? '#10b981' : 'var(--text-secondary)', background: 'var(--surface-subtle)' }}
+              onClick={handleCopyTickers}
+              title="Copy Tickers"
+            >
+              {isCopied ? <Check size={16} /> : <Copy size={16} />}
+            </button>
+            <button 
+              className="btn" 
+              style={{ padding: '10px', color: 'var(--text-secondary)', background: 'var(--surface-subtle)' }}
+              onClick={handleToggleCollapse}
+              title={isCollapsed ? "Expand" : "Minimize"}
+            >
+              {isCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+            </button>
+          </div>
         </div>
       </div>
     </Draggable>
