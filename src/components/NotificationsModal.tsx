@@ -25,6 +25,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
 }) => {
   const [timeFilter, setTimeFilter] = React.useState<'today' | 'yesterday' | 'week' | 'all'>('all');
   const [typeFilter, setTypeFilter] = React.useState<'all' | 'price' | 'changePercent' | 'crossover' | 'sma10' | 'sma20' | 'sma50' | 'sma100' | 'sma200'>('all');
+  const [directionFilter, setDirectionFilter] = React.useState<'all' | 'above' | 'below'>('all');
   const [searchQuery, setSearchQuery] = React.useState('');
 
   const timeFilteredNotifications = React.useMemo(() => {
@@ -33,18 +34,44 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
     const cutoff = new Date();
     if (timeFilter === 'today') {
       cutoff.setHours(0, 0, 0, 0);
+      return notifications.filter(n => new Date(n.timestamp) >= cutoff);
     } else if (timeFilter === 'yesterday') {
-      cutoff.setDate(now.getDate() - 1);
-      cutoff.setHours(0, 0, 0, 0);
+      const start = new Date();
+      start.setDate(now.getDate() - 1);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date();
+      end.setHours(0, 0, 0, 0);
+      return notifications.filter(n => {
+        const d = new Date(n.timestamp);
+        return d >= start && d < end;
+      });
     } else if (timeFilter === 'week') {
       cutoff.setDate(now.getDate() - 7);
+      return notifications.filter(n => new Date(n.timestamp) >= cutoff);
     }
-    return notifications.filter(n => new Date(n.timestamp) >= cutoff);
+    return notifications;
   }, [notifications, timeFilter]);
 
   const filterCounts = React.useMemo(() => {
+    // Calculate direction counts based only on time filter
+    const dirCounts = { above: 0, below: 0 };
+    timeFilteredNotifications.forEach(n => {
+      const upperMsg = n.message.toUpperCase();
+      if (upperMsg.includes('ABOVE') || upperMsg.includes('OVER')) dirCounts.above++;
+      if (upperMsg.includes('BELOW') || upperMsg.includes('UNDER')) dirCounts.below++;
+    });
+
+    // Calculate other counts based on current time + direction selection
+    const baseForCounts = timeFilteredNotifications.filter(n => {
+      if (directionFilter === 'all') return true;
+      const upperMsg = n.message.toUpperCase();
+      if (directionFilter === 'above') return upperMsg.includes('ABOVE') || upperMsg.includes('OVER');
+      if (directionFilter === 'below') return upperMsg.includes('BELOW') || upperMsg.includes('UNDER');
+      return true;
+    });
+
     const counts = {
-      all: timeFilteredNotifications.length,
+      all: baseForCounts.length,
       price: 0,
       changePercent: 0,
       crossover: 0,
@@ -52,10 +79,11 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       sma20: 0,
       sma50: 0,
       sma100: 0,
-      sma200: 0
+      sma200: 0,
+      ...dirCounts
     };
 
-    timeFilteredNotifications.forEach(n => {
+    baseForCounts.forEach(n => {
       const msg = n.message.toLowerCase();
       const isCrossover = n.type === 'crossover' || n.type?.startsWith('sma') || msg.includes('crossed');
       const isPrice = n.type === 'price' || (msg.includes('price') && !isCrossover);
@@ -73,7 +101,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
     });
 
     return counts;
-  }, [timeFilteredNotifications]);
+  }, [timeFilteredNotifications, directionFilter]);
 
   const filteredNotifications = React.useMemo(() => {
     let filtered = timeFilteredNotifications;
@@ -112,24 +140,43 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       });
     }
 
+    // Direction filter
+    if (directionFilter !== 'all') {
+      filtered = filtered.filter(n => {
+        const msg = n.message.toUpperCase();
+        if (directionFilter === 'above') return msg.includes('ABOVE') || msg.includes('OVER');
+        if (directionFilter === 'below') return msg.includes('BELOW') || msg.includes('UNDER');
+        return true;
+      });
+    }
+
     return filtered;
-  }, [timeFilteredNotifications, typeFilter, searchQuery]);
+  }, [timeFilteredNotifications, typeFilter, directionFilter, searchQuery]);
 
   const topTickers = React.useMemo(() => {
     // We only filter by time for the "Frequent" calculation
     let timeFiltered = notifications;
     if (timeFilter !== 'all') {
       const now = new Date();
-      const cutoff = new Date();
       if (timeFilter === 'today') {
+        const cutoff = new Date();
         cutoff.setHours(0, 0, 0, 0);
+        timeFiltered = timeFiltered.filter(n => new Date(n.timestamp) >= cutoff);
       } else if (timeFilter === 'yesterday') {
-        cutoff.setDate(now.getDate() - 1);
-        cutoff.setHours(0, 0, 0, 0);
+        const start = new Date();
+        start.setDate(now.getDate() - 1);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date();
+        end.setHours(0, 0, 0, 0);
+        timeFiltered = timeFiltered.filter(n => {
+          const d = new Date(n.timestamp);
+          return d >= start && d < end;
+        });
       } else if (timeFilter === 'week') {
+        const cutoff = new Date();
         cutoff.setDate(now.getDate() - 7);
+        timeFiltered = timeFiltered.filter(n => new Date(n.timestamp) >= cutoff);
       }
-      timeFiltered = timeFiltered.filter(n => new Date(n.timestamp) >= cutoff);
     }
 
     const counts: Record<string, number> = {};
@@ -143,6 +190,13 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       .slice(0, 6)
       .map(([symbol]) => symbol);
   }, [notifications, timeFilter]);
+
+  const handleResetFilters = () => {
+    setTimeFilter('all');
+    setTypeFilter('all');
+    setDirectionFilter('all');
+    setSearchQuery('');
+  };
 
   React.useEffect(() => {
     if (isOpen && notifications.some(n => !n.isRead)) {
@@ -159,6 +213,23 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Bell size={20} color="var(--accent)" />
             <h3 style={{ margin: 0 }}>Notifications ({filteredNotifications.length})</h3>
+            {(timeFilter !== 'all' || typeFilter !== 'all' || directionFilter !== 'all' || searchQuery) && (
+              <button 
+                className="btn" 
+                onClick={handleResetFilters}
+                style={{ 
+                  fontSize: '10px', 
+                  padding: '2px 8px', 
+                  background: 'rgba(99, 102, 241, 0.1)',
+                  color: 'var(--accent)',
+                  border: '1px solid rgba(99, 102, 241, 0.2)',
+                  borderRadius: '100px',
+                  marginLeft: '8px'
+                }}
+              >
+                Reset Filters
+              </button>
+            )}
           </div>
           <button className="btn" onClick={onClose}><X size={20} /></button>
         </div>
@@ -251,6 +322,38 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
               <span style={{ fontSize: '8px', opacity: 0.6 }}>{filterCounts[f]}</span>
             </button>
           ))}
+        </div>
+
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+          <div style={{ display: 'flex', flex: 1, background: 'var(--surface-subtle)', borderRadius: '8px', padding: '2px', border: '1px solid var(--border-color)' }}>
+            {(['all', 'above', 'below'] as const).map(f => (
+              <button 
+                key={f}
+                onClick={() => setDirectionFilter(f)}
+                style={{ 
+                  flex: 1,
+                  padding: '4px 2px', 
+                  fontSize: '9px', 
+                  borderRadius: '6px',
+                  background: directionFilter === f ? 'var(--surface-hover)' : 'transparent',
+                  color: directionFilter === f ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  border: 'none',
+                  cursor: 'pointer',
+                  textTransform: 'uppercase',
+                  fontWeight: directionFilter === f ? 700 : 400,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '4px'
+                }}
+              >
+                {f === 'above' && <TrendingUp size={10} color="#10b981" />}
+                {f === 'below' && <TrendingDown size={10} color="#ef4444" />}
+                <span style={{ marginRight: '4px' }}>{f}</span>
+                <span style={{ fontSize: '8px', opacity: 0.6 }}>({f === 'all' ? timeFilteredNotifications.length : filterCounts[f]})</span>
+              </button>
+            ))}
+          </div>
         </div>
 
         <div style={{ display: 'flex', background: 'var(--surface-subtle)', borderRadius: '8px', padding: '2px', border: '1px solid var(--border-color)', marginBottom: '16px' }}>
