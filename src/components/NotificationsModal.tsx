@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Bell, Calendar, Search } from 'lucide-react';
+import { X, Bell, Calendar, Search, TrendingUp, TrendingDown, AlertCircle } from 'lucide-react';
 import type { TickerNotification, Ticker } from '../types';
 
 interface NotificationsModalProps {
@@ -23,24 +23,60 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   onSelectTicker,
   allTickers
 }) => {
-  const [timeFilter, setTimeFilter] = React.useState<'today' | 'week' | 'all'>('all');
-  const [typeFilter, setTypeFilter] = React.useState<'all' | 'price' | 'changePercent' | 'crossover'>('all');
+  const [timeFilter, setTimeFilter] = React.useState<'today' | 'yesterday' | 'week' | 'all'>('all');
+  const [typeFilter, setTypeFilter] = React.useState<'all' | 'price' | 'changePercent' | 'crossover' | 'sma10' | 'sma20' | 'sma50' | 'sma100' | 'sma200'>('all');
   const [searchQuery, setSearchQuery] = React.useState('');
 
-  const filteredNotifications = React.useMemo(() => {
-    let filtered = notifications;
-
-    // Time filter
-    if (timeFilter !== 'all') {
-      const now = new Date();
-      const cutoff = new Date();
-      if (timeFilter === 'today') {
-        cutoff.setHours(0, 0, 0, 0);
-      } else if (timeFilter === 'week') {
-        cutoff.setDate(now.getDate() - 7);
-      }
-      filtered = filtered.filter(n => new Date(n.timestamp) >= cutoff);
+  const timeFilteredNotifications = React.useMemo(() => {
+    if (timeFilter === 'all') return notifications;
+    const now = new Date();
+    const cutoff = new Date();
+    if (timeFilter === 'today') {
+      cutoff.setHours(0, 0, 0, 0);
+    } else if (timeFilter === 'yesterday') {
+      cutoff.setDate(now.getDate() - 1);
+      cutoff.setHours(0, 0, 0, 0);
+    } else if (timeFilter === 'week') {
+      cutoff.setDate(now.getDate() - 7);
     }
+    return notifications.filter(n => new Date(n.timestamp) >= cutoff);
+  }, [notifications, timeFilter]);
+
+  const filterCounts = React.useMemo(() => {
+    const counts = {
+      all: timeFilteredNotifications.length,
+      price: 0,
+      changePercent: 0,
+      crossover: 0,
+      sma10: 0,
+      sma20: 0,
+      sma50: 0,
+      sma100: 0,
+      sma200: 0
+    };
+
+    timeFilteredNotifications.forEach(n => {
+      const msg = n.message.toLowerCase();
+      const isCrossover = n.type === 'crossover' || n.type?.startsWith('sma') || msg.includes('crossed');
+      const isPrice = n.type === 'price' || (msg.includes('price') && !isCrossover);
+      const isPercent = n.type === 'changePercent' || ((msg.includes('change') || msg.includes('%')) && !isCrossover);
+
+      if (isPrice) counts.price++;
+      if (isPercent) counts.changePercent++;
+      if (isCrossover) counts.crossover++;
+
+      if (n.type === 'sma200' || msg.includes('sma200')) counts.sma200++;
+      else if (n.type === 'sma100' || msg.includes('sma100')) counts.sma100++;
+      else if (n.type === 'sma50' || msg.includes('sma50')) counts.sma50++;
+      else if (n.type === 'sma20' || msg.includes('sma20')) counts.sma20++;
+      else if (n.type === 'sma10' || msg.includes('sma10')) counts.sma10++;
+    });
+
+    return counts;
+  }, [timeFilteredNotifications]);
+
+  const filteredNotifications = React.useMemo(() => {
+    let filtered = timeFilteredNotifications;
 
     // Search filter
     if (searchQuery.trim()) {
@@ -51,24 +87,33 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
     // Type filter
     if (typeFilter !== 'all') {
       filtered = filtered.filter(n => {
-        // Use the explicit type if available
-        if (n.type) return n.type === typeFilter;
-        
-        // Fallback for legacy notifications
         const msg = n.message.toLowerCase();
-        const isCrossover = msg.includes('crossed');
-        const isPrice = msg.includes('price') && !isCrossover;
-        const isPercent = (msg.includes('change') || msg.includes('%')) && !isCrossover;
-
-        if (typeFilter === 'crossover') return isCrossover;
-        if (typeFilter === 'price') return isPrice;
-        if (typeFilter === 'changePercent') return isPercent;
+        
+        if (typeFilter === 'price') {
+          return n.type === 'price' || (msg.includes('price') && !msg.includes('crossed'));
+        }
+        if (typeFilter === 'changePercent') {
+          return n.type === 'changePercent' || ((msg.includes('change') || msg.includes('%')) && !msg.includes('crossed'));
+        }
+        if (typeFilter === 'crossover') {
+          return n.type === 'crossover' || n.type?.startsWith('sma') || msg.includes('crossed');
+        }
+        if (typeFilter.startsWith('sma')) {
+          if (n.type === typeFilter) return true;
+          // Precision check for legacy messages
+          if (typeFilter === 'sma200') return msg.includes('sma200');
+          if (typeFilter === 'sma100') return msg.includes('sma100');
+          if (typeFilter === 'sma50') return msg.includes('sma50');
+          if (typeFilter === 'sma20') return msg.includes('sma20') && !msg.includes('sma200');
+          if (typeFilter === 'sma10') return msg.includes('sma10') && !msg.includes('sma100');
+          return false;
+        }
         return false;
       });
     }
 
     return filtered;
-  }, [notifications, timeFilter, typeFilter, searchQuery]);
+  }, [timeFilteredNotifications, typeFilter, searchQuery]);
 
   const topTickers = React.useMemo(() => {
     // We only filter by time for the "Frequent" calculation
@@ -77,6 +122,9 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       const now = new Date();
       const cutoff = new Date();
       if (timeFilter === 'today') {
+        cutoff.setHours(0, 0, 0, 0);
+      } else if (timeFilter === 'yesterday') {
+        cutoff.setDate(now.getDate() - 1);
         cutoff.setHours(0, 0, 0, 0);
       } else if (timeFilter === 'week') {
         cutoff.setDate(now.getDate() - 7);
@@ -128,14 +176,35 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                 background: 'var(--surface-subtle)', 
                 border: '1px solid var(--border-color)', 
                 borderRadius: '8px',
-                padding: '8px 8px 8px 30px',
+                padding: '8px 30px 8px 30px',
                 fontSize: '12px',
                 color: 'var(--text-primary)'
               }}
             />
+            {searchQuery && (
+              <button 
+                onClick={() => setSearchQuery('')}
+                style={{ 
+                  position: 'absolute', 
+                  right: '10px', 
+                  top: '50%', 
+                  transform: 'translateY(-50%)', 
+                  background: 'none', 
+                  border: 'none', 
+                  cursor: 'pointer', 
+                  padding: 0, 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  opacity: 0.8,
+                  color: 'white'
+                }}
+              >
+                <X size={12} />
+              </button>
+            )}
           </div>
           <div style={{ display: 'flex', background: 'var(--surface-subtle)', borderRadius: '8px', padding: '2px', border: '1px solid var(--border-color)' }}>
-            {(['today', 'week', 'all'] as const).map(f => (
+            {(['today', 'yesterday', 'week', 'all'] as const).map(f => (
               <button 
                 key={f}
                 onClick={() => setTimeFilter(f)}
@@ -156,7 +225,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
           </div>
         </div>
 
-        <div style={{ display: 'flex', background: 'var(--surface-subtle)', borderRadius: '8px', padding: '2px', border: '1px solid var(--border-color)', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', background: 'var(--surface-subtle)', borderRadius: '8px', padding: '2px', border: '1px solid var(--border-color)', marginBottom: '8px' }}>
           {(['all', 'price', 'changePercent', 'crossover'] as const).map(f => (
             <button 
               key={f}
@@ -171,10 +240,43 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                 border: 'none',
                 cursor: 'pointer',
                 textTransform: 'uppercase',
-                fontWeight: typeFilter === f ? 700 : 400
+                fontWeight: typeFilter === f ? 700 : 400,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '2px'
               }}
             >
-              {f === 'changePercent' ? '%' : f}
+              <span>{f === 'changePercent' ? '%' : f}</span>
+              <span style={{ fontSize: '8px', opacity: 0.6 }}>{filterCounts[f]}</span>
+            </button>
+          ))}
+        </div>
+
+        <div style={{ display: 'flex', background: 'var(--surface-subtle)', borderRadius: '8px', padding: '2px', border: '1px solid var(--border-color)', marginBottom: '16px' }}>
+          {(['sma10', 'sma20', 'sma50', 'sma100', 'sma200'] as const).map(f => (
+            <button 
+              key={f}
+              onClick={() => setTypeFilter(f)}
+              style={{ 
+                flex: 1,
+                padding: '4px 2px', 
+                fontSize: '9px', 
+                borderRadius: '6px',
+                background: typeFilter === f ? 'var(--surface-hover)' : 'transparent',
+                color: typeFilter === f ? 'var(--text-primary)' : 'var(--text-secondary)',
+                border: 'none',
+                cursor: 'pointer',
+                textTransform: 'uppercase',
+                fontWeight: typeFilter === f ? 700 : 400,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '2px'
+              }}
+            >
+              <span>{f}</span>
+              <span style={{ fontSize: '8px', opacity: 0.6 }}>{filterCounts[f]}</span>
             </button>
           ))}
         </div>
@@ -230,41 +332,63 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-               {filteredNotifications.map(n => (
-                <div 
-                  key={n.id} 
-                  onClick={() => {
-                    const ticker = allTickers.find(t => t.symbol === n.symbol);
-                    onSelectTicker(ticker || { 
-                      id: n.symbol, 
-                      symbol: n.symbol, 
-                      name: n.symbol, 
-                      stats: { price: '0', change: '0', changePercent: '0', volume: '0', marketCap: '0' } 
-                    } as any);
-                    onClose();
-                  }}
-                  style={{ 
-                    padding: '12px', 
-                    background: n.isRead ? 'var(--surface-subtle)' : 'rgba(99, 102, 241, 0.1)', 
-                    border: `1px solid ${n.isRead ? 'var(--border-color)' : 'rgba(99, 102, 241, 0.3)'}`,
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    transition: 'transform 0.2s, background 0.2s'
-                  }}
-                  className="notification-card"
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{n.symbol}</span>
-                    <span style={{ fontSize: '10px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <Calendar size={10} />
-                      {new Date(n.timestamp).toLocaleString()}
-                    </span>
-                  </div>
-                  <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-                    {n.message}
-                  </div>
-                </div>
-              ))}
+                {filteredNotifications.map(n => {
+                  const isCrossover = n.type?.startsWith('sma') || n.message.toLowerCase().includes('crossed');
+                  const isAbove = n.message.includes('ABOVE');
+                  const isBelow = n.message.includes('BELOW');
+                  
+                  return (
+                    <div 
+                      key={n.id} 
+                      onClick={() => {
+                        const ticker = allTickers.find(t => t.symbol === n.symbol);
+                        onSelectTicker(ticker || { 
+                          id: n.symbol, 
+                          symbol: n.symbol, 
+                          name: n.symbol, 
+                          stats: { price: '0', change: '0', changePercent: '0', volume: '0', marketCap: '0' } 
+                        } as any);
+                        onClose();
+                      }}
+                      style={{ 
+                        padding: '12px', 
+                        background: n.isRead ? 'var(--surface-subtle)' : 'rgba(99, 102, 241, 0.1)', 
+                        border: `1px solid ${n.isRead ? 'var(--border-color)' : 'rgba(99, 102, 241, 0.3)'}`,
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        transition: 'transform 0.2s, background 0.2s',
+                        display: 'flex',
+                        gap: '12px',
+                        alignItems: 'flex-start'
+                      }}
+                      className="notification-card"
+                    >
+                      <div style={{ 
+                        padding: '8px', 
+                        borderRadius: '8px', 
+                        background: isAbove ? 'rgba(16, 185, 129, 0.1)' : isBelow ? 'rgba(239, 68, 68, 0.1)' : 'rgba(99, 102, 241, 0.1)',
+                        color: isAbove ? '#10b981' : isBelow ? '#ef4444' : 'var(--accent)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        {isAbove ? <TrendingUp size={16} /> : isBelow ? <TrendingDown size={16} /> : <AlertCircle size={16} />}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                          <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{n.symbol}</span>
+                          <span style={{ fontSize: '10px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <Calendar size={10} />
+                            {new Date(n.timestamp).toLocaleString()}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                          {n.message}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
             </div>
           )}
         </div>

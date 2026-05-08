@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { X, BarChart2, PieChart, Info } from 'lucide-react';
-import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, ReferenceLine, Legend } from 'recharts';
+import { ScatterChart, Scatter, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, ReferenceLine, Legend, Cell } from 'recharts';
 import type { Ticker, StockList, ListGroup } from '../types';
 import { parseMarketCap, formatMarketCap } from '../types';
 
@@ -12,6 +12,7 @@ interface AnalyticsModalProps {
   groups: ListGroup[];
   theme?: 'dark' | 'light';
   onSelectTicker?: (ticker: Ticker) => void;
+  notifications?: any[];
 }
 
 const BUCKETS = [
@@ -33,7 +34,8 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
   lists,
   groups,
   theme = 'dark',
-  onSelectTicker
+  onSelectTicker,
+  notifications = []
 }) => {
   const [selectedGroupId, setSelectedGroupId] = useState<string>('all');
   const [selectedListId, setSelectedListId] = useState<string>('all');
@@ -124,6 +126,46 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
       }))
       .sort((a, b) => b.count - a.count);
   }, [filteredTickers]);
+
+  const notificationData = useMemo(() => {
+    const smaPeriods = [10, 20, 50, 100, 200];
+    const data = smaPeriods.map(period => ({
+      name: `SMA${period}`,
+      Above: 0,
+      Below: 0,
+      total: 0
+    }));
+
+    const filteredSymbols = new Set(filteredTickers.map(t => t.symbol));
+    const relevantNotifications = notifications.filter(n => filteredSymbols.has(n.symbol));
+
+    relevantNotifications.forEach(n => {
+      const smaMatch = n.type?.match(/sma(\d+)/);
+      const period = smaMatch ? parseInt(smaMatch[1]) : null;
+      const msg = n.message.toLowerCase();
+      
+      let targetPeriod = period;
+      if (!targetPeriod) {
+        if (msg.includes('sma200')) targetPeriod = 200;
+        else if (msg.includes('sma100')) targetPeriod = 100;
+        else if (msg.includes('sma50')) targetPeriod = 50;
+        else if (msg.includes('sma20')) targetPeriod = 20;
+        else if (msg.includes('sma10')) targetPeriod = 10;
+      }
+
+      if (targetPeriod && smaPeriods.includes(targetPeriod)) {
+        const index = smaPeriods.indexOf(targetPeriod);
+        if (n.message.includes('ABOVE')) {
+          data[index].Above++;
+        } else if (n.message.includes('BELOW')) {
+          data[index].Below++;
+        }
+        data[index].total++;
+      }
+    });
+
+    return data;
+  }, [notifications, filteredTickers]);
 
   const scatterData = useMemo(() => {
     const dataBySector: Record<string, any[]> = {};
@@ -417,6 +459,40 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                     </React.Fragment>
                   ))}
                 </ScatterChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* SMA Notifications Chart */}
+          <div style={{ gridColumn: '1 / -1', marginTop: '20px' }}>
+            <h3 style={{ marginBottom: '24px', fontSize: '16px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              SMA Crossover Notifications
+              <div title="Distribution of SMA crossover alerts for the current selection, stacked by direction." style={{ cursor: 'help', opacity: 0.5 }}>
+                <Info size={14} />
+              </div>
+            </h3>
+            <div style={{ background: 'var(--surface-inset)', padding: '30px 20px 20px 20px', borderRadius: '12px', border: '1px solid var(--border-color)', height: '400px' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={notificationData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-divider)" vertical={false} />
+                  <XAxis 
+                    dataKey="name" 
+                    stroke="var(--text-secondary)"
+                    tick={{ fontSize: 12 }}
+                  />
+                  <YAxis 
+                    stroke="var(--text-secondary)"
+                    tick={{ fontSize: 12 }}
+                    allowDecimals={false}
+                  />
+                  <RechartsTooltip 
+                    contentStyle={{ background: 'var(--surface-modal)', border: '1px solid var(--border-color)', borderRadius: '8px' }}
+                    itemStyle={{ fontSize: '12px' }}
+                  />
+                  <Legend verticalAlign="top" height={36}/>
+                  <Bar dataKey="Above" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]} barSize={40} />
+                  <Bar dataKey="Below" stackId="a" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={40} />
+                </BarChart>
               </ResponsiveContainer>
             </div>
           </div>

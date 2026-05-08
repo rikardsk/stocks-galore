@@ -116,7 +116,7 @@ export interface TickerNotification {
   symbol: string;
   message: string;
   timestamp: string;
-  type: 'price' | 'changePercent' | 'crossover';
+  type: 'price' | 'changePercent' | 'crossover' | 'sma10' | 'sma20' | 'sma50' | 'sma100' | 'sma200';
   isRead: boolean;
 }
 

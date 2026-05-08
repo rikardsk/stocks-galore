@@ -281,27 +281,31 @@ const App: React.FC = () => {
         const smaKey = `sma${period}` as keyof typeof ticker.stats;
         const smaVal = ticker.stats[smaKey] as number | undefined;
 
-        if (smaVal && prevPrice < smaVal && price > smaVal) {
-          // Check if we already notified about this today to avoid spamming on every refresh
-          // For simplicity, we'll check if a notification with this message already exists from today
-          const message = `${ticker.symbol} crossed ABOVE SMA${period} (Price: $${price}, SMA: ${smaVal})`;
-          const existingNotifs = storage.getNotifications();
-          const today = new Date().toISOString().split('T')[0];
-          
-          const isAlreadyNotified = existingNotifs.some(n => 
-            n.symbol === ticker.symbol && 
-            n.message.includes(`crossed ABOVE SMA${period}`) &&
-            n.timestamp.startsWith(today)
-          );
+        if (smaVal) {
+          const crossedAbove = prevPrice < smaVal && price > smaVal;
+          const crossedBelow = prevPrice > smaVal && price < smaVal;
 
-          if (!isAlreadyNotified) {
-            triggeredCount++;
-            storage.addNotification({
-              alertId: `cross-${ticker.symbol}-${period}`,
-              symbol: ticker.symbol,
-              message,
-              type: 'crossover'
-            });
+          if (crossedAbove || crossedBelow) {
+            const direction = crossedAbove ? 'ABOVE' : 'BELOW';
+            const message = `${ticker.symbol} crossed ${direction} SMA${period} (Price: $${price}, SMA: ${smaVal})`;
+            const existingNotifs = storage.getNotifications();
+            const today = new Date().toISOString().split('T')[0];
+            
+            const isAlreadyNotified = existingNotifs.some(n => 
+              n.symbol === ticker.symbol && 
+              n.message.includes(`crossed ${direction} SMA${period}`) &&
+              n.timestamp.startsWith(today)
+            );
+
+            if (!isAlreadyNotified) {
+              triggeredCount++;
+              storage.addNotification({
+                alertId: `cross-${ticker.symbol}-${period}-${direction.toLowerCase()}`,
+                symbol: ticker.symbol,
+                message,
+                type: `sma${period}` as any
+              });
+            }
           }
         }
       });
@@ -1176,6 +1180,7 @@ const App: React.FC = () => {
         tickers={allUniqueTickers}
         lists={lists}
         groups={groups}
+        notifications={notifications}
         theme={theme}
         onSelectTicker={(ticker) => {
           setSelectedDetailTicker(ticker);
