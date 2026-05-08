@@ -133,6 +133,8 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
       name: `SMA${period}`,
       Above: 0,
       Below: 0,
+      AboveSymbols: [] as string[],
+      BelowSymbols: [] as string[],
       total: 0
     }));
 
@@ -157,8 +159,14 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
         const index = smaPeriods.indexOf(targetPeriod);
         if (n.message.includes('ABOVE')) {
           data[index].Above++;
+          if (!data[index].AboveSymbols.includes(n.symbol)) {
+            data[index].AboveSymbols.push(n.symbol);
+          }
         } else if (n.message.includes('BELOW')) {
           data[index].Below++;
+          if (!data[index].BelowSymbols.includes(n.symbol)) {
+            data[index].BelowSymbols.push(n.symbol);
+          }
         }
         data[index].total++;
       }
@@ -217,22 +225,70 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
   }, [filteredTickers]);
   
   const badgeData = useMemo(() => {
-    const counts: Record<string, number> = {};
+    const counts: Record<string, { count: number; symbols: string[] }> = {};
     filteredTickers.forEach(t => {
       if (t.badges && t.badges.length > 0) {
         t.badges.forEach(badge => {
-          counts[badge] = (counts[badge] || 0) + 1;
+          if (!counts[badge]) counts[badge] = { count: 0, symbols: [] };
+          counts[badge].count++;
+          counts[badge].symbols.push(t.symbol);
         });
       }
     });
     
     return Object.entries(counts)
-      .map(([name, count]) => ({ name, count }))
+      .map(([name, data]) => ({ name, count: data.count, symbols: data.symbols }))
       .sort((a, b) => b.count - a.count);
   }, [filteredTickers]);
 
   const maxCount = Math.max(...marketCapData.buckets.map(b => b.count), 1);
   const chartMax = Math.ceil(maxCount * 1.25);
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      const symbols = payload[0].dataKey === 'Above' 
+        ? data.AboveSymbols 
+        : (payload[0].dataKey === 'Below' ? data.BelowSymbols : data.symbols);
+        
+      if (!symbols || symbols.length === 0) return null;
+      
+      const displaySymbols = symbols.slice(0, 30);
+      const hasMore = symbols.length > 30;
+
+      return (
+        <div style={{ 
+          background: 'rgba(30, 41, 59, 0.9)', // Semi-transparent slate
+          backdropFilter: 'blur(8px)',
+          padding: '12px', 
+          border: '1px solid var(--border-color)', 
+          borderRadius: '8px', 
+          boxShadow: 'var(--shadow-lg)',
+          maxWidth: '300px'
+        }}>
+          <div style={{ fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px', fontSize: '13px' }}>
+            {label} - {payload[0].name} ({symbols.length})
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+            {displaySymbols.map((s: string) => (
+              <span key={s} style={{ 
+                fontSize: '10px', 
+                background: 'var(--surface-subtle)', 
+                padding: '2px 6px', 
+                borderRadius: '4px',
+                color: 'var(--text-secondary)',
+                fontWeight: 600
+              }}>
+                {s}
+              </span>
+            ))}
+            {hasMore && <span style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>...and {symbols.length - 30} more</span>}
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
 
   if (!isOpen) return null;
 
@@ -500,6 +556,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                     tick={{ fontSize: 12 }}
                     allowDecimals={false}
                   />
+                  <RechartsTooltip content={<CustomTooltip />} cursor={false} />
                   <Legend verticalAlign="top" height={36}/>
                   <Bar dataKey="Above" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]} barSize={40}>
                     <LabelList dataKey="Above" position="center" fill="white" fontSize={10} formatter={(v: number) => v > 0 ? v : ''} />
@@ -537,6 +594,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                       tick={{ fontSize: 11 }}
                       width={100}
                     />
+                    <RechartsTooltip content={<CustomTooltip />} cursor={false} />
                     <Bar dataKey="count" fill="var(--accent)" radius={[0, 4, 4, 0]} barSize={30}>
                       <LabelList dataKey="count" position="right" fill="var(--text-secondary)" fontSize={11} offset={8} />
                     </Bar>
