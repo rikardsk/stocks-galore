@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { X, BarChart2, PieChart, Info } from 'lucide-react';
-import { ScatterChart, Scatter, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, ReferenceLine, Legend, Cell } from 'recharts';
+import { ScatterChart, Scatter, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, ReferenceLine, Legend, Cell, LabelList } from 'recharts';
 import type { Ticker, StockList, ListGroup } from '../types';
 import { parseMarketCap, formatMarketCap } from '../types';
 
@@ -214,6 +214,21 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
         trendline
       };
     });
+  }, [filteredTickers]);
+  
+  const badgeData = useMemo(() => {
+    const counts: Record<string, number> = {};
+    filteredTickers.forEach(t => {
+      if (t.badges && t.badges.length > 0) {
+        t.badges.forEach(badge => {
+          counts[badge] = (counts[badge] || 0) + 1;
+        });
+      }
+    });
+    
+    return Object.entries(counts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
   }, [filteredTickers]);
 
   const maxCount = Math.max(...marketCapData.buckets.map(b => b.count), 1);
@@ -485,17 +500,51 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                     tick={{ fontSize: 12 }}
                     allowDecimals={false}
                   />
-                  <RechartsTooltip 
-                    contentStyle={{ background: 'var(--surface-modal)', border: '1px solid var(--border-color)', borderRadius: '8px' }}
-                    itemStyle={{ fontSize: '12px' }}
-                  />
                   <Legend verticalAlign="top" height={36}/>
-                  <Bar dataKey="Above" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]} barSize={40} />
-                  <Bar dataKey="Below" stackId="a" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={40} />
+                  <Bar dataKey="Above" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]} barSize={40}>
+                    <LabelList dataKey="Above" position="center" fill="white" fontSize={10} formatter={(v: number) => v > 0 ? v : ''} />
+                  </Bar>
+                  <Bar dataKey="Below" stackId="a" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={40}>
+                    <LabelList dataKey="Below" position="center" fill="white" fontSize={10} formatter={(v: number) => v > 0 ? v : ''} />
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </div>
+          {/* Badge Distribution Chart */}
+          {badgeData.length > 0 && (
+            <div style={{ gridColumn: '1 / -1', marginTop: '20px' }}>
+              <h3 style={{ marginBottom: '24px', fontSize: '16px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                Badge Distribution
+                <div title="Count of custom badges across all selected tickers." style={{ cursor: 'help', opacity: 0.5 }}>
+                  <Info size={14} />
+                </div>
+              </h3>
+              <div style={{ background: 'var(--surface-inset)', padding: '30px 20px 20px 20px', borderRadius: '12px', border: '1px solid var(--border-color)', height: '400px' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={badgeData} layout="vertical" margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-divider)" horizontal={false} />
+                    <XAxis 
+                      type="number"
+                      stroke="var(--text-secondary)"
+                      tick={{ fontSize: 12 }}
+                      allowDecimals={false}
+                    />
+                    <YAxis 
+                      type="category"
+                      dataKey="name" 
+                      stroke="var(--text-secondary)"
+                      tick={{ fontSize: 11 }}
+                      width={100}
+                    />
+                    <Bar dataKey="count" fill="var(--accent)" radius={[0, 4, 4, 0]} barSize={30}>
+                      <LabelList dataKey="count" position="right" fill="var(--text-secondary)" fontSize={11} offset={8} />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
         </div>
 
         <style>{`
