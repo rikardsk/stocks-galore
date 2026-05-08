@@ -81,7 +81,9 @@ export const FilterModal: React.FC<FilterModalProps> = ({
     (localFilters.marketCapMin ? 1 : 0) + 
     (localFilters.marketCapMax ? 1 : 0) + 
     localFilters.sectors.length + 
-    (localFilters.rules ? localFilters.rules.length : 0);
+    (localFilters.rules ? localFilters.rules.length : 0) +
+    (localFilters.ownedOnly ? 1 : 0) +
+    (localFilters.earningsOnly ? 1 : 0);
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -95,20 +97,34 @@ export const FilterModal: React.FC<FilterModalProps> = ({
           )}
         </div>
 
-        <div style={{ marginBottom: '24px' }}>
+        <div style={{ marginBottom: '24px', display: 'flex', gap: '12px' }}>
           <button 
             className={`btn ${localFilters.ownedOnly ? 'btn-primary' : ''}`}
             style={{ 
-              width: '100%',
+              flex: 1,
               padding: '10px', 
-              fontSize: '14px', 
-              gap: '8px',
+              fontSize: '13px', 
+              gap: '6px',
               border: '1px solid var(--border-color)',
               background: localFilters.ownedOnly ? 'var(--accent)' : 'rgba(0,0,0,0.2)'
             }}
             onClick={() => setLocalFilters({ ...localFilters, ownedOnly: !localFilters.ownedOnly })}
           >
-            {localFilters.ownedOnly ? '★ Showing Portfolio Only' : '☆ Show Portfolio Only'}
+            {localFilters.ownedOnly ? '★ Portfolio' : '☆ Portfolio'}
+          </button>
+          <button 
+            className={`btn ${localFilters.earningsOnly ? 'btn-primary' : ''}`}
+            style={{ 
+              flex: 1,
+              padding: '10px', 
+              fontSize: '13px', 
+              gap: '6px',
+              border: '1px solid var(--border-color)',
+              background: localFilters.earningsOnly ? 'var(--accent)' : 'rgba(0,0,0,0.2)'
+            }}
+            onClick={() => setLocalFilters({ ...localFilters, earningsOnly: !localFilters.earningsOnly })}
+          >
+            {localFilters.earningsOnly ? '📈 Earnings' : '📉 Earnings'}
           </button>
         </div>
 

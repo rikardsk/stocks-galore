@@ -24,7 +24,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   allTickers
 }) => {
   const [timeFilter, setTimeFilter] = React.useState<'today' | 'yesterday' | 'week' | 'all'>('all');
-  const [typeFilter, setTypeFilter] = React.useState<'all' | 'price' | 'changePercent' | 'crossover' | 'sma10' | 'sma20' | 'sma50' | 'sma100' | 'sma200'>('all');
+  const [typeFilter, setTypeFilter] = React.useState<'all' | 'price' | 'changePercent' | 'crossover' | 'sma10' | 'sma20' | 'sma50' | 'sma100' | 'sma200' | 'earnings'>('all');
   const [directionFilter, setDirectionFilter] = React.useState<'all' | 'above' | 'below'>('all');
   const [searchQuery, setSearchQuery] = React.useState('');
 
@@ -80,6 +80,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       sma50: 0,
       sma100: 0,
       sma200: 0,
+      earnings: 0,
       ...dirCounts
     };
 
@@ -98,6 +99,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       else if (n.type === 'sma50' || msg.includes('sma50')) counts.sma50++;
       else if (n.type === 'sma20' || msg.includes('sma20')) counts.sma20++;
       else if (n.type === 'sma10' || msg.includes('sma10')) counts.sma10++;
+      else if (n.type === 'earnings' || msg.includes('earnings')) counts.earnings++;
     });
 
     return counts;
@@ -135,6 +137,9 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
           if (typeFilter === 'sma20') return msg.includes('sma20') && !msg.includes('sma200');
           if (typeFilter === 'sma10') return msg.includes('sma10') && !msg.includes('sma100');
           return false;
+        }
+        if (typeFilter === 'earnings') {
+          return n.type === 'earnings' || msg.includes('earnings');
         }
         return false;
       });
@@ -297,7 +302,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
         </div>
 
         <div style={{ display: 'flex', background: 'var(--surface-subtle)', borderRadius: '8px', padding: '2px', border: '1px solid var(--border-color)', marginBottom: '8px' }}>
-          {(['all', 'price', 'changePercent', 'crossover'] as const).map(f => (
+          {(['all', 'price', 'changePercent', 'crossover', 'earnings'] as const).map(f => (
             <button 
               key={f}
               onClick={() => setTypeFilter(typeFilter === f ? 'all' : f)}

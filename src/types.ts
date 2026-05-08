@@ -117,7 +117,7 @@ export interface TickerNotification {
   symbol: string;
   message: string;
   timestamp: string;
-  type: 'price' | 'changePercent' | 'crossover' | 'sma10' | 'sma20' | 'sma50' | 'sma100' | 'sma200';
+  type: 'price' | 'changePercent' | 'crossover' | 'sma10' | 'sma20' | 'sma50' | 'sma100' | 'sma200' | 'earnings';
   isRead: boolean;
 }
 
@@ -130,6 +130,7 @@ export interface StockFilters {
   rules?: FilterRule[];
   ownedOnly?: boolean;
   watchlistOnly?: boolean;
+  earningsOnly?: boolean;
 }
 
 export const EMPTY_FILTERS: StockFilters = {
@@ -141,6 +142,7 @@ export const EMPTY_FILTERS: StockFilters = {
   rules: [],
   ownedOnly: false,
   watchlistOnly: false,
+  earningsOnly: false,
 };
 
 /** Parse market cap strings like "2.30T", "0.15T" into billions */
@@ -190,6 +192,10 @@ export const countActiveFilters = (filters: StockFilters): number => {
 
 export const tickerMatchesFilters = (ticker: Ticker, filters: StockFilters): boolean => {
   if (filters.ownedOnly && !ticker.isOwned) return false;
+  if (filters.earningsOnly) {
+    const hasEarningsBadge = ticker.badges?.some(b => b === 'EARNINGS BEAT' || b === 'EARNINGS MISS');
+    if (!hasEarningsBadge) return false;
+  }
 
   const price = parseFloat(ticker.stats.price);
   if (!isNaN(price)) {

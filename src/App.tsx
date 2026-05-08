@@ -84,6 +84,69 @@ const App: React.FC = () => {
     setToastMessage(message);
   };
 
+  const autoLabelTicker = (ticker: Ticker): Ticker => {
+    const earningsDate = ticker.stats.earningsDate;
+    if (!earningsDate || earningsDate === 'N/A') return ticker;
+    
+    const changePctStr = ticker.stats.changePercent.replace('%', '');
+    const changePercent = parseFloat(changePctStr);
+    
+    // Get today and yesterday in YYYY-MM-DD
+    const today = new Date().toISOString().split('T')[0];
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+    
+    const isEarningsPeriod = earningsDate === today || earningsDate === yesterday;
+    if (!isEarningsPeriod) return ticker;
+    
+    const currentBadges = ticker.badges || [];
+    let newBadges = [...currentBadges];
+    let changed = false;
+    
+    if (changePercent >= 10 && !newBadges.includes('EARNINGS BEAT')) {
+      newBadges.push('EARNINGS BEAT');
+      newBadges = newBadges.filter(b => b !== 'EARNINGS MISS');
+      changed = true;
+      
+      const existingNotifs = storage.getNotifications();
+      const isAlreadyNotified = existingNotifs.some(n => 
+        n.symbol === ticker.symbol && 
+        n.message.includes('EARNINGS BEAT') &&
+        n.timestamp.startsWith(today)
+      );
+      
+      if (!isAlreadyNotified) {
+        storage.addNotification({
+          alertId: `earnings-beat-${ticker.symbol}-${today}`,
+          symbol: ticker.symbol,
+          message: `${ticker.symbol} Earnings Beat! Today's change: ${ticker.stats.changePercent}`,
+          type: 'earnings'
+        });
+      }
+    } else if (changePercent <= -10 && !newBadges.includes('EARNINGS MISS')) {
+      newBadges.push('EARNINGS MISS');
+      newBadges = newBadges.filter(b => b !== 'EARNINGS BEAT');
+      changed = true;
+      
+      const existingNotifs = storage.getNotifications();
+      const isAlreadyNotified = existingNotifs.some(n => 
+        n.symbol === ticker.symbol && 
+        n.message.includes('EARNINGS MISS') &&
+        n.timestamp.startsWith(today)
+      );
+      
+      if (!isAlreadyNotified) {
+        storage.addNotification({
+          alertId: `earnings-miss-${ticker.symbol}-${today}`,
+          symbol: ticker.symbol,
+          message: `${ticker.symbol} Earnings Miss! Today's change: ${ticker.stats.changePercent}`,
+          type: 'earnings'
+        });
+      }
+    }
+    
+    return changed ? { ...ticker, badges: newBadges } : ticker;
+  };
+
   useEffect(() => {
     let currentLists = storage.getLists();
     let changed = false;
@@ -646,16 +709,19 @@ const App: React.FC = () => {
             }
           };
           
+          const autoLabeledTicker = autoLabelTicker(newTicker);
+          
           setLists(prev => {
             const updated = prev.map(l => {
               if (l.id === activeListId) {
                 if (l.tickers.some(t => t.symbol === symbol)) return l;
-                return { ...l, tickers: [...l.tickers, newTicker] };
+                return { ...l, tickers: [...l.tickers, autoLabeledTicker] };
               }
               return l;
             });
             storage.saveLists(updated);
-            checkAlerts([newTicker]);
+            setNotifications(storage.getNotifications());
+            checkAlerts([autoLabeledTicker]);
             return updated;
           });
           showToast(`${symbol} added successfully!`, 'success');
@@ -717,7 +783,7 @@ const App: React.FC = () => {
           tickers: list.tickers.map(ticker => {
           const freshData = allFreshData.find((d: any) => d.symbol === ticker.symbol);
           if (freshData) {
-            return {
+            const updatedTicker = {
               ...ticker,
               name: freshData.name,
               stats: {
@@ -748,6 +814,7 @@ const App: React.FC = () => {
                 error: undefined
               }
             };
+            return autoLabelTicker(updatedTicker);
           }
           return ticker;
         })
@@ -756,6 +823,7 @@ const App: React.FC = () => {
       
       setLists(updatedLists);
       storage.saveLists(updatedLists);
+      setNotifications(storage.getNotifications());
 
       // Check alerts for all refreshed tickers
       const allRefreshedTickers = updatedLists.flatMap(l => l.tickers);
@@ -786,7 +854,7 @@ const App: React.FC = () => {
         tickers: list.tickers.map(ticker => {
           const freshData = freshDataList.find((d: any) => d.symbol === ticker.symbol);
           if (freshData) {
-            return {
+            const updatedTicker = {
               ...ticker,
               name: freshData.name,
               stats: {
@@ -817,6 +885,7 @@ const App: React.FC = () => {
                 error: undefined
               }
             };
+            return autoLabelTicker(updatedTicker);
           }
           return ticker;
         })
@@ -825,6 +894,7 @@ const App: React.FC = () => {
       // Update lists state
       const updatedLists = lists.map(l => l.id === listId ? updatedList : l);
       setLists(updatedLists);
+      setNotifications(storage.getNotifications());
       storage.saveLists(updatedLists);
       
       // Check alerts for refreshed tickers in this list
