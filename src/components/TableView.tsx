@@ -41,6 +41,17 @@ export const TableView: React.FC<TableViewProps> = ({
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'symbol', direction: 'asc' });
   const [selectedGroupId, setSelectedGroupId] = useState<string>('all');
   const [selectedListId, setSelectedListId] = useState<string>('all');
+  const [selectedBadge, setSelectedBadge] = useState<string>('all');
+
+  const allBadges = useMemo(() => {
+    const badges = new Set<string>();
+    tickers.forEach(t => {
+      if (t.badges) {
+        t.badges.forEach(b => badges.add(b));
+      }
+    });
+    return Array.from(badges).sort();
+  }, [tickers]);
 
   const filteredTickers = useMemo(() => {
     let result = tickers;
@@ -68,6 +79,10 @@ export const TableView: React.FC<TableViewProps> = ({
       result = result.filter(t => watchlistSymbols.has(t.symbol));
     }
 
+    if (selectedBadge !== 'all') {
+      result = result.filter(t => t.badges?.includes(selectedBadge));
+    }
+
     if (!filters) return result;
     return result.filter(t => {
       try {
@@ -77,7 +92,7 @@ export const TableView: React.FC<TableViewProps> = ({
         return false;
       }
     });
-  }, [tickers, filters, selectedGroupId, selectedListId, lists, groups]);
+  }, [tickers, filters, selectedGroupId, selectedListId, selectedBadge, lists, groups]);
 
   const sortedTickers = useMemo(() => {
     if (sortConfig.direction === 'none') return filteredTickers;
@@ -201,6 +216,21 @@ export const TableView: React.FC<TableViewProps> = ({
               </select>
             </div>
 
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Tag:</span>
+              <select 
+                value={selectedBadge} 
+                onChange={(e) => setSelectedBadge(e.target.value)}
+                className="btn"
+                style={{ background: 'var(--surface-subtle)', border: '1px solid var(--border-color)', padding: '4px 8px' }}
+              >
+                <option value="all">All Tags</option>
+                {allBadges.map(b => (
+                  <option key={b} value={b}>{b}</option>
+                ))}
+              </select>
+            </div>
+
             <button 
               className={`btn ${filters.ownedOnly ? 'btn-primary' : ''}`}
               style={{ 
@@ -274,6 +304,7 @@ export const TableView: React.FC<TableViewProps> = ({
                 <th onClick={() => requestSort('changePercent')} style={thStyle} className="print-col">Change % {getSortIcon('changePercent')}</th>
                 <th onClick={() => requestSort('marketCap')} style={thStyle} className="print-col">Cap {getSortIcon('marketCap')}</th>
                 <th onClick={() => requestSort('sector')} style={thStyle} className="print-col">Sector {getSortIcon('sector')}</th>
+                <th style={thStyle}>Tags</th>
                 {[10, 20, 50, 100, 200].map(p => (
                   <th key={p} onClick={() => requestSort(`sma${p}`)} style={{ ...thStyle }} className="no-print">S{p} % {getSortIcon(`sma${p}`)}</th>
                 ))}
@@ -348,6 +379,25 @@ export const TableView: React.FC<TableViewProps> = ({
                     </td>
                     <td style={tdStyle} className="print-col">{formatMarketCap(ticker.stats?.marketCap)}</td>
                     <td style={tdStyle} className="print-col">{ticker.stats?.sector}</td>
+                    <td style={tdStyle}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                        {ticker.badges?.map(badge => (
+                          <span 
+                            key={badge}
+                            style={{ 
+                              fontSize: '10px', 
+                              fontWeight: 700, 
+                              padding: '2px 6px', 
+                              borderRadius: '4px',
+                              background: badge === 'EARNINGS BEAT' ? '#10b981' : (badge === 'EARNINGS MISS' ? '#ef4444' : 'var(--accent)'),
+                              color: 'white'
+                            }}
+                          >
+                            {badge}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
                     {[10, 20, 50, 100, 200].map(p => {
                       const sma = ticker.stats ? (ticker.stats[`sma${p}` as keyof typeof ticker.stats] as number | undefined) : undefined;
                       const dist = (sma && price) ? ((price - sma) / sma) * 100 : null;
