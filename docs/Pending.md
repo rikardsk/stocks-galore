@@ -1,6 +1,7 @@
 ## TODOs
 ~~- Can you add IPO date to Market Overview Table and Deep dive panel~~
-- Graph for IPO date?
+~~- Graph for IPO date?~~
+- In the logs it looks like it's getting almost all ipo dates, it's just that it doesn't show in deep dive panel or market overview
 - Add a portfolio button that opens up a portfolio modal to manage Quantity and Average Price per ticker. The modal should also include  the Gain/Loss in numbers and percentages.
 
 ## Later maybe
