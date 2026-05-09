@@ -1,5 +1,6 @@
 ## TODOs
-- Can you add IPO date to Market Overview Table and Deep dive panel
+~~- Can you add IPO date to Market Overview Table and Deep dive panel~~
+- Graph for IPO date?
 - Add a portfolio button that opens up a portfolio modal to manage Quantity and Average Price per ticker. The modal should also include  the Gain/Loss in numbers and percentages.
 
 ## Later maybe

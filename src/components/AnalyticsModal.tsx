@@ -42,6 +42,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
   const [isScatterExpanded, setIsScatterExpanded] = useState(true);
   const [isSmaExpanded, setIsSmaExpanded] = useState(true);
   const [isBadgeExpanded, setIsBadgeExpanded] = useState(true);
+  const [isEarningsExpanded, setIsEarningsExpanded] = useState(true);
 
   const filteredTickers = useMemo(() => {
     let result = tickers;
@@ -242,6 +243,27 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
     return Object.entries(counts)
       .map(([name, data]) => ({ name, count: data.count, symbols: data.symbols }))
       .sort((a, b) => b.count - a.count);
+  }, [filteredTickers]);
+
+  const earningsData = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const byDate: Record<string, string[]> = {};
+    filteredTickers.forEach(t => {
+      const raw = t.stats.earningsDate;
+      if (!raw || raw === 'N/A') return;
+      const d = new Date(raw);
+      if (isNaN(d.getTime()) || d < today) return;
+      const key = raw.slice(0, 10); // YYYY-MM-DD
+      if (!byDate[key]) byDate[key] = [];
+      byDate[key].push(t.symbol);
+    });
+
+    return Object.entries(byDate)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .slice(0, 5)
+      .map(([date, symbols]) => ({ date, count: symbols.length, symbols }));
   }, [filteredTickers]);
 
   const maxCount = Math.max(...marketCapData.buckets.map(b => b.count), 1);
@@ -624,6 +646,56 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
               )}
             </div>
           )}
+
+          {/* Upcoming Earnings Chart */}
+          <div style={{ gridColumn: '1 / -1', marginTop: '20px' }}>
+            <h3
+              onClick={() => setIsEarningsExpanded(!isEarningsExpanded)}
+              style={{ marginBottom: '24px', fontSize: '16px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}
+            >
+              {isEarningsExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+              Upcoming Earnings
+              <div title="Number of tickers reporting earnings on each of the next 5 upcoming dates." style={{ cursor: 'help', opacity: 0.5 }} onClick={e => e.stopPropagation()}>
+                <Info size={14} />
+              </div>
+            </h3>
+            {isEarningsExpanded && (
+              earningsData.length === 0 ? (
+                <div style={{ background: 'var(--surface-inset)', padding: '40px', borderRadius: '12px', border: '1px solid var(--border-color)', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '14px' }}>
+                  No upcoming earnings dates found in the current selection.
+                </div>
+              ) : (
+                <div style={{ background: 'var(--surface-inset)', padding: '30px 20px 20px 20px', borderRadius: '12px', border: '1px solid var(--border-color)', height: '320px' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={earningsData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-divider)" vertical={false} />
+                      <XAxis
+                        dataKey="date"
+                        stroke="var(--text-secondary)"
+                        tick={{ fontSize: 12 }}
+                      />
+                      <YAxis
+                        stroke="var(--text-secondary)"
+                        tick={{ fontSize: 12 }}
+                        allowDecimals={false}
+                        width={32}
+                      />
+                      <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'transparent' }} />
+                      <Bar dataKey="count" radius={[6, 6, 0, 0]} barSize={52}>
+                        {earningsData.map((entry, index) => (
+                          <Cell
+                            key={entry.date}
+                            fill={`hsl(${240 + index * 22}, 82%, ${58 + index * 4}%)`}
+                          />
+                        ))}
+                        <LabelList dataKey="count" position="top" fill="var(--text-secondary)" fontSize={12} fontWeight={600} />
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )
+            )}
+          </div>
         </div>
 
         <style>{`
