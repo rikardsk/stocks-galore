@@ -43,6 +43,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
   const [isSmaExpanded, setIsSmaExpanded] = useState(true);
   const [isBadgeExpanded, setIsBadgeExpanded] = useState(true);
   const [isEarningsExpanded, setIsEarningsExpanded] = useState(true);
+  const [isIpoExpanded, setIsIpoExpanded] = useState(true);
 
   const filteredTickers = useMemo(() => {
     let result = tickers;
@@ -269,7 +270,38 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
   const maxCount = Math.max(...marketCapData.buckets.map(b => b.count), 1);
   const chartMax = Math.ceil(maxCount * 1.25);
 
+  const IPO_BUCKETS = [
+    { label: '< 3 Months', maxMonths: 3 },
+    { label: '< 1 Year',   maxMonths: 12 },
+    { label: '< 2 Years',  maxMonths: 24 },
+    { label: '< 3 Years',  maxMonths: 36 },
+    { label: '3+ Years',   maxMonths: Infinity },
+  ];
+
+  const ipoAgeData = useMemo(() => {
+    const today = new Date();
+    const buckets = IPO_BUCKETS.map(b => ({ ...b, count: 0, symbols: [] as string[] }));
+
+    filteredTickers.forEach(t => {
+      const raw = t.stats.ipoDate;
+      if (!raw || raw === 'N/A') return;
+      const d = new Date(raw);
+      if (isNaN(d.getTime())) return;
+      const diffMs = today.getTime() - d.getTime();
+      if (diffMs < 0) return;
+      const ageMonths = diffMs / (1000 * 60 * 60 * 24 * 30.44);
+      const bucket = buckets.find(b => ageMonths < b.maxMonths);
+      if (bucket) {
+        bucket.count++;
+        bucket.symbols.push(t.symbol);
+      }
+    });
+
+    return buckets.filter(b => b.count > 0);
+  }, [filteredTickers]);
+
   const CustomTooltip = ({ active, payload, label }: any) => {
+
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       const symbols = payload[0].dataKey === 'Above' 
@@ -686,6 +718,56 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                           <Cell
                             key={entry.date}
                             fill={`hsl(${240 + index * 22}, 82%, ${58 + index * 4}%)`}
+                          />
+                        ))}
+                        <LabelList dataKey="count" position="top" fill="var(--text-secondary)" fontSize={12} fontWeight={600} />
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )
+            )}
+          </div>
+
+          {/* IPO Age Distribution Chart */}
+          <div style={{ gridColumn: '1 / -1', marginTop: '20px' }}>
+            <h3
+              onClick={() => setIsIpoExpanded(!isIpoExpanded)}
+              style={{ marginBottom: '24px', fontSize: '16px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}
+            >
+              {isIpoExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+              IPO Age Distribution
+              <div title="Number of tickers grouped by how long ago they IPO'd." style={{ cursor: 'help', opacity: 0.5 }} onClick={e => e.stopPropagation()}>
+                <Info size={14} />
+              </div>
+            </h3>
+            {isIpoExpanded && (
+              ipoAgeData.length === 0 ? (
+                <div style={{ background: 'var(--surface-inset)', padding: '40px', borderRadius: '12px', border: '1px solid var(--border-color)', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '14px' }}>
+                  No IPO date data found in the current selection.
+                </div>
+              ) : (
+                <div style={{ background: 'var(--surface-inset)', padding: '30px 20px 20px 20px', borderRadius: '12px', border: '1px solid var(--border-color)', height: '320px' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={ipoAgeData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-divider)" vertical={false} />
+                      <XAxis
+                        dataKey="label"
+                        stroke="var(--text-secondary)"
+                        tick={{ fontSize: 12 }}
+                      />
+                      <YAxis
+                        stroke="var(--text-secondary)"
+                        tick={{ fontSize: 12 }}
+                        allowDecimals={false}
+                        width={32}
+                      />
+                      <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'transparent' }} />
+                      <Bar dataKey="count" radius={[6, 6, 0, 0]} barSize={64}>
+                        {ipoAgeData.map((entry, index) => (
+                          <Cell
+                            key={entry.label}
+                            fill={['#10b981', '#06b6d4', '#6366f1', '#8b5cf6', '#f59e0b'][index % 5]}
                           />
                         ))}
                         <LabelList dataKey="count" position="top" fill="var(--text-secondary)" fontSize={12} fontWeight={600} />

@@ -104,8 +104,45 @@ def calculate_stats(symbol: str, info: Dict, hist: pd.DataFrame) -> Dict[str, An
         "high52": safe_float(info.get('fiftyTwoWeekHigh')),
         "low52": safe_float(info.get('fiftyTwoWeekLow')),
         "avgVolume": f"{info.get('averageVolume', 0) / 1e6:.1f}M" if info.get('averageVolume') else "N/A",
-        "ipoDate": datetime.datetime.fromtimestamp(info.get('firstTradeDateEpochUtc')).strftime('%Y-%m-%d') if info.get('firstTradeDateEpochUtc') else "N/A"
+        "ipoDate": "N/A"  # filled in by caller
     }
+
+def get_ipo_date(symbol: str, info: Dict) -> str:
+    """Try multiple yfinance fields to find the IPO / first-trade date."""
+    # 1. firstTradeDateEpochUtc (epoch seconds, most common)
+    try:
+        ts = info.get('firstTradeDateEpochUtc')
+        if ts and ts > 0:
+            return datetime.datetime.fromtimestamp(ts, datetime.UTC).strftime('%Y-%m-%d')
+    except Exception:
+        pass
+
+    # 2. firstTradeDateMilliseconds (epoch ms)
+    try:
+        ts_ms = info.get('firstTradeDateMilliseconds')
+        if ts_ms and ts_ms > 0:
+            return datetime.datetime.fromtimestamp(ts_ms / 1000, datetime.UTC).strftime('%Y-%m-%d')
+    except Exception:
+        pass
+
+    # 3. ipoDate as a direct string (e.g. '2004-08-19')
+    try:
+        raw = info.get('ipoDate')
+        if raw and isinstance(raw, str) and len(raw) >= 10:
+            return raw[:10]
+    except Exception:
+        pass
+
+    # 4. fundInceptionDate (ETFs / funds, stored as epoch seconds)
+    try:
+        ts = info.get('fundInceptionDate')
+        if ts and ts > 0:
+            return datetime.datetime.fromtimestamp(ts, datetime.UTC).strftime('%Y-%m-%d')
+    except Exception:
+        pass
+
+    print(f"[ipo] No IPO date found for {symbol}")
+    return "N/A"
 
 def get_earnings_date(ticker: yf.Ticker, info: Dict) -> str:
     """Attempt to get next earnings date."""
@@ -154,6 +191,7 @@ async def get_stock(symbol: str):
         stats = calculate_stats(symbol, info, hist)
         if stats:
             stats['earningsDate'] = get_earnings_date(ticker, info)
+            stats['ipoDate'] = get_ipo_date(symbol, info)
         return stats
     except HTTPException:
         raise
@@ -253,6 +291,7 @@ async def get_batch(symbols: str = Query(..., description="Comma-separated symbo
             stats = calculate_stats(symbol, info, hist)
             if stats:
                 stats['earningsDate'] = get_earnings_date(ticker, info)
+                stats['ipoDate'] = get_ipo_date(symbol, info)
             results.append(stats)
         except Exception as e:
             print(f"[batch] Error processing {symbol}: {e}")
