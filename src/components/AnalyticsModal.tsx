@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { X, BarChart2, PieChart, Info } from 'lucide-react';
+import { X, BarChart2, PieChart, Info, ChevronDown, ChevronRight } from 'lucide-react';
 import { ScatterChart, Scatter, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, ReferenceLine, Legend, Cell, LabelList } from 'recharts';
 import type { Ticker, StockList, ListGroup } from '../types';
 import { parseMarketCap, formatMarketCap } from '../types';
@@ -39,6 +39,9 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
 }) => {
   const [selectedGroupId, setSelectedGroupId] = useState<string>('all');
   const [selectedListId, setSelectedListId] = useState<string>('all');
+  const [isScatterExpanded, setIsScatterExpanded] = useState(true);
+  const [isSmaExpanded, setIsSmaExpanded] = useState(true);
+  const [isBadgeExpanded, setIsBadgeExpanded] = useState(true);
 
   const filteredTickers = useMemo(() => {
     let result = tickers;
@@ -460,147 +463,165 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
 
           {/* Scatter Plot Section */}
           <div style={{ gridColumn: '1 / -1', marginTop: '20px' }}>
-            <h3 style={{ marginBottom: '24px', fontSize: '16px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h3 
+              onClick={() => setIsScatterExpanded(!isScatterExpanded)}
+              style={{ marginBottom: '24px', fontSize: '16px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}
+            >
+              {isScatterExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
               Market Cap vs 1-Year Performance
-              <div title="Scatter plot showing the relationship between company size and 1-year returns." style={{ cursor: 'help', opacity: 0.5 }}>
+              <div title="Scatter plot showing the relationship between company size and 1-year returns." style={{ cursor: 'help', opacity: 0.5 }} onClick={e => e.stopPropagation()}>
                 <Info size={14} />
               </div>
             </h3>
-            <div style={{ background: 'var(--surface-inset)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)', height: '500px' }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-divider)" />
-                  <XAxis 
-                    type="number" 
-                    dataKey="x" 
-                    name="Market Cap" 
-                    tickFormatter={(val) => formatMarketCap(val)} 
-                    stroke="var(--text-secondary)"
-                    tick={{ fontSize: 11 }}
-                    domain={['auto', 'auto']}
-                  />
-                  <YAxis 
-                    type="number" 
-                    dataKey="y" 
-                    name="1Y Gain" 
-                    tickFormatter={(val) => `${val > 0 ? '+' : ''}${val.toFixed(1)}%`}
-                    stroke="var(--text-secondary)"
-                    tick={{ fontSize: 11 }}
-                    domain={['auto', 'auto']}
-                  />
-                  <RechartsTooltip 
-                    cursor={{ strokeDasharray: '3 3' }}
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
-                        const data = payload[0].payload;
-                        return (
-                          <div style={{ background: 'var(--surface-modal)', padding: '12px', border: '1px solid var(--border-color)', borderRadius: '8px', boxShadow: 'var(--shadow-lg)' }}>
-                            <div style={{ fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>{data.symbol} - {data.name}</div>
-                            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '2px' }}>Sector: {data.ticker.stats.sector || 'Unknown'}</div>
-                            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '2px' }}>Market Cap: {formatMarketCap(data.x)}</div>
-                            <div style={{ fontSize: '12px', color: data.y >= 0 ? '#10b981' : '#ef4444' }}>1Y Perf: {data.y > 0 ? '+' : ''}{data.y.toFixed(2)}%</div>
-                            <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginTop: '8px', fontStyle: 'italic' }}>Click to view details</div>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  <Legend wrapperStyle={{ fontSize: '12px' }} />
-                  {scatterData.map(s => (
-                    <React.Fragment key={s.sector}>
-                      <Scatter 
-                        name={s.sector} 
-                        data={s.points} 
-                        fill={s.color} 
-                        onClick={(data: any) => {
-                          const ticker = data?.ticker || data?.payload?.ticker;
-                          if (onSelectTicker && ticker) onSelectTicker(ticker);
-                        }}
-                        style={{ cursor: 'pointer' }}
-                      />
-                      {s.trendline && (
-                        <ReferenceLine 
-                          segment={s.trendline} 
-                          stroke={s.color} 
-                          strokeOpacity={0.5} 
-                          strokeDasharray="3 3"
+            {isScatterExpanded && (
+              <div style={{ background: 'var(--surface-inset)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)', height: '500px' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-divider)" />
+                    <XAxis 
+                      type="number" 
+                      dataKey="x" 
+                      name="Market Cap" 
+                      tickFormatter={(val) => formatMarketCap(val)} 
+                      stroke="var(--text-secondary)"
+                      tick={{ fontSize: 11 }}
+                      domain={['auto', 'auto']}
+                    />
+                    <YAxis 
+                      type="number" 
+                      dataKey="y" 
+                      name="1Y Gain" 
+                      tickFormatter={(val) => `${val > 0 ? '+' : ''}${val.toFixed(1)}%`}
+                      stroke="var(--text-secondary)"
+                      tick={{ fontSize: 11 }}
+                      domain={['auto', 'auto']}
+                    />
+                    <RechartsTooltip 
+                      cursor={{ strokeDasharray: '3 3' }}
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload;
+                          return (
+                            <div style={{ background: 'var(--surface-modal)', padding: '12px', border: '1px solid var(--border-color)', borderRadius: '8px', boxShadow: 'var(--shadow-lg)' }}>
+                              <div style={{ fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>{data.symbol} - {data.name}</div>
+                              <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '2px' }}>Sector: {data.ticker.stats.sector || 'Unknown'}</div>
+                              <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '2px' }}>Market Cap: {formatMarketCap(data.x)}</div>
+                              <div style={{ fontSize: '12px', color: data.y >= 0 ? '#10b981' : '#ef4444' }}>1Y Perf: {data.y > 0 ? '+' : ''}{data.y.toFixed(2)}%</div>
+                              <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginTop: '8px', fontStyle: 'italic' }}>Click to view details</div>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <Legend wrapperStyle={{ fontSize: '12px' }} />
+                    {scatterData.map(s => (
+                      <React.Fragment key={s.sector}>
+                        <Scatter 
+                          name={s.sector} 
+                          data={s.points} 
+                          fill={s.color} 
+                          onClick={(data: any) => {
+                            const ticker = data?.ticker || data?.payload?.ticker;
+                            if (onSelectTicker && ticker) onSelectTicker(ticker);
+                          }}
+                          style={{ cursor: 'pointer' }}
                         />
-                      )}
-                    </React.Fragment>
-                  ))}
-                </ScatterChart>
-              </ResponsiveContainer>
-            </div>
+                        {s.trendline && (
+                          <ReferenceLine 
+                            segment={s.trendline} 
+                            stroke={s.color} 
+                            strokeOpacity={0.5} 
+                            strokeDasharray="3 3"
+                          />
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </ScatterChart>
+                </ResponsiveContainer>
+              </div>
+            )}
           </div>
 
           {/* SMA Notifications Chart */}
           <div style={{ gridColumn: '1 / -1', marginTop: '20px' }}>
-            <h3 style={{ marginBottom: '24px', fontSize: '16px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h3 
+              onClick={() => setIsSmaExpanded(!isSmaExpanded)}
+              style={{ marginBottom: '24px', fontSize: '16px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}
+            >
+              {isSmaExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
               SMA Crossover Notifications
-              <div title="Distribution of SMA crossover alerts for the current selection, stacked by direction." style={{ cursor: 'help', opacity: 0.5 }}>
+              <div title="Distribution of SMA crossover alerts for the current selection, stacked by direction." style={{ cursor: 'help', opacity: 0.5 }} onClick={e => e.stopPropagation()}>
                 <Info size={14} />
               </div>
             </h3>
-            <div style={{ background: 'var(--surface-inset)', padding: '30px 20px 20px 20px', borderRadius: '12px', border: '1px solid var(--border-color)', height: '400px' }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={notificationData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-divider)" vertical={false} />
-                  <XAxis 
-                    dataKey="name" 
-                    stroke="var(--text-secondary)"
-                    tick={{ fontSize: 12 }}
-                  />
-                  <YAxis 
-                    stroke="var(--text-secondary)"
-                    tick={{ fontSize: 12 }}
-                    allowDecimals={false}
-                  />
-                  <RechartsTooltip content={<CustomTooltip />} cursor={false} />
-                  <Legend verticalAlign="top" height={36}/>
-                  <Bar dataKey="Above" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]} barSize={40}>
-                    <LabelList dataKey="Above" position="center" fill="white" fontSize={10} formatter={(v: number) => v > 0 ? v : ''} />
-                  </Bar>
-                  <Bar dataKey="Below" stackId="a" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={40}>
-                    <LabelList dataKey="Below" position="center" fill="white" fontSize={10} formatter={(v: number) => v > 0 ? v : ''} />
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-          {/* Badge Distribution Chart */}
-          {badgeData.length > 0 && (
-            <div style={{ gridColumn: '1 / -1', marginTop: '20px' }}>
-              <h3 style={{ marginBottom: '24px', fontSize: '16px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                Badge Distribution
-                <div title="Count of custom badges across all selected tickers." style={{ cursor: 'help', opacity: 0.5 }}>
-                  <Info size={14} />
-                </div>
-              </h3>
+            {isSmaExpanded && (
               <div style={{ background: 'var(--surface-inset)', padding: '30px 20px 20px 20px', borderRadius: '12px', border: '1px solid var(--border-color)', height: '400px' }}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={badgeData} layout="vertical" margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-divider)" horizontal={false} />
+                  <BarChart data={notificationData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-divider)" vertical={false} />
                     <XAxis 
-                      type="number"
+                      dataKey="name" 
+                      stroke="var(--text-secondary)"
+                      tick={{ fontSize: 12 }}
+                    />
+                    <YAxis 
                       stroke="var(--text-secondary)"
                       tick={{ fontSize: 12 }}
                       allowDecimals={false}
                     />
-                    <YAxis 
-                      type="category"
-                      dataKey="name" 
-                      stroke="var(--text-secondary)"
-                      tick={{ fontSize: 11 }}
-                      width={100}
-                    />
                     <RechartsTooltip content={<CustomTooltip />} cursor={false} />
-                    <Bar dataKey="count" fill="var(--accent)" radius={[0, 4, 4, 0]} barSize={30}>
-                      <LabelList dataKey="count" position="right" fill="var(--text-secondary)" fontSize={11} offset={8} />
+                    <Legend verticalAlign="top" height={36}/>
+                    <Bar dataKey="Above" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]} barSize={40}>
+                      <LabelList dataKey="Above" position="center" fill="white" fontSize={10} formatter={(v: number) => v > 0 ? v : ''} />
+                    </Bar>
+                    <Bar dataKey="Below" stackId="a" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={40}>
+                      <LabelList dataKey="Below" position="center" fill="white" fontSize={10} formatter={(v: number) => v > 0 ? v : ''} />
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </div>
+            )}
+          </div>
+          {/* Badge Distribution Chart */}
+          {badgeData.length > 0 && (
+            <div style={{ gridColumn: '1 / -1', marginTop: '20px' }}>
+              <h3 
+                onClick={() => setIsBadgeExpanded(!isBadgeExpanded)}
+                style={{ marginBottom: '24px', fontSize: '16px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}
+              >
+                {isBadgeExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+                Badge Distribution
+                <div title="Count of custom badges across all selected tickers." style={{ cursor: 'help', opacity: 0.5 }} onClick={e => e.stopPropagation()}>
+                  <Info size={14} />
+                </div>
+              </h3>
+              {isBadgeExpanded && (
+                <div style={{ background: 'var(--surface-inset)', padding: '30px 20px 20px 20px', borderRadius: '12px', border: '1px solid var(--border-color)', height: '400px' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={badgeData} layout="vertical" margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-divider)" horizontal={false} />
+                      <XAxis 
+                        type="number"
+                        stroke="var(--text-secondary)"
+                        tick={{ fontSize: 12 }}
+                        allowDecimals={false}
+                      />
+                      <YAxis 
+                        type="category"
+                        dataKey="name" 
+                        stroke="var(--text-secondary)"
+                        tick={{ fontSize: 11 }}
+                        width={100}
+                      />
+                      <RechartsTooltip content={<CustomTooltip />} cursor={false} />
+                      <Bar dataKey="count" fill="var(--accent)" radius={[0, 4, 4, 0]} barSize={30}>
+                        <LabelList dataKey="count" position="right" fill="var(--text-secondary)" fontSize={11} offset={8} />
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
             </div>
           )}
         </div>
