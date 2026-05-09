@@ -6,6 +6,7 @@ import numpy as np
 import math
 from typing import List, Dict, Any
 import uvicorn
+import datetime
 
 app = FastAPI(title="Stocks Galore Backend")
 
@@ -102,12 +103,12 @@ def calculate_stats(symbol: str, info: Dict, hist: pd.DataFrame) -> Dict[str, An
         "pe": safe_float(info.get('trailingPE')),
         "high52": safe_float(info.get('fiftyTwoWeekHigh')),
         "low52": safe_float(info.get('fiftyTwoWeekLow')),
-        "avgVolume": f"{info.get('averageVolume', 0) / 1e6:.1f}M" if info.get('averageVolume') else "N/A"
+        "avgVolume": f"{info.get('averageVolume', 0) / 1e6:.1f}M" if info.get('averageVolume') else "N/A",
+        "ipoDate": datetime.datetime.fromtimestamp(info.get('firstTradeDateEpochUtc')).strftime('%Y-%m-%d') if info.get('firstTradeDateEpochUtc') else "N/A"
     }
 
 def get_earnings_date(ticker: yf.Ticker, info: Dict) -> str:
     """Attempt to get next earnings date."""
-    import datetime
     
     # 1. Try info.earningsTimestamp (most reliable for some tickers)
     try:

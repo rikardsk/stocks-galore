@@ -354,6 +354,10 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
             <span className="stat-label">Earnings Date</span>
             <span className="stat-value" style={{ color: 'var(--accent)' }}>{ticker.stats.earningsDate || 'N/A'}</span>
           </div>
+          <div style={{ background: 'var(--surface-subtle)' }} className="stat-box">
+            <span className="stat-label">IPO Date</span>
+            <span className="stat-value" style={{ color: 'var(--text-secondary)' }}>{ticker.stats.ipoDate || 'N/A'}</span>
+          </div>
           <div style={{ gridColumn: 'span 2', background: 'var(--surface-subtle)' }} className="stat-box">
             <span className="stat-label">52 Week Range</span>
             <div className="range-bar-container">
