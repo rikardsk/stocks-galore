@@ -6,7 +6,7 @@ interface NotificationsModalProps {
   isOpen: boolean;
   onClose: () => void;
   notifications: TickerNotification[];
-  onClear: () => void;
+  onClear: (ids?: string[]) => void;
   onMarkRead: () => void;
   onOpenAlerts: () => void;
   onSelectTicker: (ticker: Ticker) => void;
@@ -424,10 +424,21 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
           <button 
             className="btn" 
             style={{ flex: 1, fontSize: '12px', padding: '8px', border: '1px solid var(--border-color)' }}
-            onClick={onClear}
-            disabled={notifications.length === 0}
+            onClick={() => {
+              const isFiltered = filteredNotifications.length !== notifications.length;
+              const count = isFiltered ? filteredNotifications.length : notifications.length;
+              const word = isFiltered ? 'the filtered' : 'all';
+              if (window.confirm(`Are you sure you want to clear ${word} ${count} notifications?`)) {
+                if (isFiltered) {
+                  onClear(filteredNotifications.map(n => n.id));
+                } else {
+                  onClear();
+                }
+              }
+            }}
+            disabled={filteredNotifications.length === 0}
           >
-            Clear All
+            {filteredNotifications.length !== notifications.length ? 'Clear' : 'Clear All'}
           </button>
         </div>
 

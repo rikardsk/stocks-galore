@@ -232,5 +232,10 @@ export const storage = {
 
   clearNotifications: () => {
     storage.saveNotifications([]);
+  },
+
+  removeNotifications: (ids: string[]) => {
+    const notifications = storage.getNotifications();
+    storage.saveNotifications(notifications.filter(n => !ids.includes(n.id)));
   }
 };

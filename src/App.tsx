@@ -1399,9 +1399,14 @@ const App: React.FC = () => {
         isOpen={isNotificationsModalOpen} 
         onClose={() => setIsNotificationsModalOpen(false)} 
         notifications={notifications}
-        onClear={() => {
-          storage.clearNotifications();
-          setNotifications([]);
+        onClear={(ids?: string[]) => {
+          if (ids) {
+            storage.removeNotifications(ids);
+            setNotifications(storage.getNotifications());
+          } else {
+            storage.clearNotifications();
+            setNotifications([]);
+          }
         }}
         onMarkRead={() => {
           storage.markNotificationsRead();

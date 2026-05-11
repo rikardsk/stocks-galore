@@ -3,10 +3,10 @@
 ~~- Graph for IPO date?~~
 - Remove from portfolio button in Portfolio list doesn't work.
 ~~- In the logs it looks like it's getting almost all ipo dates, it's just that it doesn't show in deep dive panel or market overview.~~
-- Warning when clicking on Clear All in the notifications tab.
+~~- Warning when clicking on Clear All in the notifications tab.~~
 ~~- Add a new list named Today in the sidebar under PINNED, under Portfolio.~~
 ~~- Align price in lists in the workbench to the right.~~
-- Add a delete button in the notification modal to remove selected notifications from the list. Repurpose the Clear All button (?).
+~~- Add a delete button in the notification modal to remove selected notifications from the list. Repurpose the Clear All button (?).~~
 - Add a note section in the deep dive modal to add custom notes for each ticker. 
 
 ## Later maybe
