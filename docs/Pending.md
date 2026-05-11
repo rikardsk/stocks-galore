@@ -1,12 +1,18 @@
 ## TODOs
 ~~- Can you add IPO date to Market Overview Table and Deep dive panel~~
 ~~- Graph for IPO date?~~
-- In the logs it looks like it's getting almost all ipo dates, it's just that it doesn't show in deep dive panel or market overview
-- Add a portfolio button that opens up a portfolio modal to manage Quantity and Average Price per ticker. The modal should also include  the Gain/Loss in numbers and percentages.
+- Remove from portfolio button in Portfolio list doesn't work.
+~~- In the logs it looks like it's getting almost all ipo dates, it's just that it doesn't show in deep dive panel or market overview.~~
+- Warning when clicking on Clear All in the notifications tab.
+- New list named Today in the sidebar under PINNED.
+~~- Align price in lists in the workbench to the right.~~
+- Add a delete button in the notification modal to remove selected notifications from the list. Repurpose the Clear All button (?).
+- Add a note section in the deep dive modal to add custom notes for each ticker. 
 
 ## Later maybe
-- Earnings dates (for tracking upcoming earnings in the deep dive panel)
-- IPO dates
+- Add a portfolio button that opens up a portfolio modal to manage Quantity and Average Price per ticker. The modal should also include  the Gain/Loss in numbers and percentages.
+- Select a single notification to view details or delete it.
+- Hover button to delete notification
 - Zoom in/out with the mouse scroll wheel
 - Earnings winners/dates
 - Newsfeed?
@@ -65,5 +71,6 @@
 - ~~A refresh button in the list next to the + Add Ticker button. The refresh button should only refresh the list in question.~~
 - ~~Add Alert management (Add/Delete) directly in the "Deep Dive" panel.~~
 - ~~Add Earnings Date to Market Overview table and Deep Dive panel.~~
-
+~~- Earnings dates (for tracking upcoming earnings in the deep dive panel)~~
+~~- IPO dates~~
 

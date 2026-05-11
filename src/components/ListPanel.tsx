@@ -208,7 +208,7 @@ export const ListPanel: React.FC<ListPanelProps> = ({
                 }}
               >
                 <div className="ticker-info">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                     <button 
                       className="btn" 
