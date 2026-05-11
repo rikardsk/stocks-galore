@@ -22,6 +22,7 @@ import './index.css';
 const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 const WATCHLIST_ID = 'permanent-watchlist';
 const PORTFOLIO_ID = 'permanent-portfolio';
+const TODAY_ID = 'permanent-today';
 const API_BASE_URL = 'http://localhost:8000';
 
 const App: React.FC = () => {
@@ -232,6 +233,52 @@ const App: React.FC = () => {
         // Remove any other duplicates that might have been created
         currentLists = currentLists.filter((l, idx) => 
           idx === portfolioIndex || (l.id !== PORTFOLIO_ID && l.name !== 'Portfolio')
+        );
+      }
+    }
+
+    // Find any existing Today (by ID or name)
+    const todayIndex = currentLists.findIndex(l => l.id === TODAY_ID || l.name === 'Today');
+    
+    if (todayIndex === -1) {
+      // Create it if it doesn't exist
+      const today: StockList = {
+        id: TODAY_ID,
+        name: 'Today',
+        color: '#10b981',
+        tickers: [],
+        position: { x: 850, y: 50 }, // Offset from Portfolio (450, 50)
+        isCollapsed: false,
+        showStats: true,
+        isVisible: true,
+        sortOrder: 'none',
+        isProtected: true
+      };
+      
+      // Place it right after Portfolio if it exists
+      const pIdx = currentLists.findIndex(l => l.id === PORTFOLIO_ID);
+      if (pIdx !== -1) {
+        currentLists.splice(pIdx + 1, 0, today);
+      } else {
+        currentLists.push(today);
+      }
+      changed = true;
+    } else {
+      // Update the existing one and ensure it's protected and has the right ID
+      const existing = currentLists[todayIndex];
+      if (!existing.isProtected || existing.id !== TODAY_ID || existing.position.y !== 50) {
+        currentLists[todayIndex] = { 
+          ...existing, 
+          id: TODAY_ID, 
+          name: 'Today',
+          isProtected: true,
+          position: { ...existing.position, y: 50 }
+        };
+        changed = true;
+
+        // Remove any other duplicates that might have been created
+        currentLists = currentLists.filter((l, idx) => 
+          idx === todayIndex || (l.id !== TODAY_ID && l.name !== 'Today')
         );
       }
     }
@@ -992,6 +1039,16 @@ const App: React.FC = () => {
     return new Set(watchlist?.tickers.map(t => t.symbol) || []);
   }, [lists]);
 
+  const handleClearList = (listId: string) => {
+    if (window.confirm('Remove all tickers from this list?')) {
+      const list = lists.find(l => l.id === listId);
+      if (list) {
+        handleUpdateList({ ...list, tickers: [] });
+        showToast(`Cleared ${list.name}`, 'success');
+      }
+    }
+  };
+
   return (
     <div className={`app-container ${theme === 'light' ? 'light-theme' : ''}`}>
       <Sidebar 
@@ -1039,6 +1096,7 @@ const App: React.FC = () => {
         }}
         onMoveListToGroup={handleMoveListToGroup}
         onAssignList={handleOpenAssignModal}
+        onClearList={handleClearList}
       />
       
       <div style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>

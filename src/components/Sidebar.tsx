@@ -18,6 +18,7 @@ interface SidebarProps {
   onRenameGroup: (groupId: string, newName: string) => void;
   onRenameList: (listId: string, newName: string, color?: string) => void;
   onAssignList: (listId: string) => void;
+  onClearList?: (listId: string) => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -34,7 +35,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onMoveListToGroup,
   onRenameGroup,
   onRenameList,
-  onAssignList
+  onAssignList,
+  onClearList
 }) => {
   const [isEditMode, setIsEditMode] = React.useState(false);
   const [isUngroupedEditMode, setIsUngroupedEditMode] = React.useState(false);
@@ -187,6 +189,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <Trash2 size={14} color="var(--text-secondary)" opacity={0.5} />
                 </button>
               </>
+            )}
+            {list.name === 'Today' && (
+              <button className="btn" style={{ padding: '4px' }} onClick={(e) => { e.stopPropagation(); onClearList?.(list.id); }} title="Clear Today List">
+                <Trash2 size={14} color="var(--text-secondary)" opacity={0.5} />
+              </button>
             )}
           </div>
         </div>
