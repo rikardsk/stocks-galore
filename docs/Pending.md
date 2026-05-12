@@ -1,4 +1,5 @@
 ## TODOs
+- Can you make so that the pinned lists can move freely in the workbench like the rest of the lists.
 
 ## Later maybe
 - Add a portfolio button that opens up a portfolio modal to manage Quantity and Average Price per ticker. The modal should also include  the Gain/Loss in numbers and percentages.

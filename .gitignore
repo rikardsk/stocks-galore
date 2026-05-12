@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Batch scripts
+Stocks_Galore_backend.bat
+Stocks_Galore_start.bat
