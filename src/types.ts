@@ -32,6 +32,7 @@ export type Ticker = {
   };
   isOwned?: boolean;
   badges?: string[];
+  notes?: string;
 };
 
 export type StockList = {

@@ -7,7 +7,7 @@
 ~~- Add a new list named Today in the sidebar under PINNED, under Portfolio.~~
 ~~- Align price in lists in the workbench to the right.~~
 ~~- Add a delete button in the notification modal to remove selected notifications from the list. Repurpose the Clear All button (?).~~
-- Add a note section in the deep dive modal to add custom notes for each ticker. 
+~~- Add a note section in the deep dive modal to add custom notes for each ticker.~~ 
 
 ## Later maybe
 - Add a portfolio button that opens up a portfolio modal to manage Quantity and Average Price per ticker. The modal should also include  the Gain/Loss in numbers and percentages.

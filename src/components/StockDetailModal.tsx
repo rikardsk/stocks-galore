@@ -13,6 +13,7 @@ interface StockDetailModalProps {
   onToggleOwned: (ticker: Ticker) => void;
   onToggleWatchlist: (ticker: Ticker) => void;
   onUpdateBadges?: (ticker: Ticker, badges: string[]) => void;
+  onUpdateNotes?: (ticker: Ticker, notes: string) => void;
   isWatchlisted: boolean;
   alerts: StockAlert[];
   onAddAlert: (alert: Omit<StockAlert, 'id' | 'isTriggered'>) => void;
@@ -45,7 +46,7 @@ const Candlestick = (props: any) => {
 };
 
 export const StockDetailModal: React.FC<StockDetailModalProps> = ({ 
-  ticker, isOpen, onClose, onToggleOwned, onToggleWatchlist, onUpdateBadges, isWatchlisted, 
+  ticker, isOpen, onClose, onToggleOwned, onToggleWatchlist, onUpdateBadges, onUpdateNotes, isWatchlisted, 
   alerts, onAddAlert, onDeleteAlert, onUpdateAlert, theme 
 }) => {
   const [history, setHistory] = useState<any[]>([]);
@@ -59,10 +60,12 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
   
   // Alert input state
   const [newAlertVal, setNewAlertVal] = useState('');
+  const [notes, setNotes] = useState('');
 
   useEffect(() => {
     if (ticker) {
       setBadges(ticker.badges || []);
+      setNotes(ticker.notes || '');
     }
   }, [ticker]);
 
@@ -487,12 +490,36 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
           </div>
         </div>
 
-        {/* Description & Badges */}
+        {/* Notes & Badges & Description */}
         <div className="detail-description" style={{ background: 'var(--surface-inset)' }}>
-          <h3 style={{ color: 'var(--text-primary)' }}>About Company</h3>
-          <p>{ticker.stats.description}</p>
-          
-          <div style={{ marginTop: '24px' }}>
+          <div style={{ marginBottom: '24px' }}>
+            <h3 style={{ color: 'var(--text-primary)', fontSize: '14px', marginBottom: '12px' }}>Custom Notes</h3>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              onBlur={() => {
+                if (onUpdateNotes && ticker) {
+                  onUpdateNotes(ticker, notes);
+                }
+              }}
+              placeholder="Add your personal notes for this stock here..."
+              style={{
+                width: '100%',
+                minHeight: '80px',
+                background: 'var(--surface-subtle)',
+                border: '1px solid var(--border-color)',
+                color: 'var(--text-primary)',
+                padding: '12px',
+                borderRadius: '8px',
+                fontSize: '13px',
+                resize: 'vertical',
+                outline: 'none',
+                fontFamily: 'inherit'
+              }}
+            />
+          </div>
+
+          <div style={{ marginBottom: '24px' }}>
             <h3 style={{ color: 'var(--text-primary)', fontSize: '14px', marginBottom: '12px' }}>Custom Badges</h3>
             
             <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
@@ -563,6 +590,11 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
                 </button>
               </div>
             </div>
+          </div>
+          
+          <div style={{ marginTop: '24px' }}>
+            <h3 style={{ color: 'var(--text-primary)' }}>About Company</h3>
+            <p>{ticker.stats.description}</p>
           </div>
         </div>
 

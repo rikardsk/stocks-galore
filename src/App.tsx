@@ -1372,11 +1372,26 @@ const App: React.FC = () => {
         }}
         onToggleWatchlist={(ticker) => handleToggleWatchlist(ticker)}
         onUpdateBadges={(ticker, badges) => {
-          setLists(prevLists => prevLists.map(l => ({
-            ...l,
-            tickers: l.tickers.map(t => t.symbol === ticker.symbol ? { ...t, badges } : t)
-          })));
+          setLists(prevLists => {
+            const next = prevLists.map(l => ({
+              ...l,
+              tickers: l.tickers.map(t => t.symbol === ticker.symbol ? { ...t, badges } : t)
+            }));
+            storage.saveLists(next);
+            return next;
+          });
           setSelectedDetailTicker(prev => prev && prev.symbol === ticker.symbol ? { ...prev, badges } : prev);
+        }}
+        onUpdateNotes={(ticker, notes) => {
+          setLists(prevLists => {
+            const next = prevLists.map(l => ({
+              ...l,
+              tickers: l.tickers.map(t => t.symbol === ticker.symbol ? { ...t, notes } : t)
+            }));
+            storage.saveLists(next);
+            return next;
+          });
+          setSelectedDetailTicker(prev => prev && prev.symbol === ticker.symbol ? { ...prev, notes } : prev);
         }}
         isWatchlisted={selectedDetailTicker ? watchlistSymbols.has(selectedDetailTicker.symbol) : false}
         alerts={alerts}
