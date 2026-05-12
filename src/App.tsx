@@ -619,13 +619,8 @@ const App: React.FC = () => {
       ownedStatusMap[t.symbol] = !!t.isOwned;
     });
 
-    // If we are updating the Portfolio list itself, any ticker in it MUST be owned
-    if (updatedList.id === PORTFOLIO_ID) {
-      updatedList.tickers.forEach(t => {
-        t.isOwned = true;
-        ownedStatusMap[t.symbol] = true;
-      });
-    }
+    // We no longer force isOwned = true for PORTFOLIO_ID here.
+    // If a user toggled ownership off within the Portfolio list, we respect it.
 
     // 2. Sync isOwned across ALL lists and collect all owned tickers
     const allOwnedTickersMap: Record<string, Ticker> = {};
@@ -641,14 +636,12 @@ const App: React.FC = () => {
         return t;
       });
 
-      // Collect owned tickers for the Portfolio list (ignoring the portfolio list itself for now)
-      if (currentList.id !== PORTFOLIO_ID) {
-        updatedTickers.forEach(t => {
-          if (t.isOwned && !allOwnedTickersMap[t.symbol]) {
-            allOwnedTickersMap[t.symbol] = { ...t };
-          }
-        });
-      }
+      // Collect owned tickers from ALL lists to ensure we have a master copy of each owned ticker
+      updatedTickers.forEach(t => {
+        if (t.isOwned && !allOwnedTickersMap[t.symbol]) {
+          allOwnedTickersMap[t.symbol] = { ...t };
+        }
+      });
 
       return { ...currentList, tickers: updatedTickers };
     });
