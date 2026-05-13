@@ -108,16 +108,16 @@ const App: React.FC = () => {
       newBadges = newBadges.filter(b => b !== 'EARNINGS MISS');
       changed = true;
       
+      const targetAlertId = `earnings-beat-${ticker.symbol}-${today}`;
       const existingNotifs = storage.getNotifications();
       const isAlreadyNotified = existingNotifs.some(n => 
-        n.symbol === ticker.symbol && 
-        n.message.includes('EARNINGS BEAT') &&
-        n.timestamp.startsWith(today)
+        n.alertId === targetAlertId || 
+        (n.symbol === ticker.symbol && n.type === 'earnings' && n.message.includes('Earnings Beat') && n.timestamp.startsWith(today))
       );
       
       if (!isAlreadyNotified) {
         storage.addNotification({
-          alertId: `earnings-beat-${ticker.symbol}-${today}`,
+          alertId: targetAlertId,
           symbol: ticker.symbol,
           message: `${ticker.symbol} Earnings Beat! Today's change: ${ticker.stats.changePercent}`,
           type: 'earnings'
@@ -128,16 +128,16 @@ const App: React.FC = () => {
       newBadges = newBadges.filter(b => b !== 'EARNINGS BEAT');
       changed = true;
       
+      const targetAlertId = `earnings-miss-${ticker.symbol}-${today}`;
       const existingNotifs = storage.getNotifications();
       const isAlreadyNotified = existingNotifs.some(n => 
-        n.symbol === ticker.symbol && 
-        n.message.includes('EARNINGS MISS') &&
-        n.timestamp.startsWith(today)
+        n.alertId === targetAlertId || 
+        (n.symbol === ticker.symbol && n.type === 'earnings' && n.message.includes('Earnings Miss') && n.timestamp.startsWith(today))
       );
       
       if (!isAlreadyNotified) {
         storage.addNotification({
-          alertId: `earnings-miss-${ticker.symbol}-${today}`,
+          alertId: targetAlertId,
           symbol: ticker.symbol,
           message: `${ticker.symbol} Earnings Miss! Today's change: ${ticker.stats.changePercent}`,
           type: 'earnings'
@@ -332,12 +332,13 @@ const App: React.FC = () => {
   }, [refreshInterval, lists]);
 
   const checkAlerts = (updatedTickers: Ticker[]) => {
+    const today = new Date().toISOString().split('T')[0];
     const activeAlerts = storage.getAlerts();
-    if (activeAlerts.length === 0) return;
-
     let triggeredCount = 0;
-    const updatedAlerts = activeAlerts.map(alert => {
-      const ticker = updatedTickers.find(t => t.symbol === alert.symbol);
+
+    if (activeAlerts.length > 0) {
+      const updatedAlerts = activeAlerts.map(alert => {
+        const ticker = updatedTickers.find(t => t.symbol === alert.symbol);
       if (!ticker) return alert;
 
       let isMet = false;
@@ -373,13 +374,17 @@ const App: React.FC = () => {
       return alert;
     });
 
-    if (triggeredCount > 0) {
-      storage.saveAlerts(updatedAlerts);
-      setAlerts(updatedAlerts);
+      if (triggeredCount > 0) {
+        storage.saveAlerts(updatedAlerts);
+        setAlerts(updatedAlerts);
+      }
     }
 
     // --- Automatic Crossover Detection ---
-    updatedTickers.forEach(ticker => {
+    // Deduplicate tickers by symbol for crossover detection to avoid multiple notifications if ticker is in multiple lists
+    const uniqueTickersForCrossover = Array.from(new Map(updatedTickers.map(t => [t.symbol, t])).values());
+
+    uniqueTickersForCrossover.forEach(ticker => {
       const price = parseFloat(ticker.stats.price);
       const change = parseFloat(ticker.stats.change);
       const prevPrice = price - change;
@@ -394,22 +399,22 @@ const App: React.FC = () => {
 
           if (crossedAbove || crossedBelow) {
             const direction = crossedAbove ? 'ABOVE' : 'BELOW';
-            const message = `${ticker.symbol} crossed ${direction} SMA${period} (Price: $${price}, SMA: ${smaVal})`;
+            const targetAlertId = `cross-${ticker.symbol}-${period}-${direction.toLowerCase()}-${today}`;
             const existingNotifs = storage.getNotifications();
-            const today = new Date().toISOString().split('T')[0];
             
             const isAlreadyNotified = existingNotifs.some(n => 
-              n.symbol === ticker.symbol && 
-              n.message.includes(`crossed ${direction} SMA${period}`) &&
-              n.timestamp.startsWith(today)
+              n.alertId === targetAlertId ||
+              (n.symbol === ticker.symbol && 
+               n.message.includes(`crossed ${direction} SMA${period}`) &&
+               n.timestamp.startsWith(today))
             );
 
             if (!isAlreadyNotified) {
               triggeredCount++;
               storage.addNotification({
-                alertId: `cross-${ticker.symbol}-${period}-${direction.toLowerCase()}`,
+                alertId: targetAlertId,
                 symbol: ticker.symbol,
-                message,
+                message: `${ticker.symbol} crossed ${direction} SMA${period} (Price: $${price}, SMA: ${smaVal})`,
                 type: `sma${period}` as any
               });
             }
