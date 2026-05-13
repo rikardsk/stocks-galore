@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import Draggable from 'react-draggable';
-import { X, ChevronDown, ChevronUp, Eye, EyeOff, Plus, RefreshCw, Trash2, ArrowUpDown, ArrowUpAZ, ArrowDownAZ, Lock, AlertCircle, Briefcase, Star, Info, Copy, Check } from 'lucide-react';
+import { X, ChevronDown, ChevronUp, Eye, EyeOff, Plus, RefreshCw, Trash2, ArrowUpDown, ArrowUpAZ, ArrowDownAZ, ArrowUp10, ArrowDown10, Lock, AlertCircle, Briefcase, Star, Info, Copy, Check } from 'lucide-react';
 import { Sparkline } from './Sparkline';
 import type { StockList, StockFilters } from '../types';
 import { COUNTRY_FLAGS, tickerMatchesFilters, formatMarketCap } from '../types';
@@ -57,9 +57,11 @@ export const ListPanel: React.FC<ListPanelProps> = ({
   };
 
   const handleToggleSort = () => {
-    let nextOrder: 'asc' | 'desc' | 'none' = 'asc';
+    let nextOrder: StockList['sortOrder'] = 'asc';
     if (list.sortOrder === 'asc') nextOrder = 'desc';
-    else if (list.sortOrder === 'desc') nextOrder = 'none';
+    else if (list.sortOrder === 'desc') nextOrder = 'gain-desc';
+    else if (list.sortOrder === 'gain-desc') nextOrder = 'gain-asc';
+    else if (list.sortOrder === 'gain-asc') nextOrder = 'none';
     
     onUpdate({ ...list, sortOrder: nextOrder });
   };
@@ -91,8 +93,16 @@ export const ListPanel: React.FC<ListPanelProps> = ({
 
   const sortedTickers = [...filteredTickers].sort((a, b) => {
     if (list.sortOrder === 'none') return 0;
-    const comparison = a.symbol.localeCompare(b.symbol);
-    return list.sortOrder === 'asc' ? comparison : -comparison;
+    
+    if (list.sortOrder === 'asc' || list.sortOrder === 'desc') {
+      const comparison = a.symbol.localeCompare(b.symbol);
+      return list.sortOrder === 'asc' ? comparison : -comparison;
+    } else {
+      const aGain = parseFloat(a.stats.changePercent) || 0;
+      const bGain = parseFloat(b.stats.changePercent) || 0;
+      const comparison = aGain - bGain;
+      return list.sortOrder === 'gain-asc' ? comparison : -comparison;
+    }
   });
 
   const lastUpdatedTimes = list.tickers.map(t => t.stats.lastUpdated ? new Date(t.stats.lastUpdated).getTime() : 0);
@@ -114,7 +124,7 @@ export const ListPanel: React.FC<ListPanelProps> = ({
       defaultPosition={list.position}
       onStop={handleDrag}
       bounds="parent"
-      disabled={list.isProtected}
+      disabled={false}
     >
       <div 
         className="list-panel" 
@@ -130,7 +140,7 @@ export const ListPanel: React.FC<ListPanelProps> = ({
               ? 'rgba(239, 68, 68, 0.25)' 
               : list.color + '22', 
           borderBottom: `2px solid ${isBigGain ? '#10b981' : isBigLoss ? '#ef4444' : list.color}`,
-          cursor: list.isProtected ? 'default' : 'grab'
+          cursor: 'grab'
         }}
         >
           <div className="panel-title" style={{ color: isBigGain ? '#10b981' : isBigLoss ? '#ef4444' : list.color, display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
@@ -171,6 +181,8 @@ export const ListPanel: React.FC<ListPanelProps> = ({
             <button className="btn" onClick={handleToggleSort} title={`Sort: ${list.sortOrder}`}>
               {list.sortOrder === 'asc' && <ArrowUpAZ size={16} />}
               {list.sortOrder === 'desc' && <ArrowDownAZ size={16} />}
+              {list.sortOrder === 'gain-asc' && <ArrowUp10 size={16} />}
+              {list.sortOrder === 'gain-desc' && <ArrowDown10 size={16} />}
               {list.sortOrder === 'none' && <ArrowUpDown size={16} />}
             </button>
             <button className="btn" onClick={handleToggleStats} title="Toggle Stats">

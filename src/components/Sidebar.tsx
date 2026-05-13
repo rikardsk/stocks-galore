@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Trash2, ChevronDown, ChevronUp, ChevronRight, FolderPlus, Folder, GripVertical } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronUp, ChevronRight, FolderPlus, Folder, GripVertical, ArrowUpDown, ArrowUpAZ, ArrowDownAZ, ArrowUp10, ArrowDown10 } from 'lucide-react';
 import type { StockList, ListGroup } from '../types';
 import { COUNTRY_FLAGS } from '../types';
 
@@ -49,6 +49,30 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [editingGroupId, setEditingGroupId] = React.useState<string | null>(null);
   const [editingListId, setEditingListId] = React.useState<string | null>(null);
   const [editValue, setEditValue] = React.useState('');
+  const [ungroupedSort, setUngroupedSort] = React.useState<StockList['sortOrder']>('gain-desc');
+  const [archiveSort, setArchiveSort] = React.useState<StockList['sortOrder']>('gain-desc');
+  
+  const handleToggleSort = (current: StockList['sortOrder'], setter: (val: StockList['sortOrder']) => void) => {
+    let next: StockList['sortOrder'] = 'asc';
+    if (current === 'asc') next = 'desc';
+    else if (current === 'desc') next = 'gain-desc';
+    else if (current === 'gain-desc') next = 'gain-asc';
+    else if (current === 'gain-asc') next = 'none';
+    setter(next);
+  };
+
+  const sortLists = (listsToSort: StockList[], order: StockList['sortOrder']) => {
+    if (order === 'none') return listsToSort;
+    return [...listsToSort].sort((a, b) => {
+      if (order === 'asc' || order === 'desc') {
+        const comp = a.name.localeCompare(b.name);
+        return order === 'asc' ? comp : -comp;
+      } else {
+        const comp = calculateAverageGain(a) - calculateAverageGain(b);
+        return order === 'gain-asc' ? comp : -comp;
+      }
+    });
+  };
   const calculateAverageGain = (list: StockList) => {
     if (!list || !list.tickers || list.tickers.length === 0) return 0;
     const total = list.tickers.reduce((sum, t) => {
@@ -62,15 +86,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const protectedLists = lists.filter(list => list.isProtected);
   const regularLists = lists.filter(list => !list.isProtected);
   
-  const archivedLists = regularLists
-    .filter(list => list.isArchived)
-    .sort((a, b) => calculateAverageGain(b) - calculateAverageGain(a));
+  const archivedLists = sortLists(regularLists.filter(list => list.isArchived), archiveSort);
 
   const activeLists = regularLists.filter(list => !list.isArchived);
   
-  const ungroupedLists = activeLists
-    .filter(list => !groups.some(g => g.listIds.includes(list.id)))
-    .sort((a, b) => calculateAverageGain(b) - calculateAverageGain(a));
+  const ungroupedLists = sortLists(activeLists.filter(list => !groups.some(g => g.listIds.includes(list.id))), ungroupedSort);
 
 
 
@@ -420,20 +440,34 @@ export const Sidebar: React.FC<SidebarProps> = ({
               Ungrouped ({ungroupedLists.length})
             </div>
             {ungroupedLists.length > 0 && (
-              <button 
-                className="btn" 
-                style={{ 
-                  fontSize: '11px', 
-                  padding: '2px 8px', 
-                  color: isUngroupedEditMode ? 'var(--accent)' : 'var(--text-secondary)', 
-                  background: isUngroupedEditMode ? 'rgba(59, 130, 246, 0.1)' : 'transparent', 
-                  borderRadius: '4px',
-                  border: isUngroupedEditMode ? '1px solid rgba(59, 130, 246, 0.2)' : '1px solid transparent'
-                }}
-                onClick={() => setIsUngroupedEditMode(!isUngroupedEditMode)}
-              >
-                {isUngroupedEditMode ? 'Done' : 'Edit'}
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <button 
+                  className="btn" 
+                  onClick={() => handleToggleSort(ungroupedSort, setUngroupedSort)} 
+                  title={`Sort: ${ungroupedSort}`}
+                  style={{ padding: '2px', color: 'var(--text-secondary)', opacity: 0.7 }}
+                >
+                  {ungroupedSort === 'asc' && <ArrowUpAZ size={14} />}
+                  {ungroupedSort === 'desc' && <ArrowDownAZ size={14} />}
+                  {ungroupedSort === 'gain-asc' && <ArrowUp10 size={14} />}
+                  {ungroupedSort === 'gain-desc' && <ArrowDown10 size={14} />}
+                  {ungroupedSort === 'none' && <ArrowUpDown size={14} />}
+                </button>
+                <button 
+                  className="btn" 
+                  style={{ 
+                    fontSize: '11px', 
+                    padding: '2px 8px', 
+                    color: isUngroupedEditMode ? 'var(--accent)' : 'var(--text-secondary)', 
+                    background: isUngroupedEditMode ? 'rgba(59, 130, 246, 0.1)' : 'transparent', 
+                    borderRadius: '4px',
+                    border: isUngroupedEditMode ? '1px solid rgba(59, 130, 246, 0.2)' : '1px solid transparent'
+                  }}
+                  onClick={() => setIsUngroupedEditMode(!isUngroupedEditMode)}
+                >
+                  {isUngroupedEditMode ? 'Done' : 'Edit'}
+                </button>
+              </div>
             )}
           </div>
           {!isUngroupedSectionCollapsed && (
@@ -470,20 +504,34 @@ export const Sidebar: React.FC<SidebarProps> = ({
               Archive ({archivedLists.length})
             </div>
             {archivedLists.length > 0 && (
-              <button 
-                className="btn" 
-                style={{ 
-                  fontSize: '11px', 
-                  padding: '2px 8px', 
-                  color: isArchiveEditMode ? 'var(--accent)' : 'var(--text-secondary)', 
-                  background: isArchiveEditMode ? 'rgba(59, 130, 246, 0.1)' : 'transparent', 
-                  borderRadius: '4px',
-                  border: isArchiveEditMode ? '1px solid rgba(59, 130, 246, 0.2)' : '1px solid transparent'
-                }}
-                onClick={() => setIsArchiveEditMode(!isArchiveEditMode)}
-              >
-                {isArchiveEditMode ? 'Done' : 'Edit'}
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <button 
+                  className="btn" 
+                  onClick={() => handleToggleSort(archiveSort, setArchiveSort)} 
+                  title={`Sort: ${archiveSort}`}
+                  style={{ padding: '2px', color: 'var(--text-secondary)', opacity: 0.7 }}
+                >
+                  {archiveSort === 'asc' && <ArrowUpAZ size={14} />}
+                  {archiveSort === 'desc' && <ArrowDownAZ size={14} />}
+                  {archiveSort === 'gain-asc' && <ArrowUp10 size={14} />}
+                  {archiveSort === 'gain-desc' && <ArrowDown10 size={14} />}
+                  {archiveSort === 'none' && <ArrowUpDown size={14} />}
+                </button>
+                <button 
+                  className="btn" 
+                  style={{ 
+                    fontSize: '11px', 
+                    padding: '2px 8px', 
+                    color: isArchiveEditMode ? 'var(--accent)' : 'var(--text-secondary)', 
+                    background: isArchiveEditMode ? 'rgba(59, 130, 246, 0.1)' : 'transparent', 
+                    borderRadius: '4px',
+                    border: isArchiveEditMode ? '1px solid rgba(59, 130, 246, 0.2)' : '1px solid transparent'
+                  }}
+                  onClick={() => setIsArchiveEditMode(!isArchiveEditMode)}
+                >
+                  {isArchiveEditMode ? 'Done' : 'Edit'}
+                </button>
+              </div>
             )}
           </div>
           {!isArchiveSectionCollapsed && (

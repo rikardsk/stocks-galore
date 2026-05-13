@@ -172,15 +172,14 @@ const App: React.FC = () => {
       currentLists = [watchlist, ...currentLists];
       changed = true;
     } else {
-      // Update the existing one and ensure it's protected and has the right ID
+      // Update the existing one and ensure it has the right ID and is protected
       const existing = currentLists[watchlistIndex];
-      if (!existing.isProtected || existing.id !== WATCHLIST_ID || existing.position.y !== 50) {
+      if (existing.id !== WATCHLIST_ID || !existing.isProtected) {
         currentLists[watchlistIndex] = { 
           ...existing, 
           id: WATCHLIST_ID, 
           name: 'Watchlist',
-          isProtected: true,
-          position: { ...existing.position, y: 50 }
+          isProtected: true
         };
         changed = true;
         
@@ -220,13 +219,12 @@ const App: React.FC = () => {
     } else {
       // Update the existing one and ensure it's protected and has the right ID
       const existing = currentLists[portfolioIndex];
-      if (!existing.isProtected || existing.id !== PORTFOLIO_ID || existing.position.y !== 50) {
+      if (existing.id !== PORTFOLIO_ID || !existing.isProtected) {
         currentLists[portfolioIndex] = { 
           ...existing, 
           id: PORTFOLIO_ID, 
           name: 'Portfolio',
-          isProtected: true,
-          position: { ...existing.position, y: 50 }
+          isProtected: true
         };
         changed = true;
 
@@ -266,13 +264,12 @@ const App: React.FC = () => {
     } else {
       // Update the existing one and ensure it's protected and has the right ID
       const existing = currentLists[todayIndex];
-      if (!existing.isProtected || existing.id !== TODAY_ID || existing.position.y !== 50) {
+      if (existing.id !== TODAY_ID || !existing.isProtected) {
         currentLists[todayIndex] = { 
           ...existing, 
           id: TODAY_ID, 
           name: 'Today',
-          isProtected: true,
-          position: { ...existing.position, y: 50 }
+          isProtected: true
         };
         changed = true;
 

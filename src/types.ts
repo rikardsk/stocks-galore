@@ -45,7 +45,7 @@ export type StockList = {
   isCollapsed: boolean;
   showStats: boolean;
   isVisible: boolean;
-  sortOrder: 'asc' | 'desc' | 'none';
+  sortOrder: 'asc' | 'desc' | 'gain-asc' | 'gain-desc' | 'none';
   isProtected?: boolean;
   isArchived?: boolean;
   lastUpdated?: string;
