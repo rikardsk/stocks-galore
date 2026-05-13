@@ -1,7 +1,5 @@
 ## TODOs
-~~- Add %-gain to the sort button on the lists in the workbench.~~
-~~- Add the same sort button (as in the lists in the workbench) to the sidebar (ungrouped, archive only) after the headings, right centered.~~
-~~- Can you make so that the pinned lists can move freely in the workbench like the rest of the lists.~~
+
 
 ## Later maybe
 - Add a portfolio button that opens up a portfolio modal to manage Quantity and Average Price per ticker. The modal should also include  the Gain/Loss in numbers and percentages.
@@ -76,5 +74,7 @@
 ~~- Align price in lists in the workbench to the right.~~
 ~~- Add a delete button in the notification modal to remove selected notifications from the list. Repurpose the Clear All button (?).~~
 ~~- Add a note section in the deep dive modal to add custom notes for each ticker.~~ 
-
+~~- Add %-gain to the sort button on the lists in the workbench.~~
+~~- Add the same sort button (as in the lists in the workbench) to the sidebar (ungrouped, archive only) after the headings, right centered.~~
+~~- Can you make so that the pinned lists can move freely in the workbench like the rest of the lists.~~
 
