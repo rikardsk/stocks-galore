@@ -24,7 +24,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   allTickers
 }) => {
   const [timeFilter, setTimeFilter] = React.useState<'today' | 'yesterday' | 'week' | 'all'>('all');
-  const [typeFilter, setTypeFilter] = React.useState<'all' | 'price' | 'changePercent' | 'crossover' | 'sma10' | 'sma20' | 'sma50' | 'sma100' | 'sma200' | 'earnings'>('all');
+  const [typeFilter, setTypeFilter] = React.useState<'all' | 'price' | 'changePercent' | 'crossover' | 'sma10' | 'sma20' | 'sma50' | 'sma100' | 'sma200' | 'earnings' | 'earningsBeat' | 'earningsMiss'>('all');
   const [directionFilter, setDirectionFilter] = React.useState<'all' | 'above' | 'below'>('all');
   const [searchQuery, setSearchQuery] = React.useState('');
 
@@ -78,9 +78,10 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       sma10: 0,
       sma20: 0,
       sma50: 0,
-      sma100: 0,
       sma200: 0,
       earnings: 0,
+      earningsBeat: 0,
+      earningsMiss: 0,
       ...dirCounts
     };
 
@@ -99,7 +100,11 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       else if (n.type === 'sma50' || msg.includes('sma50')) counts.sma50++;
       else if (n.type === 'sma20' || msg.includes('sma20')) counts.sma20++;
       else if (n.type === 'sma10' || msg.includes('sma10')) counts.sma10++;
-      else if (n.type === 'earnings' || msg.includes('earnings')) counts.earnings++;
+      else if (n.type === 'earnings' || msg.includes('earnings')) {
+        counts.earnings++;
+        if (msg.includes('beat')) counts.earningsBeat++;
+        if (msg.includes('miss')) counts.earningsMiss++;
+      }
     });
 
     return counts;
@@ -140,6 +145,12 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
         }
         if (typeFilter === 'earnings') {
           return n.type === 'earnings' || msg.includes('earnings');
+        }
+        if (typeFilter === 'earningsBeat') {
+          return (n.type === 'earnings' || msg.includes('earnings')) && msg.includes('beat');
+        }
+        if (typeFilter === 'earningsMiss') {
+          return (n.type === 'earnings' || msg.includes('earnings')) && msg.includes('miss');
         }
         return false;
       });
@@ -302,7 +313,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
         </div>
 
         <div style={{ display: 'flex', background: 'var(--surface-subtle)', borderRadius: '8px', padding: '2px', border: '1px solid var(--border-color)', marginBottom: '8px' }}>
-          {(['all', 'price', 'changePercent', 'crossover', 'earnings'] as const).map(f => (
+          {(['all', 'price', 'changePercent', 'crossover', 'earnings', 'earningsBeat', 'earningsMiss'] as const).map(f => (
             <button 
               key={f}
               onClick={() => setTypeFilter(typeFilter === f ? 'all' : f)}
@@ -311,8 +322,12 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                 padding: '4px 2px', 
                 fontSize: '9px', 
                 borderRadius: '6px',
-                background: typeFilter === f ? 'var(--surface-hover)' : 'transparent',
-                color: typeFilter === f ? 'var(--text-primary)' : 'var(--text-secondary)',
+                background: typeFilter === f 
+                  ? (f === 'earningsBeat' ? 'rgba(16, 185, 129, 0.15)' : f === 'earningsMiss' ? 'rgba(239, 68, 68, 0.15)' : 'var(--surface-hover)') 
+                  : 'transparent',
+                color: typeFilter === f 
+                  ? (f === 'earningsBeat' ? '#10b981' : f === 'earningsMiss' ? '#ef4444' : 'var(--text-primary)') 
+                  : 'var(--text-secondary)',
                 border: 'none',
                 cursor: 'pointer',
                 textTransform: 'uppercase',
@@ -323,7 +338,12 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                 gap: '2px'
               }}
             >
-              <span>{f === 'changePercent' ? '%' : f}</span>
+              <span>
+                {f === 'changePercent' ? '%' : 
+                 f === 'earningsBeat' ? 'BEAT' : 
+                 f === 'earningsMiss' ? 'MISS' : 
+                 f}
+              </span>
               <span style={{ fontSize: '8px', opacity: 0.6 }}>{filterCounts[f]}</span>
             </button>
           ))}
