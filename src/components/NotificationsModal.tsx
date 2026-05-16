@@ -27,6 +27,8 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   const [typeFilter, setTypeFilter] = React.useState<'all' | 'price' | 'changePercent' | 'crossover' | 'sma10' | 'sma20' | 'sma50' | 'sma100' | 'sma200' | 'earnings' | 'earningsBeat' | 'earningsMiss'>('all');
   const [directionFilter, setDirectionFilter] = React.useState<'all' | 'above' | 'below'>('all');
   const [searchQuery, setSearchQuery] = React.useState('');
+  const [fiftyTwoWeekFilter, setFiftyTwoWeekFilter] = React.useState<number>(50);
+  const [fiftyTwoWeekDirection, setFiftyTwoWeekDirection] = React.useState<'none' | 'above' | 'below'>('none');
 
   const timeFilteredNotifications = React.useMemo(() => {
     if (timeFilter === 'all') return notifications;
@@ -166,8 +168,30 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       });
     }
 
+    // 52 Week Filter
+    if (fiftyTwoWeekDirection !== 'none') {
+      filtered = filtered.filter(n => {
+        const ticker = allTickers.find(t => t.symbol === n.symbol);
+        if (!ticker || !ticker.stats.high52 || !ticker.stats.low52) return false;
+        
+        const price = parseFloat(ticker.stats.price);
+        const low = ticker.stats.low52;
+        const high = ticker.stats.high52;
+        const range = high - low;
+        if (range <= 0) return false;
+        
+        const percentInRange = ((price - low) / range) * 100;
+        
+        if (fiftyTwoWeekDirection === 'above') {
+          return percentInRange >= fiftyTwoWeekFilter;
+        } else {
+          return percentInRange <= fiftyTwoWeekFilter;
+        }
+      });
+    }
+
     return filtered;
-  }, [timeFilteredNotifications, typeFilter, directionFilter, searchQuery]);
+  }, [timeFilteredNotifications, typeFilter, directionFilter, searchQuery, fiftyTwoWeekFilter, fiftyTwoWeekDirection, allTickers]);
 
   const topTickers = React.useMemo(() => {
     // We only filter by time for the "Frequent" calculation
@@ -212,6 +236,8 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
     setTypeFilter('all');
     setDirectionFilter('all');
     setSearchQuery('');
+    setFiftyTwoWeekDirection('none');
+    setFiftyTwoWeekFilter(50);
   };
 
   React.useEffect(() => {
@@ -229,7 +255,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Bell size={20} color="var(--accent)" />
             <h3 style={{ margin: 0 }}>Notifications ({filteredNotifications.length})</h3>
-            {(timeFilter !== 'all' || typeFilter !== 'all' || directionFilter !== 'all' || searchQuery) && (
+            {(timeFilter !== 'all' || typeFilter !== 'all' || directionFilter !== 'all' || searchQuery || fiftyTwoWeekDirection !== 'none') && (
               <button 
                 className="btn" 
                 onClick={handleResetFilters}
@@ -407,6 +433,82 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
               <span style={{ fontSize: '8px', opacity: 0.6 }}>{filterCounts[f]}</span>
             </button>
           ))}
+        </div>
+
+        {/* 52 Week Filter UI */}
+        <div style={{ 
+          background: 'var(--surface-subtle)', 
+          borderRadius: '8px', 
+          padding: '10px', 
+          border: '1px solid var(--border-color)', 
+          marginBottom: '16px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>52 Week Range Filter</span>
+            <div style={{ display: 'flex', gap: '4px' }}>
+              {(['above', 'below'] as const).map(dir => (
+                <button
+                  key={dir}
+                  onClick={() => setFiftyTwoWeekDirection(fiftyTwoWeekDirection === dir ? 'none' : dir)}
+                  style={{
+                    padding: '2px 8px',
+                    fontSize: '9px',
+                    borderRadius: '4px',
+                    background: fiftyTwoWeekDirection === dir ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
+                    color: fiftyTwoWeekDirection === dir ? 'white' : 'var(--text-secondary)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    cursor: 'pointer',
+                    textTransform: 'uppercase',
+                    fontWeight: 600
+                  }}
+                >
+                  {dir}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '10px', color: 'var(--text-secondary)', width: '25px' }}>Low</span>
+            <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <input 
+                type="range" 
+                min="0" 
+                max="100" 
+                value={fiftyTwoWeekFilter}
+                onChange={(e) => setFiftyTwoWeekFilter(parseInt(e.target.value))}
+                style={{ 
+                  width: '100%',
+                  accentColor: 'var(--accent)',
+                  height: '4px',
+                  borderRadius: '2px',
+                  outline: 'none',
+                  opacity: fiftyTwoWeekDirection === 'none' ? 0.3 : 1,
+                  cursor: fiftyTwoWeekDirection === 'none' ? 'not-allowed' : 'pointer'
+                }}
+                disabled={fiftyTwoWeekDirection === 'none'}
+              />
+              {fiftyTwoWeekDirection !== 'none' && (
+                <div style={{ 
+                  position: 'absolute', 
+                  left: `${fiftyTwoWeekFilter}%`, 
+                  top: '-20px', 
+                  transform: 'translateX(-50%)',
+                  background: 'var(--accent)',
+                  color: 'white',
+                  fontSize: '9px',
+                  padding: '2px 4px',
+                  borderRadius: '4px',
+                  fontWeight: 700
+                }}>
+                  {fiftyTwoWeekFilter}%
+                </div>
+              )}
+            </div>
+            <span style={{ fontSize: '10px', color: 'var(--text-secondary)', width: '25px' }}>High</span>
+          </div>
         </div>
 
         {topTickers.length > 0 && (
