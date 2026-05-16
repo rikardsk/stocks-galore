@@ -79,4 +79,6 @@
 ~~- Can you make so that the pinned lists can move freely in the workbench like the rest of the lists.~~
 ~~- Add a 52-week slider filter together with above/below toggle buttons in the notifications modal.~~
 ~~- Add a P/E ratio filter with above/below toggle buttons in the notifications modal.~~
+~~- Add a volume vs avg. volume filter with 2x, 3x, 4x, 5x+ buttons in the notifications modal.~~
+~~- Display daily volume in parentheses after average volume in the deep dive modal.~~
 

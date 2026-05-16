@@ -347,7 +347,7 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
           </div>
           <div className="stat-box" style={{ background: 'var(--surface-subtle)' }}>
             <span className="stat-label">Avg Volume</span>
-            <span className="stat-value" style={{ color: 'var(--text-primary)' }}>{ticker.stats.avgVolume}</span>
+            <span className="stat-value" style={{ color: 'var(--text-primary)', fontSize: '14px' }}>{ticker.stats.avgVolume} ({ticker.stats.volume})</span>
           </div>
           <div style={{ background: 'var(--surface-subtle)' }} className="stat-box">
             <span className="stat-label">Dividend Yield</span>

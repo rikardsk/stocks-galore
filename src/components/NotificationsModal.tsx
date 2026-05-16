@@ -31,6 +31,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   const [fiftyTwoWeekDirection, setFiftyTwoWeekDirection] = React.useState<'none' | 'above' | 'below'>('none');
   const [peFilter, setPeFilter] = React.useState<number>(20);
   const [peDirection, setPeDirection] = React.useState<'none' | 'above' | 'below'>('none');
+  const [volumeFilter, setVolumeFilter] = React.useState<'none' | '2x' | '3x' | '4x' | '5x'>('none');
   const [showFilters, setShowFilters] = React.useState(true);
 
   const timeFilteredNotifications = React.useMemo(() => {
@@ -209,8 +210,33 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       });
     }
 
+    // Volume Filter
+    if (volumeFilter !== 'none') {
+      const targetRatio = parseInt(volumeFilter);
+      filtered = filtered.filter(n => {
+        const ticker = allTickers.find(t => t.symbol === n.symbol);
+        if (!ticker || !ticker.stats.volume || !ticker.stats.avgVolume) return false;
+        
+        const parseVol = (s: string): number => {
+          const num = parseFloat(s);
+          if (isNaN(num)) return 0;
+          if (s.toUpperCase().includes('B')) return num * 1000000000;
+          if (s.toUpperCase().includes('M')) return num * 1000000;
+          if (s.toUpperCase().includes('K')) return num * 1000;
+          return num;
+        };
+
+        const currentVol = parseVol(ticker.stats.volume);
+        const avgVol = parseVol(ticker.stats.avgVolume);
+        if (avgVol === 0) return false;
+        
+        const ratio = currentVol / avgVol;
+        return ratio >= targetRatio;
+      });
+    }
+
     return filtered;
-  }, [timeFilteredNotifications, typeFilter, directionFilter, searchQuery, fiftyTwoWeekFilter, fiftyTwoWeekDirection, peFilter, peDirection, allTickers]);
+  }, [timeFilteredNotifications, typeFilter, directionFilter, searchQuery, fiftyTwoWeekFilter, fiftyTwoWeekDirection, peFilter, peDirection, volumeFilter, allTickers]);
 
   const topTickers = React.useMemo(() => {
     // We only filter by time for the "Frequent" calculation
@@ -259,6 +285,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
     setFiftyTwoWeekFilter(50);
     setPeDirection('none');
     setPeFilter(20);
+    setVolumeFilter('none');
   };
 
   const activeFilterCount = React.useMemo(() => {
@@ -268,8 +295,9 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
     if (directionFilter !== 'all') count++;
     if (fiftyTwoWeekDirection !== 'none') count++;
     if (peDirection !== 'none') count++;
+    if (volumeFilter !== 'none') count++;
     return count;
-  }, [timeFilter, typeFilter, directionFilter, fiftyTwoWeekDirection, peDirection]);
+  }, [timeFilter, typeFilter, directionFilter, fiftyTwoWeekDirection, peDirection, volumeFilter]);
 
   React.useEffect(() => {
     if (isOpen && notifications.some(n => !n.isRead)) {
@@ -286,7 +314,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Bell size={20} color="var(--accent)" />
             <h3 style={{ margin: 0 }}>Notifications ({filteredNotifications.length})</h3>
-            {(timeFilter !== 'all' || typeFilter !== 'all' || directionFilter !== 'all' || searchQuery || fiftyTwoWeekDirection !== 'none' || peDirection !== 'none') && (
+            {(timeFilter !== 'all' || typeFilter !== 'all' || directionFilter !== 'all' || searchQuery || fiftyTwoWeekDirection !== 'none' || peDirection !== 'none' || volumeFilter !== 'none') && (
               <button 
                 className="btn" 
                 onClick={handleResetFilters}
@@ -653,6 +681,43 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                   )}
                 </div>
                 <span style={{ fontSize: '10px', color: 'var(--text-secondary)', width: '25px' }}>100+</span>
+              </div>
+            </div>
+
+            {/* Volume Ratio Filter UI */}
+            <div style={{ 
+              background: 'var(--surface-subtle)', 
+              borderRadius: '8px', 
+              padding: '10px', 
+              border: '1px solid var(--border-color)', 
+              marginBottom: '16px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Volume vs Avg Volume</span>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  {(['none', '2x', '3x', '4x', '5x'] as const).map(v => (
+                    <button
+                      key={v}
+                      onClick={() => setVolumeFilter(volumeFilter === v ? 'none' : v)}
+                      style={{
+                        padding: '2px 8px',
+                        fontSize: '9px',
+                        borderRadius: '4px',
+                        background: volumeFilter === v ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
+                        color: volumeFilter === v ? 'white' : 'var(--text-secondary)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        cursor: 'pointer',
+                        textTransform: 'uppercase',
+                        fontWeight: 600
+                      }}
+                    >
+                      {v === 'none' ? 'OFF' : v}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
