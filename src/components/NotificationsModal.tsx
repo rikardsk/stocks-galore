@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Bell, Calendar, Search, TrendingUp, TrendingDown, AlertCircle } from 'lucide-react';
+import { X, Bell, Calendar, Search, TrendingUp, TrendingDown, AlertCircle, ChevronDown, ChevronUp, Filter } from 'lucide-react';
 import type { TickerNotification, Ticker } from '../types';
 
 interface NotificationsModalProps {
@@ -29,6 +29,9 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   const [searchQuery, setSearchQuery] = React.useState('');
   const [fiftyTwoWeekFilter, setFiftyTwoWeekFilter] = React.useState<number>(50);
   const [fiftyTwoWeekDirection, setFiftyTwoWeekDirection] = React.useState<'none' | 'above' | 'below'>('none');
+  const [peFilter, setPeFilter] = React.useState<number>(20);
+  const [peDirection, setPeDirection] = React.useState<'none' | 'above' | 'below'>('none');
+  const [showFilters, setShowFilters] = React.useState(true);
 
   const timeFilteredNotifications = React.useMemo(() => {
     if (timeFilter === 'all') return notifications;
@@ -80,6 +83,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       sma10: 0,
       sma20: 0,
       sma50: 0,
+      sma100: 0,
       sma200: 0,
       earnings: 0,
       earningsBeat: 0,
@@ -190,8 +194,23 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       });
     }
 
+    // P/E Filter
+    if (peDirection !== 'none') {
+      filtered = filtered.filter(n => {
+        const ticker = allTickers.find(t => t.symbol === n.symbol);
+        if (!ticker || ticker.stats.pe === undefined || ticker.stats.pe === null) return false;
+        
+        const pe = ticker.stats.pe;
+        if (peDirection === 'above') {
+          return pe >= peFilter;
+        } else {
+          return pe <= peFilter;
+        }
+      });
+    }
+
     return filtered;
-  }, [timeFilteredNotifications, typeFilter, directionFilter, searchQuery, fiftyTwoWeekFilter, fiftyTwoWeekDirection, allTickers]);
+  }, [timeFilteredNotifications, typeFilter, directionFilter, searchQuery, fiftyTwoWeekFilter, fiftyTwoWeekDirection, peFilter, peDirection, allTickers]);
 
   const topTickers = React.useMemo(() => {
     // We only filter by time for the "Frequent" calculation
@@ -238,7 +257,19 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
     setSearchQuery('');
     setFiftyTwoWeekDirection('none');
     setFiftyTwoWeekFilter(50);
+    setPeDirection('none');
+    setPeFilter(20);
   };
+
+  const activeFilterCount = React.useMemo(() => {
+    let count = 0;
+    if (timeFilter !== 'all') count++;
+    if (typeFilter !== 'all') count++;
+    if (directionFilter !== 'all') count++;
+    if (fiftyTwoWeekDirection !== 'none') count++;
+    if (peDirection !== 'none') count++;
+    return count;
+  }, [timeFilter, typeFilter, directionFilter, fiftyTwoWeekDirection, peDirection]);
 
   React.useEffect(() => {
     if (isOpen && notifications.some(n => !n.isRead)) {
@@ -255,7 +286,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Bell size={20} color="var(--accent)" />
             <h3 style={{ margin: 0 }}>Notifications ({filteredNotifications.length})</h3>
-            {(timeFilter !== 'all' || typeFilter !== 'all' || directionFilter !== 'all' || searchQuery || fiftyTwoWeekDirection !== 'none') && (
+            {(timeFilter !== 'all' || typeFilter !== 'all' || directionFilter !== 'all' || searchQuery || fiftyTwoWeekDirection !== 'none' || peDirection !== 'none') && (
               <button 
                 className="btn" 
                 onClick={handleResetFilters}
@@ -273,7 +304,41 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
               </button>
             )}
           </div>
-          <button className="btn" onClick={onClose}><X size={20} /></button>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <button 
+              className="btn" 
+              onClick={() => setShowFilters(!showFilters)}
+              style={{ 
+                fontSize: '11px', 
+                padding: '4px 10px', 
+                background: showFilters ? 'var(--surface-subtle)' : 'var(--accent)',
+                color: showFilters ? 'var(--text-primary)' : 'white',
+                border: '1px solid var(--border-color)',
+                borderRadius: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                transition: 'all 0.2s'
+              }}
+            >
+              <Filter size={12} />
+              {showFilters ? 'Hide Filters' : 'Show Filters'}
+              {activeFilterCount > 0 && !showFilters && (
+                <span style={{ 
+                  background: 'white', 
+                  color: 'var(--accent)', 
+                  borderRadius: '10px', 
+                  padding: '0 5px', 
+                  fontSize: '9px', 
+                  fontWeight: 800 
+                }}>
+                  {activeFilterCount}
+                </span>
+              )}
+              {showFilters ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+            </button>
+            <button className="btn" onClick={onClose}><X size={20} /></button>
+          </div>
         </div>
 
         <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
@@ -338,178 +403,260 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
           </div>
         </div>
 
-        <div style={{ display: 'flex', background: 'var(--surface-subtle)', borderRadius: '8px', padding: '2px', border: '1px solid var(--border-color)', marginBottom: '8px' }}>
-          {(['all', 'price', 'changePercent', 'crossover', 'earnings', 'earningsBeat', 'earningsMiss'] as const).map(f => (
-            <button 
-              key={f}
-              onClick={() => setTypeFilter(typeFilter === f ? 'all' : f)}
-              style={{ 
-                flex: 1,
-                padding: '4px 2px', 
-                fontSize: '9px', 
-                borderRadius: '6px',
-                background: typeFilter === f 
-                  ? (f === 'earningsBeat' ? 'rgba(16, 185, 129, 0.15)' : f === 'earningsMiss' ? 'rgba(239, 68, 68, 0.15)' : 'var(--surface-hover)') 
-                  : 'transparent',
-                color: typeFilter === f 
-                  ? (f === 'earningsBeat' ? '#10b981' : f === 'earningsMiss' ? '#ef4444' : 'var(--text-primary)') 
-                  : 'var(--text-secondary)',
-                border: 'none',
-                cursor: 'pointer',
-                textTransform: 'uppercase',
-                fontWeight: typeFilter === f ? 700 : 400,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '2px'
-              }}
-            >
-              <span>
-                {f === 'changePercent' ? '%' : 
-                 f === 'earningsBeat' ? 'BEAT' : 
-                 f === 'earningsMiss' ? 'MISS' : 
-                 f}
-              </span>
-              <span style={{ fontSize: '8px', opacity: 0.6 }}>{filterCounts[f]}</span>
-            </button>
-          ))}
-        </div>
-
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-          <div style={{ display: 'flex', flex: 1, background: 'var(--surface-subtle)', borderRadius: '8px', padding: '2px', border: '1px solid var(--border-color)' }}>
-            {(['all', 'above', 'below'] as const).map(f => (
-              <button 
-                key={f}
-                onClick={() => setDirectionFilter(directionFilter === f ? 'all' : f)}
-                style={{ 
-                  flex: 1,
-                  padding: '4px 2px', 
-                  fontSize: '9px', 
-                  borderRadius: '6px',
-                  background: directionFilter === f ? 'var(--surface-hover)' : 'transparent',
-                  color: directionFilter === f ? 'var(--text-primary)' : 'var(--text-secondary)',
-                  border: 'none',
-                  cursor: 'pointer',
-                  textTransform: 'uppercase',
-                  fontWeight: directionFilter === f ? 700 : 400,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '4px'
-                }}
-              >
-                {f === 'above' && <TrendingUp size={10} color="#10b981" />}
-                {f === 'below' && <TrendingDown size={10} color="#ef4444" />}
-                <span style={{ marginRight: '4px' }}>{f}</span>
-                <span style={{ fontSize: '8px', opacity: 0.6 }}>({f === 'all' ? timeFilteredNotifications.length : filterCounts[f]})</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', background: 'var(--surface-subtle)', borderRadius: '8px', padding: '2px', border: '1px solid var(--border-color)', marginBottom: '16px' }}>
-          {(['sma10', 'sma20', 'sma50', 'sma100', 'sma200'] as const).map(f => (
-            <button 
-              key={f}
-              onClick={() => setTypeFilter(typeFilter === f ? 'all' : f)}
-              style={{ 
-                flex: 1,
-                padding: '4px 2px', 
-                fontSize: '9px', 
-                borderRadius: '6px',
-                background: typeFilter === f ? 'var(--surface-hover)' : 'transparent',
-                color: typeFilter === f ? 'var(--text-primary)' : 'var(--text-secondary)',
-                border: 'none',
-                cursor: 'pointer',
-                textTransform: 'uppercase',
-                fontWeight: typeFilter === f ? 700 : 400,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '2px'
-              }}
-            >
-              <span>{f}</span>
-              <span style={{ fontSize: '8px', opacity: 0.6 }}>{filterCounts[f]}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* 52 Week Filter UI */}
-        <div style={{ 
-          background: 'var(--surface-subtle)', 
-          borderRadius: '8px', 
-          padding: '10px', 
-          border: '1px solid var(--border-color)', 
-          marginBottom: '16px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '8px'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>52 Week Range Filter</span>
-            <div style={{ display: 'flex', gap: '4px' }}>
-              {(['above', 'below'] as const).map(dir => (
-                <button
-                  key={dir}
-                  onClick={() => setFiftyTwoWeekDirection(fiftyTwoWeekDirection === dir ? 'none' : dir)}
-                  style={{
-                    padding: '2px 8px',
-                    fontSize: '9px',
-                    borderRadius: '4px',
-                    background: fiftyTwoWeekDirection === dir ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
-                    color: fiftyTwoWeekDirection === dir ? 'white' : 'var(--text-secondary)',
-                    border: '1px solid rgba(255,255,255,0.1)',
+        {showFilters && (
+          <div className="filters-container" style={{ display: 'flex', flexDirection: 'column', animation: 'slideDown 0.3s ease-out' }}>
+            <div style={{ display: 'flex', background: 'var(--surface-subtle)', borderRadius: '8px', padding: '2px', border: '1px solid var(--border-color)', marginBottom: '8px' }}>
+              {(['all', 'price', 'changePercent', 'crossover', 'earnings', 'earningsBeat', 'earningsMiss'] as const).map(f => (
+                <button 
+                  key={f}
+                  onClick={() => setTypeFilter(typeFilter === f ? 'all' : f)}
+                  style={{ 
+                    flex: 1,
+                    padding: '4px 2px', 
+                    fontSize: '9px', 
+                    borderRadius: '6px',
+                    background: typeFilter === f 
+                      ? (f === 'earningsBeat' ? 'rgba(16, 185, 129, 0.15)' : f === 'earningsMiss' ? 'rgba(239, 68, 68, 0.15)' : 'var(--surface-hover)') 
+                      : 'transparent',
+                    color: typeFilter === f 
+                      ? (f === 'earningsBeat' ? '#10b981' : f === 'earningsMiss' ? '#ef4444' : 'var(--text-primary)') 
+                      : 'var(--text-secondary)',
+                    border: 'none',
                     cursor: 'pointer',
                     textTransform: 'uppercase',
-                    fontWeight: 600
+                    fontWeight: typeFilter === f ? 700 : 400,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '2px'
                   }}
                 >
-                  {dir}
+                  <span>
+                    {f === 'changePercent' ? '%' : 
+                     f === 'earningsBeat' ? 'BEAT' : 
+                     f === 'earningsMiss' ? 'MISS' : 
+                     f}
+                  </span>
+                  <span style={{ fontSize: '8px', opacity: 0.6 }}>{filterCounts[f]}</span>
                 </button>
               ))}
             </div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '10px', color: 'var(--text-secondary)', width: '25px' }}>Low</span>
-            <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center' }}>
-              <input 
-                type="range" 
-                min="0" 
-                max="100" 
-                value={fiftyTwoWeekFilter}
-                onChange={(e) => setFiftyTwoWeekFilter(parseInt(e.target.value))}
-                style={{ 
-                  width: '100%',
-                  accentColor: 'var(--accent)',
-                  height: '4px',
-                  borderRadius: '2px',
-                  outline: 'none',
-                  opacity: fiftyTwoWeekDirection === 'none' ? 0.3 : 1,
-                  cursor: fiftyTwoWeekDirection === 'none' ? 'not-allowed' : 'pointer'
-                }}
-                disabled={fiftyTwoWeekDirection === 'none'}
-              />
-              {fiftyTwoWeekDirection !== 'none' && (
-                <div style={{ 
-                  position: 'absolute', 
-                  left: `${fiftyTwoWeekFilter}%`, 
-                  top: '-20px', 
-                  transform: 'translateX(-50%)',
-                  background: 'var(--accent)',
-                  color: 'white',
-                  fontSize: '9px',
-                  padding: '2px 4px',
-                  borderRadius: '4px',
-                  fontWeight: 700
-                }}>
-                  {fiftyTwoWeekFilter}%
-                </div>
-              )}
+
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+              <div style={{ display: 'flex', flex: 1, background: 'var(--surface-subtle)', borderRadius: '8px', padding: '2px', border: '1px solid var(--border-color)' }}>
+                {(['all', 'above', 'below'] as const).map(f => (
+                  <button 
+                    key={f}
+                    onClick={() => setDirectionFilter(directionFilter === f ? 'all' : f)}
+                    style={{ 
+                      flex: 1,
+                      padding: '4px 2px', 
+                      fontSize: '9px', 
+                      borderRadius: '6px',
+                      background: directionFilter === f ? 'var(--surface-hover)' : 'transparent',
+                      color: directionFilter === f ? 'var(--text-primary)' : 'var(--text-secondary)',
+                      border: 'none',
+                      cursor: 'pointer',
+                      textTransform: 'uppercase',
+                      fontWeight: directionFilter === f ? 700 : 400,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    {f === 'above' && <TrendingUp size={10} color="#10b981" />}
+                    {f === 'below' && <TrendingDown size={10} color="#ef4444" />}
+                    <span style={{ marginRight: '4px' }}>{f}</span>
+                    <span style={{ fontSize: '8px', opacity: 0.6 }}>({f === 'all' ? timeFilteredNotifications.length : filterCounts[f]})</span>
+                  </button>
+                ))}
+              </div>
             </div>
-            <span style={{ fontSize: '10px', color: 'var(--text-secondary)', width: '25px' }}>High</span>
+
+            <div style={{ display: 'flex', background: 'var(--surface-subtle)', borderRadius: '8px', padding: '2px', border: '1px solid var(--border-color)', marginBottom: '8px' }}>
+              {(['sma10', 'sma20', 'sma50', 'sma100', 'sma200'] as const).map(f => (
+                <button 
+                  key={f}
+                  onClick={() => setTypeFilter(typeFilter === f ? 'all' : f)}
+                  style={{ 
+                    flex: 1,
+                    padding: '4px 2px', 
+                    fontSize: '9px', 
+                    borderRadius: '6px',
+                    background: typeFilter === f ? 'var(--surface-hover)' : 'transparent',
+                    color: typeFilter === f ? 'var(--text-primary)' : 'var(--text-secondary)',
+                    border: 'none',
+                    cursor: 'pointer',
+                    textTransform: 'uppercase',
+                    fontWeight: typeFilter === f ? 700 : 400,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '2px'
+                  }}
+                >
+                  <span>{f}</span>
+                  <span style={{ fontSize: '8px', opacity: 0.6 }}>{filterCounts[f]}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* 52 Week Filter UI */}
+            <div style={{ 
+              background: 'var(--surface-subtle)', 
+              borderRadius: '8px', 
+              padding: '10px', 
+              border: '1px solid var(--border-color)', 
+              marginBottom: '8px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>52 Week Range</span>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  {(['above', 'below'] as const).map(dir => (
+                    <button
+                      key={dir}
+                      onClick={() => setFiftyTwoWeekDirection(fiftyTwoWeekDirection === dir ? 'none' : dir)}
+                      style={{
+                        padding: '2px 8px',
+                        fontSize: '9px',
+                        borderRadius: '4px',
+                        background: fiftyTwoWeekDirection === dir ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
+                        color: fiftyTwoWeekDirection === dir ? 'white' : 'var(--text-secondary)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        cursor: 'pointer',
+                        textTransform: 'uppercase',
+                        fontWeight: 600
+                      }}
+                    >
+                      {dir}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontSize: '10px', color: 'var(--text-secondary)', width: '25px' }}>Low</span>
+                <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="100" 
+                    value={fiftyTwoWeekFilter}
+                    onChange={(e) => setFiftyTwoWeekFilter(parseInt(e.target.value))}
+                    style={{ 
+                      width: '100%',
+                      accentColor: 'var(--accent)',
+                      height: '4px',
+                      borderRadius: '2px',
+                      outline: 'none',
+                      opacity: fiftyTwoWeekDirection === 'none' ? 0.3 : 1,
+                      cursor: fiftyTwoWeekDirection === 'none' ? 'not-allowed' : 'pointer'
+                    }}
+                    disabled={fiftyTwoWeekDirection === 'none'}
+                  />
+                  {fiftyTwoWeekDirection !== 'none' && (
+                    <div style={{ 
+                      position: 'absolute', 
+                      left: `${fiftyTwoWeekFilter}%`, 
+                      top: '-20px', 
+                      transform: 'translateX(-50%)',
+                      background: 'var(--accent)',
+                      color: 'white',
+                      fontSize: '9px',
+                      padding: '2px 4px',
+                      borderRadius: '4px',
+                      fontWeight: 700
+                    }}>
+                      {fiftyTwoWeekFilter}%
+                    </div>
+                  )}
+                </div>
+                <span style={{ fontSize: '10px', color: 'var(--text-secondary)', width: '25px' }}>High</span>
+              </div>
+            </div>
+
+            {/* P/E Ratio Filter UI */}
+            <div style={{ 
+              background: 'var(--surface-subtle)', 
+              borderRadius: '8px', 
+              padding: '10px', 
+              border: '1px solid var(--border-color)', 
+              marginBottom: '16px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>P/E Ratio Filter</span>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  {(['above', 'below'] as const).map(dir => (
+                    <button
+                      key={dir}
+                      onClick={() => setPeDirection(peDirection === dir ? 'none' : dir)}
+                      style={{
+                        padding: '2px 8px',
+                        fontSize: '9px',
+                        borderRadius: '4px',
+                        background: peDirection === dir ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
+                        color: peDirection === dir ? 'white' : 'var(--text-secondary)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        cursor: 'pointer',
+                        textTransform: 'uppercase',
+                        fontWeight: 600
+                      }}
+                    >
+                      {dir}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontSize: '10px', color: 'var(--text-secondary)', width: '25px' }}>0</span>
+                <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="100" 
+                    step="1"
+                    value={peFilter}
+                    onChange={(e) => setPeFilter(parseInt(e.target.value))}
+                    style={{ 
+                      width: '100%',
+                      accentColor: 'var(--accent)',
+                      height: '4px',
+                      borderRadius: '2px',
+                      outline: 'none',
+                      opacity: peDirection === 'none' ? 0.3 : 1,
+                      cursor: peDirection === 'none' ? 'not-allowed' : 'pointer'
+                    }}
+                    disabled={peDirection === 'none'}
+                  />
+                  {peDirection !== 'none' && (
+                    <div style={{ 
+                      position: 'absolute', 
+                      left: `${(peFilter / 100) * 100}%`, 
+                      top: '-20px', 
+                      transform: 'translateX(-50%)',
+                      background: 'var(--accent)',
+                      color: 'white',
+                      fontSize: '9px',
+                      padding: '2px 4px',
+                      borderRadius: '4px',
+                      fontWeight: 700,
+                      whiteSpace: 'nowrap'
+                    }}>
+                      P/E: {peFilter}
+                    </div>
+                  )}
+                </div>
+                <span style={{ fontSize: '10px', color: 'var(--text-secondary)', width: '25px' }}>100+</span>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
 
         {topTickers.length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '16px' }}>
@@ -637,6 +784,10 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
           .notification-card:hover {
             background: var(--surface-hover) !important;
             transform: translateY(-2px);
+          }
+          @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
           }
         `}</style>
       </div>

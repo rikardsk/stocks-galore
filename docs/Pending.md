@@ -78,4 +78,5 @@
 ~~- Add the same sort button (as in the lists in the workbench) to the sidebar (ungrouped, archive only) after the headings, right centered.~~
 ~~- Can you make so that the pinned lists can move freely in the workbench like the rest of the lists.~~
 ~~- Add a 52-week slider filter together with above/below toggle buttons in the notifications modal.~~
+~~- Add a P/E ratio filter with above/below toggle buttons in the notifications modal.~~
 
