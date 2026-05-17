@@ -1053,7 +1053,12 @@ const App: React.FC = () => {
         onCreateList={() => setIsCreateModalOpen(true)}
         onCreateGroup={() => setIsCreateGroupModalOpen(true)}
         onDeleteList={(id) => {
-          if (window.confirm('Delete this list permanently?')) {
+          const list = lists.find(l => l.id === id);
+          const listName = list ? list.name : '';
+          const confirmMsg = listName 
+            ? `Delete "${listName}" permanently?` 
+            : 'Delete this list permanently?';
+          if (window.confirm(confirmMsg)) {
             storage.deleteList(id);
             setLists(lists.filter(l => l.id !== id));
           }
