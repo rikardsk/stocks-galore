@@ -502,68 +502,6 @@ const App: React.FC = () => {
     setIsCreateGroupModalOpen(true);
   };
 
-  const handleReorderList = (draggedId: string, targetId: string) => {
-    if (draggedId === targetId) return;
-
-    const targetGroup = groups.find(g => g.listIds.includes(targetId));
-    const draggedGroup = groups.find(g => g.listIds.includes(draggedId));
-
-    if (targetGroup) {
-      // Moving into or within a group
-      const newListIds = [...targetGroup.listIds].filter(id => id !== draggedId);
-      const targetIndex = newListIds.indexOf(targetId);
-      newListIds.splice(targetIndex, 0, draggedId);
-      
-      const updatedGroups = groups.map(g => {
-        if (g.id === targetGroup.id) {
-          const updated = { ...g, listIds: newListIds };
-          storage.updateGroup(updated);
-          return updated;
-        }
-        if (draggedGroup && g.id === draggedGroup.id) {
-          const updated = { ...g, listIds: g.listIds.filter(id => id !== draggedId) };
-          storage.updateGroup(updated);
-          return updated;
-        }
-        return g;
-      });
-      setGroups(updatedGroups);
-    } else {
-      // Moving into ungrouped section at a specific position
-      if (draggedGroup) {
-        const updatedGroups = groups.map(g => {
-          if (g.id === draggedGroup.id) {
-            const updated = { ...g, listIds: g.listIds.filter(id => id !== draggedId) };
-            storage.updateGroup(updated);
-            return updated;
-          }
-          return g;
-        });
-        setGroups(updatedGroups);
-      }
-
-      const newLists = [...lists];
-      const draggedIndex = newLists.findIndex(l => l.id === draggedId);
-      const [draggedList] = newLists.splice(draggedIndex, 1);
-      const targetIndex = newLists.findIndex(l => l.id === targetId);
-      newLists.splice(targetIndex, 0, draggedList);
-      
-      setLists(newLists);
-      storage.saveLists(newLists);
-    }
-  };
-
-  const handleReorderGroup = (draggedId: string, targetId: string) => {
-    if (draggedId === targetId) return;
-    const newGroups = [...groups];
-    const draggedIndex = newGroups.findIndex(g => g.id === draggedId);
-    const [draggedGroup] = newGroups.splice(draggedIndex, 1);
-    const targetIndex = newGroups.findIndex(g => g.id === targetId);
-    newGroups.splice(targetIndex, 0, draggedGroup);
-    setGroups(newGroups);
-    storage.saveGroups(newGroups);
-  };
-
   const handleMoveGroup = (groupId: string, direction: 'up' | 'down') => {
     const index = groups.findIndex(g => g.id === groupId);
     if (index === -1) return;
