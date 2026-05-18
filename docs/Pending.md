@@ -6,11 +6,12 @@
 - Select a single notification to view details or delete it.
 - Hover button to delete notification
 - Zoom in/out with the mouse scroll wheel
-- Earnings winners/dates
+~~- Earnings winners/dates~~
 - Newsfeed?
 ~~- Database integration~~
 
 ## Done
+~~- Earnings calendar modal showing Yesterday, Today, + 3 nextcoming days with filters and detail views, triggered by a floating action button~~
 ~~- Stock Deep Dive Modal (Interactive charts & fundamentals)~~
 ~~- Analytics dashboard with market cap histogram~~
 ~~- Sector analysis (Donut chart)~~

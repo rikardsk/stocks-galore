@@ -17,6 +17,7 @@ import { RankingModal } from './components/RankingModal';
 import { StockDetailModal } from './components/StockDetailModal';
 import { SearchChoiceModal } from './components/SearchChoiceModal';
 import { AssignGroupModal } from './components/AssignGroupModal';
+import { EarningsModal } from './components/EarningsModal';
 import './index.css';
 
 const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
@@ -58,6 +59,8 @@ const App: React.FC = () => {
   const [shouldReopenNotifications, setShouldReopenNotifications] = useState(false);
   const [shouldReopenRanking, setShouldReopenRanking] = useState(false);
   const [shouldReopenAnalytics, setShouldReopenAnalytics] = useState(false);
+  const [isEarningsOpen, setIsEarningsOpen] = useState(false);
+  const [shouldReopenEarnings, setShouldReopenEarnings] = useState(false);
   const [theme, setTheme] = useState<'dark' | 'light'>(() => (localStorage.getItem('theme') as 'dark' | 'light') || 'dark');
   
   const [newListName, setNewListName] = useState('');
@@ -1101,6 +1104,7 @@ const App: React.FC = () => {
           onOpenNotifications={() => setIsNotificationsModalOpen(true)}
           onOpenAnalytics={() => setIsAnalyticsOpen(true)}
           onOpenRanking={() => setIsRankingOpen(true)}
+          onOpenEarnings={() => setIsEarningsOpen(true)}
           unreadCount={notifications.filter(n => !n.isRead).length}
           activeFilterCount={countActiveFilters(globalFilters)}
         />
@@ -1275,6 +1279,18 @@ const App: React.FC = () => {
         theme={theme}
       />
 
+      <EarningsModal 
+        isOpen={isEarningsOpen} 
+        onClose={() => setIsEarningsOpen(false)} 
+        tickers={allUniqueTickers}
+        watchlistSymbols={watchlistSymbols}
+        onSelectTicker={(ticker) => {
+          setSelectedDetailTicker(ticker);
+          setIsEarningsOpen(false);
+          setShouldReopenEarnings(true);
+        }}
+      />
+
       <SearchChoiceModal 
         isOpen={isSearchModalOpen}
         onClose={() => setIsSearchModalOpen(false)}
@@ -1299,6 +1315,10 @@ const App: React.FC = () => {
           if (shouldReopenAnalytics) {
             setIsAnalyticsOpen(true);
             setShouldReopenAnalytics(false);
+          }
+          if (shouldReopenEarnings) {
+            setIsEarningsOpen(true);
+            setShouldReopenEarnings(false);
           }
         }}
         onToggleOwned={(ticker) => {
