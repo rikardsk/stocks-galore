@@ -985,6 +985,76 @@ const App: React.FC = () => {
     }
   };
 
+  const addAlertBadgeForSymbol = (symbol: string) => {
+    setLists(prevLists => {
+      const next = prevLists.map(l => ({
+        ...l,
+        tickers: l.tickers.map(t => {
+          if (t.symbol !== symbol) return t;
+          const currentBadges = t.badges || [];
+          if (currentBadges.includes('ALERT')) return t;
+          return { ...t, badges: [...currentBadges, 'ALERT'] };
+        })
+      }));
+      storage.saveLists(next);
+      return next;
+    });
+    setSelectedDetailTicker(prev => {
+      if (!prev || prev.symbol !== symbol) return prev;
+      const currentBadges = prev.badges || [];
+      if (currentBadges.includes('ALERT')) return prev;
+      return { ...prev, badges: [...currentBadges, 'ALERT'] };
+    });
+  };
+
+  const removeAlertBadgeForSymbol = (symbol: string) => {
+    setLists(prevLists => {
+      const next = prevLists.map(l => ({
+        ...l,
+        tickers: l.tickers.map(t => {
+          if (t.symbol !== symbol) return t;
+          const currentBadges = t.badges || [];
+          if (!currentBadges.includes('ALERT')) return t;
+          return { ...t, badges: currentBadges.filter(b => b !== 'ALERT') };
+        })
+      }));
+      storage.saveLists(next);
+      return next;
+    });
+    setSelectedDetailTicker(prev => {
+      if (!prev || prev.symbol !== symbol) return prev;
+      const currentBadges = prev.badges || [];
+      if (!currentBadges.includes('ALERT')) return prev;
+      return { ...prev, badges: currentBadges.filter(b => b !== 'ALERT') };
+    });
+  };
+
+  const handleAddAlert = (alertData: Omit<StockAlert, 'id' | 'isTriggered'>) => {
+    storage.addAlert(alertData);
+    const updatedAlerts = storage.getAlerts();
+    setAlerts(updatedAlerts);
+    if (alertData.metric === 'price') {
+      addAlertBadgeForSymbol(alertData.symbol);
+    }
+  };
+
+  const handleDeleteAlert = (id: string) => {
+    const alertToDelete = alerts.find(a => a.id === id);
+    if (!alertToDelete) return;
+    
+    storage.deleteAlert(id);
+    const updatedAlerts = storage.getAlerts();
+    setAlerts(updatedAlerts);
+
+    if (alertToDelete.metric === 'price') {
+      const symbol = alertToDelete.symbol;
+      const hasRemainingAlerts = updatedAlerts.some(a => a.symbol === symbol && a.metric === 'price');
+      if (!hasRemainingAlerts) {
+        removeAlertBadgeForSymbol(symbol);
+      }
+    }
+  };
+
   return (
     <div className={`app-container ${theme === 'light' ? 'light-theme' : ''}`}>
       <Sidebar 
@@ -1353,14 +1423,8 @@ const App: React.FC = () => {
         }}
         isWatchlisted={selectedDetailTicker ? watchlistSymbols.has(selectedDetailTicker.symbol) : false}
         alerts={alerts}
-        onAddAlert={(a) => {
-          storage.addAlert(a);
-          setAlerts(storage.getAlerts());
-        }}
-        onDeleteAlert={(id) => {
-          storage.deleteAlert(id);
-          setAlerts(storage.getAlerts());
-        }}
+        onAddAlert={handleAddAlert}
+        onDeleteAlert={handleDeleteAlert}
         onUpdateAlert={(updated) => {
           storage.updateAlert(updated);
           setAlerts(storage.getAlerts());
@@ -1400,14 +1464,8 @@ const App: React.FC = () => {
         isOpen={isAlertsModalOpen} 
         onClose={() => setIsAlertsModalOpen(false)} 
         alerts={alerts}
-        onAddAlert={(a) => {
-          storage.addAlert(a);
-          setAlerts(storage.getAlerts());
-        }}
-        onDeleteAlert={(id) => {
-          storage.deleteAlert(id);
-          setAlerts(storage.getAlerts());
-        }}
+        onAddAlert={handleAddAlert}
+        onDeleteAlert={handleDeleteAlert}
       />
 
       <AssignGroupModal 

@@ -547,6 +547,18 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
               >
                 Earnings Miss
               </button>
+              <button 
+                onClick={() => toggleQuickBadge('ALERT')}
+                style={{ 
+                  background: badges.includes('ALERT') ? 'var(--accent)' : 'var(--surface-subtle)', 
+                  color: badges.includes('ALERT') ? 'white' : 'var(--text-secondary)',
+                  border: '1px solid ' + (badges.includes('ALERT') ? 'var(--accent)' : 'var(--border-color)'),
+                  padding: '6px 16px', borderRadius: '100px', fontSize: '12px', fontWeight: 700, cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                Alert
+              </button>
             </div>
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>

@@ -257,7 +257,7 @@ export const ListPanel: React.FC<ListPanelProps> = ({
                         <div style={{ position: 'absolute', top: '-10px', left: '0', display: 'flex', gap: '3px', zIndex: 1 }}>
                           {ticker.badges.map((badge, idx) => (
                             <span key={idx} style={{ 
-                              background: 'var(--accent)', color: 'white', 
+                              background: badge === 'EARNINGS BEAT' ? '#10b981' : (badge === 'EARNINGS MISS' ? '#ef4444' : 'var(--accent)'), color: 'white', 
                               padding: '1px 4px', borderRadius: '4px', 
                               fontSize: '8px', fontWeight: 700,
                               boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
