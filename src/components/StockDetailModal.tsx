@@ -82,11 +82,22 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
   const [notes, setNotes] = useState('');
 
   const [prevTickerId, setPrevTickerId] = useState<string | null>(null);
+  const [prevBadges, setPrevBadges] = useState<string[]>([]);
 
   if (ticker && ticker.id !== prevTickerId) {
     setPrevTickerId(ticker.id);
     setBadges(ticker.badges || []);
+    setPrevBadges(ticker.badges || []);
     setNotes(ticker.notes || '');
+  }
+
+  if (ticker && ticker.id === prevTickerId && ticker.badges) {
+    const serializedPropBadges = JSON.stringify(ticker.badges);
+    const serializedPrevBadges = JSON.stringify(prevBadges);
+    if (serializedPropBadges !== serializedPrevBadges) {
+      setBadges(ticker.badges);
+      setPrevBadges(ticker.badges);
+    }
   }
 
   const handleAddBadge = (e?: React.KeyboardEvent) => {
