@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { X, TrendingUp, TrendingDown, Clock, Calendar, BarChart3, Info, Briefcase, Star, Eye, EyeOff, Bell } from 'lucide-react';
+import { X, TrendingUp, TrendingDown, Briefcase, Star, Eye, EyeOff, Bell } from 'lucide-react';
 import { 
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, 
-  ResponsiveContainer, AreaChart, Area, BarChart, Bar, ComposedChart, ReferenceLine
+  Line, XAxis, YAxis, CartesianGrid, Tooltip, 
+  ResponsiveContainer, Area, Bar, ComposedChart, ReferenceLine
 } from 'recharts';
 import type { Ticker, StockAlert } from '../types';
 
@@ -30,11 +30,30 @@ const TIMEFRAMES = [
   { label: '5Y', value: '5y' },
 ];
 
-const Candlestick = (props: any) => {
+interface HistoryItem {
+  date: string;
+  price: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+  [key: string]: string | number | null | undefined;
+}
+
+interface CandlestickProps {
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  payload?: HistoryItem;
+}
+
+const Candlestick = (props: CandlestickProps) => {
   const { x, y, width, height, payload } = props;
   if (!payload) return null;
 
-  const { open, close, high, low } = payload;
+  const { open, close } = payload;
   const isPositive = close >= open;
   const color = isPositive ? '#10b981' : '#ef4444';
   
@@ -47,9 +66,9 @@ const Candlestick = (props: any) => {
 
 export const StockDetailModal: React.FC<StockDetailModalProps> = ({ 
   ticker, isOpen, onClose, onToggleOwned, onToggleWatchlist, onUpdateBadges, onUpdateNotes, isWatchlisted, 
-  alerts, onAddAlert, onDeleteAlert, onUpdateAlert, theme 
+  alerts, onAddAlert, onDeleteAlert
 }) => {
-  const [history, setHistory] = useState<any[]>([]);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
   const [timeframe, setTimeframe] = useState('1y');
   const [chartType, setChartType] = useState<'line' | 'candle'>('line');
   const [showVolume, setShowVolume] = useState(false);
@@ -62,12 +81,13 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
   const [newAlertVal, setNewAlertVal] = useState('');
   const [notes, setNotes] = useState('');
 
-  useEffect(() => {
-    if (ticker) {
-      setBadges(ticker.badges || []);
-      setNotes(ticker.notes || '');
-    }
-  }, [ticker]);
+  const [prevTickerId, setPrevTickerId] = useState<string | null>(null);
+
+  if (ticker && ticker.id !== prevTickerId) {
+    setPrevTickerId(ticker.id);
+    setBadges(ticker.badges || []);
+    setNotes(ticker.notes || '');
+  }
 
   const handleAddBadge = (e?: React.KeyboardEvent) => {
     if (e && e.key !== 'Enter') return;
@@ -106,7 +126,7 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
   const historyWithSMAs = useMemo(() => {
     if (history.length === 0) return [];
     
-    const calculateSMA = (data: any[], period: number) => {
+    const calculateSMA = (data: HistoryItem[], period: number) => {
       const result = [...data];
       for (let i = 0; i < result.length; i++) {
         if (i < period - 1) {
@@ -129,26 +149,26 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
   }, [history]);
 
   useEffect(() => {
+    const fetchHistory = async () => {
+      if (!ticker) return;
+      setIsLoading(true);
+      try {
+        const response = await fetch(`http://localhost:8000/stock/${ticker.symbol}/history?period=${timeframe}`);
+        if (response.ok) {
+          const data = await response.json();
+          setHistory(data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch history', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     if (isOpen && ticker) {
       fetchHistory();
     }
   }, [isOpen, ticker, timeframe]);
-
-  const fetchHistory = async () => {
-    if (!ticker) return;
-    setIsLoading(true);
-    try {
-      const response = await fetch(`http://localhost:8000/stock/${ticker.symbol}/history?period=${timeframe}`);
-      if (response.ok) {
-        const data = await response.json();
-        setHistory(data);
-      }
-    } catch (err) {
-      console.error('Failed to fetch history', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const chartColor = useMemo(() => {
     if (history.length < 2) return '#10b981';
@@ -170,8 +190,6 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
   }, [alerts, ticker]);
 
   if (!isOpen || !ticker) return null;
-
-  const isDark = theme === 'dark';
 
   return (
     <div className="modal-overlay" onClick={onClose}>
