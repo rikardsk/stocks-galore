@@ -1422,6 +1422,7 @@ const App: React.FC = () => {
           setSelectedDetailTicker(prev => prev && prev.symbol === ticker.symbol ? { ...prev, notes } : prev);
         }}
         isWatchlisted={selectedDetailTicker ? watchlistSymbols.has(selectedDetailTicker.symbol) : false}
+        notifications={notifications}
         alerts={alerts}
         onAddAlert={handleAddAlert}
         onDeleteAlert={handleDeleteAlert}

@@ -786,7 +786,6 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {filteredNotifications.map(n => {
-                  const isCrossover = n.type?.startsWith('sma') || n.message.toLowerCase().includes('crossed');
                   const isAbove = n.message.includes('ABOVE');
                   const isBelow = n.message.includes('BELOW');
                   

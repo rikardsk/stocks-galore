@@ -4,7 +4,7 @@ import {
   Line, XAxis, YAxis, CartesianGrid, Tooltip, 
   ResponsiveContainer, Area, Bar, ComposedChart, ReferenceLine
 } from 'recharts';
-import type { Ticker, StockAlert } from '../types';
+import type { Ticker, StockAlert, TickerNotification } from '../types';
 
 interface StockDetailModalProps {
   ticker: Ticker | null;
@@ -16,6 +16,7 @@ interface StockDetailModalProps {
   onUpdateNotes?: (ticker: Ticker, notes: string) => void;
   isWatchlisted: boolean;
   alerts: StockAlert[];
+  notifications: TickerNotification[];
   onAddAlert: (alert: Omit<StockAlert, 'id' | 'isTriggered'>) => void;
   onDeleteAlert: (id: string) => void;
   onUpdateAlert: (updated: StockAlert) => void;
@@ -59,15 +60,58 @@ const Candlestick = (props: CandlestickProps) => {
   
   return (
     <g>
-      <rect x={x} y={y} width={width} height={Math.max(height, 1)} fill={color} />
+      <rect x={x} y={y} width={width} height={Math.max(height ?? 0, 1)} fill={color} />
     </g>
   );
 };
 
 export const StockDetailModal: React.FC<StockDetailModalProps> = ({ 
   ticker, isOpen, onClose, onToggleOwned, onToggleWatchlist, onUpdateBadges, onUpdateNotes, isWatchlisted, 
-  alerts, onAddAlert, onDeleteAlert
+  alerts, notifications = [], onAddAlert, onDeleteAlert
 }) => {
+  const [notifTypeFilter, setNotifTypeFilter] = useState<'All' | 'Price' | '%' | 'Crossover' | 'Earnings'>('All');
+
+  const getNotificationTypeDisplay = (n: TickerNotification): 'Price' | '%' | 'Crossover' | 'Earnings' | 'Other' => {
+    const msg = n.message.toLowerCase();
+    const isCrossover = n.type === 'crossover' || n.type?.startsWith('sma') || msg.includes('crossed');
+    if (isCrossover) return 'Crossover';
+    const isPrice = n.type === 'price' || (msg.includes('price') && !isCrossover);
+    if (isPrice) return 'Price';
+    const isPercent = n.type === 'changePercent' || ((msg.includes('change') || msg.includes('%')) && !isCrossover);
+    if (isPercent) return '%';
+    const isEarnings = n.type === 'earnings' || msg.includes('earnings');
+    if (isEarnings) return 'Earnings';
+    return 'Other';
+  };
+
+  const tickerNotifications = useMemo(() => {
+    if (!ticker) return [];
+    return notifications
+      .filter(n => n.symbol.toUpperCase() === ticker.symbol.toUpperCase())
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  }, [notifications, ticker]);
+
+  const filteredTickerNotifications = useMemo(() => {
+    if (notifTypeFilter === 'All') return tickerNotifications;
+    return tickerNotifications.filter(n => getNotificationTypeDisplay(n) === notifTypeFilter);
+  }, [tickerNotifications, notifTypeFilter]);
+
+  const thStyle: React.CSSProperties = {
+    padding: '10px 14px',
+    textAlign: 'left',
+    borderBottom: '1px solid var(--border-color)',
+    color: 'var(--text-secondary)',
+    fontWeight: 600,
+    background: 'var(--surface-modal)',
+    position: 'sticky',
+    top: 0,
+    zIndex: 1
+  };
+
+  const tdStyle: React.CSSProperties = {
+    padding: '10px 14px',
+    borderBottom: '1px solid var(--surface-divider)'
+  };
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [timeframe, setTimeframe] = useState('1y');
   const [chartType, setChartType] = useState<'line' | 'candle'>('line');
@@ -636,6 +680,101 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
           <div style={{ marginTop: '24px' }}>
             <h3 style={{ color: 'var(--text-primary)' }}>About Company</h3>
             <p>{ticker.stats.description}</p>
+          </div>
+        </div>
+
+        {/* Notifications Section */}
+        <div style={{ padding: '30px', borderTop: '1px solid var(--border-color)', background: 'var(--surface-subtle)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+            <h3 style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, fontSize: '16px', fontWeight: 600 }}>
+              <Bell size={18} color="var(--accent)" />
+              Notifications
+            </h3>
+            
+            {/* Filter Pills */}
+            <div style={{ display: 'flex', background: 'var(--surface-inset)', borderRadius: '8px', padding: '2px', border: '1px solid var(--border-color)' }}>
+              {(['All', 'Price', '%', 'Crossover', 'Earnings'] as const).map(type => (
+                <button 
+                  key={type}
+                  onClick={() => setNotifTypeFilter(type)}
+                  style={{
+                    background: notifTypeFilter === type ? 'var(--surface-hover)' : 'transparent',
+                    border: 'none',
+                    color: notifTypeFilter === type ? 'var(--text-primary)' : 'var(--text-secondary)',
+                    padding: '4px 10px',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  {type}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ maxHeight: '250px', overflowY: 'auto', background: 'var(--surface-inset)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+            {filteredTickerNotifications.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '30px', color: 'var(--text-secondary)', fontSize: '13px' }}>
+                No notifications found.
+              </div>
+            ) : (
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                <thead>
+                  <tr>
+                    <th style={thStyle}>Date</th>
+                    <th style={thStyle}>Ticker</th>
+                    <th style={thStyle}>Title</th>
+                    <th style={thStyle}>Type</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredTickerNotifications.map(n => {
+                    const displayType = getNotificationTypeDisplay(n);
+                    let badgeBg = 'var(--accent)';
+                    if (displayType === 'Price') badgeBg = '#3b82f6';
+                    else if (displayType === '%') badgeBg = '#6366f1';
+                    else if (displayType === 'Crossover') badgeBg = '#f59e0b';
+                    else if (displayType === 'Earnings') {
+                      const msgLower = n.message.toLowerCase();
+                      if (msgLower.includes('beat')) badgeBg = '#10b981';
+                      else if (msgLower.includes('miss')) badgeBg = '#ef4444';
+                      else badgeBg = '#ec4899';
+                    }
+
+                    return (
+                      <tr key={n.id} className="table-row">
+                        <td style={{ ...tdStyle, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+                          {new Date(n.timestamp).toLocaleString()}
+                        </td>
+                        <td style={{ ...tdStyle, fontWeight: 'bold', color: 'var(--text-primary)' }}>
+                          {n.symbol}
+                        </td>
+                        <td style={{ ...tdStyle, color: 'var(--text-secondary)' }}>
+                          {n.message}
+                        </td>
+                        <td style={tdStyle}>
+                          <span style={{
+                            fontSize: '10px',
+                            fontWeight: 700,
+                            padding: '2px 8px',
+                            borderRadius: '4px',
+                            background: badgeBg,
+                            color: 'white',
+                            textTransform: 'uppercase',
+                            whiteSpace: 'nowrap'
+                          }}>
+                            {displayType}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
 
