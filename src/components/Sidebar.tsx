@@ -83,7 +83,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     return total / list.tickers.length;
   };
 
-  const protectedLists = lists.filter(list => list.isProtected);
+  const protectedLists = lists.filter(list => list.isProtected && !list.isPinnedHidden);
   const regularLists = lists.filter(list => !list.isProtected);
   
   const archivedLists = sortLists(regularLists.filter(list => list.isArchived), archiveSort);

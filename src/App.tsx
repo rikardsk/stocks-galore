@@ -536,6 +536,29 @@ const App: React.FC = () => {
     }
   };
 
+  const handleAddPinnedList = (name: string) => {
+    const newList: import('./types').StockList = {
+      id: uuidv4(),
+      name: name.trim(),
+      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      tickers: [],
+      position: { x: 50, y: 50 },
+      isCollapsed: false,
+      showStats: true,
+      isVisible: true,
+      sortOrder: 'none',
+      isProtected: true,
+    };
+    const updated = [...lists, newList];
+    storage.saveLists(updated);
+    setLists(updated);
+  };
+
+  const handleDeletePinnedList = (id: string) => {
+    storage.deleteList(id);
+    setLists(prev => prev.filter(l => l.id !== id));
+  };
+
   const handleRenameList = (id: string, newName: string, color?: string) => {
     if (!newName.trim()) return;
     const list = lists.find(l => l.id === id);
@@ -1297,6 +1320,13 @@ const App: React.FC = () => {
         onImportData={handleImportData}
         theme={theme}
         onToggleTheme={toggleTheme}
+        pinnedLists={lists.filter(l => l.isProtected)}
+        onTogglePinnedVisibility={(id, shownInSidebar) => {
+          const list = lists.find(l => l.id === id);
+          if (list) handleUpdateList({ ...list, isPinnedHidden: !shownInSidebar });
+        }}
+        onAddPinnedList={handleAddPinnedList}
+        onDeletePinnedList={handleDeletePinnedList}
       />
 
       <TableView 
