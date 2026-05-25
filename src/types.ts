@@ -67,6 +67,8 @@ export const COUNTRY_FLAGS: Record<string, string> = {
   "Switzerland": "🇨🇭",
   "Italy": "🇮🇹",
   "Spain": "🇪🇸",
+  "Brazil": "🇧🇷",
+  "Japan": "🇯🇵",
   "Other": "🌍"
 };
 

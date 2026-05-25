@@ -2,7 +2,7 @@
 
 
 ## Later maybe
-- Could you also do toggle buttons for Groups, Ungrouped and Archive in the settings modal.
+- Could you also do toggle buttons for Pinned, Groups, Ungrouped and Archive in the settings modal.
 - Add a portfolio button that opens up a portfolio modal to manage Quantity and Average Price per ticker. The modal should also include  the Gain/Loss in numbers and percentages.
 - Select a single notification to view details or delete it.
 - Hover button to delete notification
