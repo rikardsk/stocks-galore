@@ -610,8 +610,21 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               onBlur={() => {
-                if (onUpdateNotes && ticker) {
-                  onUpdateNotes(ticker, notes);
+                if (ticker) {
+                  if (onUpdateNotes) onUpdateNotes(ticker, notes);
+                  
+                  const hasNotes = notes.trim().length > 0;
+                  const hasNoteBadge = badges.includes('NOTE');
+                  
+                  if (hasNotes && !hasNoteBadge) {
+                    const updated = [...badges, 'NOTE'];
+                    setBadges(updated);
+                    if (onUpdateBadges) onUpdateBadges(ticker, updated);
+                  } else if (!hasNotes && hasNoteBadge) {
+                    const updated = badges.filter(b => b !== 'NOTE');
+                    setBadges(updated);
+                    if (onUpdateBadges) onUpdateBadges(ticker, updated);
+                  }
                 }
               }}
               placeholder="Add your personal notes for this stock here..."
@@ -670,6 +683,18 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
                 }}
               >
                 Alert
+              </button>
+              <button 
+                onClick={() => toggleQuickBadge('NOTE')}
+                style={{ 
+                  background: badges.includes('NOTE') ? '#8b5cf6' : 'var(--surface-subtle)', 
+                  color: badges.includes('NOTE') ? 'white' : 'var(--text-secondary)',
+                  border: '1px solid ' + (badges.includes('NOTE') ? '#8b5cf6' : 'var(--border-color)'),
+                  padding: '6px 16px', borderRadius: '100px', fontSize: '12px', fontWeight: 700, cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                Note
               </button>
             </div>
 
