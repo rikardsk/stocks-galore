@@ -54,6 +54,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [editValue, setEditValue] = React.useState('');
   const [ungroupedSort, setUngroupedSort] = React.useState<StockList['sortOrder']>('gain-desc');
   const [archiveSort, setArchiveSort] = React.useState<StockList['sortOrder']>('gain-desc');
+  const [pinnedSort, setPinnedSort] = React.useState<StockList['sortOrder']>('none');
+  const [groupsSort, setGroupsSort] = React.useState<StockList['sortOrder']>('none');
   
   const handleToggleSort = (current: StockList['sortOrder'], setter: (val: StockList['sortOrder']) => void) => {
     let next: StockList['sortOrder'] = 'asc';
@@ -86,7 +88,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     return total / list.tickers.length;
   };
 
-  const protectedLists = lists.filter(list => list.isProtected && (!list.isPinnedHidden || isPinnedEditMode));
+  const protectedLists = sortLists(lists.filter(list => list.isProtected && (!list.isPinnedHidden || isPinnedEditMode)), pinnedSort);
   const regularLists = lists.filter(list => !list.isProtected);
   
   const archivedLists = sortLists(regularLists.filter(list => list.isArchived), archiveSort);
@@ -284,20 +286,34 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 {isPinnedSectionCollapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
                 Pinned ({protectedLists.length})
               </div>
-              <button 
-                className="btn" 
-                style={{ 
-                  fontSize: '11px', 
-                  padding: '2px 8px', 
-                  color: isPinnedEditMode ? 'var(--accent)' : 'var(--text-secondary)', 
-                  background: isPinnedEditMode ? 'rgba(59, 130, 246, 0.1)' : 'transparent', 
-                  borderRadius: '4px',
-                  border: isPinnedEditMode ? '1px solid rgba(59, 130, 246, 0.2)' : '1px solid transparent'
-                }}
-                onClick={() => setIsPinnedEditMode(!isPinnedEditMode)}
-              >
-                {isPinnedEditMode ? 'Done' : 'Edit'}
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <button 
+                  className="btn" 
+                  onClick={() => handleToggleSort(pinnedSort, setPinnedSort)} 
+                  title={`Sort: ${pinnedSort}`}
+                  style={{ padding: '2px', color: 'var(--text-secondary)', opacity: 0.7 }}
+                >
+                  {pinnedSort === 'asc' && <ArrowUpAZ size={14} />}
+                  {pinnedSort === 'desc' && <ArrowDownAZ size={14} />}
+                  {pinnedSort === 'gain-asc' && <ArrowUp10 size={14} />}
+                  {pinnedSort === 'gain-desc' && <ArrowDown10 size={14} />}
+                  {pinnedSort === 'none' && <ArrowUpDown size={14} />}
+                </button>
+                <button 
+                  className="btn" 
+                  style={{ 
+                    fontSize: '11px', 
+                    padding: '2px 8px', 
+                    color: isPinnedEditMode ? 'var(--accent)' : 'var(--text-secondary)', 
+                    background: isPinnedEditMode ? 'rgba(59, 130, 246, 0.1)' : 'transparent', 
+                    borderRadius: '4px',
+                    border: isPinnedEditMode ? '1px solid rgba(59, 130, 246, 0.2)' : '1px solid transparent'
+                  }}
+                  onClick={() => setIsPinnedEditMode(!isPinnedEditMode)}
+                >
+                  {isPinnedEditMode ? 'Done' : 'Edit'}
+                </button>
+              </div>
             </div>
             {!isPinnedSectionCollapsed && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -309,155 +325,170 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Groups */}
         {groups.length > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '16px 0 8px 0', paddingRight: '8px' }}>
-            <div 
-              className="sidebar-section-label" 
-              style={{ 
-                fontSize: '11px', 
-                color: 'var(--text-secondary)', 
-                textTransform: 'uppercase', 
-                letterSpacing: '1px', 
-                margin: 0,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                cursor: 'pointer',
-                userSelect: 'none'
-              }}
-              onClick={() => setIsGroupsSectionCollapsed(!isGroupsSectionCollapsed)}
-            >
-              {isGroupsSectionCollapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
-              Groups ({groups.length})
+          <div style={{ marginBottom: '24px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 0 8px 0', paddingRight: '8px' }}>
+              <div 
+                className="sidebar-section-label" 
+                style={{ 
+                  fontSize: '11px', 
+                  color: 'var(--text-secondary)', 
+                  textTransform: 'uppercase', 
+                  letterSpacing: '1px', 
+                  margin: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  cursor: 'pointer',
+                  userSelect: 'none'
+                }}
+                onClick={() => setIsGroupsSectionCollapsed(!isGroupsSectionCollapsed)}
+              >
+                {isGroupsSectionCollapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
+                Groups ({groups.length})
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <button 
+                  className="btn" 
+                  onClick={() => handleToggleSort(groupsSort, setGroupsSort)} 
+                  title={`Sort: ${groupsSort}`}
+                  style={{ padding: '2px', color: 'var(--text-secondary)', opacity: 0.7 }}
+                >
+                  {groupsSort === 'asc' && <ArrowUpAZ size={14} />}
+                  {groupsSort === 'desc' && <ArrowDownAZ size={14} />}
+                  {groupsSort === 'gain-asc' && <ArrowUp10 size={14} />}
+                  {groupsSort === 'gain-desc' && <ArrowDown10 size={14} />}
+                  {groupsSort === 'none' && <ArrowUpDown size={14} />}
+                </button>
+                <button 
+                  className="btn" 
+                  style={{ 
+                    fontSize: '11px', 
+                    padding: '2px 8px', 
+                    color: isEditMode ? 'var(--accent)' : 'var(--text-secondary)', 
+                    background: isEditMode ? 'rgba(59, 130, 246, 0.1)' : 'transparent', 
+                    borderRadius: '4px',
+                    border: isEditMode ? '1px solid rgba(59, 130, 246, 0.2)' : '1px solid transparent'
+                  }}
+                  onClick={() => setIsEditMode(!isEditMode)}
+                >
+                  {isEditMode ? 'Done' : 'Edit'}
+                </button>
+              </div>
             </div>
-            <button 
-              className="btn" 
-              style={{ 
-                fontSize: '11px', 
-                padding: '2px 8px', 
-                color: isEditMode ? 'var(--accent)' : 'var(--text-secondary)', 
-                background: isEditMode ? 'rgba(59, 130, 246, 0.1)' : 'transparent', 
-                borderRadius: '4px',
-                border: isEditMode ? '1px solid rgba(59, 130, 246, 0.2)' : '1px solid transparent'
-              }}
-              onClick={() => setIsEditMode(!isEditMode)}
-            >
-              {isEditMode ? 'Done' : 'Edit'}
-            </button>
+
+            {!isGroupsSectionCollapsed && groups.map((group, index) => (
+              <div 
+                key={group.id} 
+                className="sidebar-group" 
+                style={{ marginBottom: '12px' }}
+              >
+                <div 
+                  className="group-header"
+                  style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between',
+                    padding: '6px 8px',
+                    cursor: 'pointer',
+                    borderRadius: '6px'
+                  }}
+                  onClick={() => onToggleGroup(group.id)}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, overflow: 'hidden' }}>
+                    {group.isCollapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
+                    <Folder size={16} color="var(--accent)" />
+                    {isEditMode && editingGroupId === group.id ? (
+                      <input 
+                        autoFocus
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            onRenameGroup(group.id, editValue);
+                            setEditingGroupId(null);
+                          } else if (e.key === 'Escape') {
+                            setEditingGroupId(null);
+                          }
+                        }}
+                        onBlur={() => {
+                          onRenameGroup(group.id, editValue);
+                          setEditingGroupId(null);
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                          background: 'var(--surface-input)',
+                          border: '1px solid var(--accent)',
+                          borderRadius: '4px',
+                          color: 'var(--text-primary)',
+                          fontSize: '13px',
+                          padding: '2px 6px',
+                          width: '100%',
+                          outline: 'none'
+                        }}
+                      />
+                    ) : (
+                      <span 
+                        style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                        onClick={(e) => {
+                          if (isEditMode) {
+                            e.stopPropagation();
+                            setEditingGroupId(group.id);
+                            setEditValue(group.name);
+                          }
+                        }}
+                      >
+                        {group.name} 
+                        <span style={{ marginLeft: '4px', opacity: 0.5, fontWeight: 400 }}>({group.listIds.length})</span>
+                      </span>
+                    )}
+                  </div>
+                  {isEditMode && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <button 
+                        className="btn" 
+                        style={{ padding: '2px', opacity: index === 0 ? 0.3 : 0.7 }}
+                        onClick={(e) => { e.stopPropagation(); onMoveGroup?.(group.id, 'up'); }}
+                        disabled={index === 0}
+                      >
+                        <ChevronUp size={14} />
+                      </button>
+                      <button 
+                        className="btn" 
+                        style={{ padding: '2px', opacity: index === groups.length - 1 ? 0.3 : 0.7 }}
+                        onClick={(e) => { e.stopPropagation(); onMoveGroup?.(group.id, 'down'); }}
+                        disabled={index === groups.length - 1}
+                      >
+                        <ChevronDown size={14} />
+                      </button>
+                      <button className="btn" style={{ padding: '4px' }} onClick={(e) => { e.stopPropagation(); onDeleteGroup(group.id); }}>
+                        <Trash2 size={12} color="rgba(255,255,255,0.3)" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+                
+                {!group.isCollapsed && (
+                  <div className="group-content" style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px', borderLeft: '1px solid var(--surface-divider)', marginLeft: '16px' }}>
+                    {sortLists(group.listIds
+                      .map(id => lists.find(l => l.id === id))
+                      .filter((l): l is StockList => !!l), groupsSort)
+                      .map(l => renderListItem(l, isEditMode))
+                    }
+                    {group.listIds.length === 0 && (
+                      <div style={{ height: '8px' }} />
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         )}
 
-        {!isGroupsSectionCollapsed && groups.map((group, index) => (
-          <div 
-            key={group.id} 
-            className="sidebar-group" 
-            style={{ marginBottom: '12px' }}
-          >
-            <div 
-              className="group-header"
-              style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'space-between',
-                padding: '6px 8px',
-                cursor: 'pointer',
-                borderRadius: '6px'
-              }}
-              onClick={() => onToggleGroup(group.id)}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, overflow: 'hidden' }}>
-                {group.isCollapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
-                <Folder size={16} color="var(--accent)" />
-                {isEditMode && editingGroupId === group.id ? (
-                  <input 
-                    autoFocus
-                    value={editValue}
-                    onChange={(e) => setEditValue(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        onRenameGroup(group.id, editValue);
-                        setEditingGroupId(null);
-                      } else if (e.key === 'Escape') {
-                        setEditingGroupId(null);
-                      }
-                    }}
-                    onBlur={() => {
-                      onRenameGroup(group.id, editValue);
-                      setEditingGroupId(null);
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                    style={{
-                      background: 'var(--surface-input)',
-                      border: '1px solid var(--accent)',
-                      borderRadius: '4px',
-                      color: 'var(--text-primary)',
-                      fontSize: '13px',
-                      padding: '2px 6px',
-                      width: '100%',
-                      outline: 'none'
-                    }}
-                  />
-                ) : (
-                  <span 
-                    style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
-                    onClick={(e) => {
-                      if (isEditMode) {
-                        e.stopPropagation();
-                        setEditingGroupId(group.id);
-                        setEditValue(group.name);
-                      }
-                    }}
-                  >
-                    {group.name} 
-                    <span style={{ marginLeft: '4px', opacity: 0.5, fontWeight: 400 }}>({group.listIds.length})</span>
-                  </span>
-                )}
-              </div>
-              {isEditMode && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <button 
-                    className="btn" 
-                    style={{ padding: '2px', opacity: index === 0 ? 0.3 : 0.7 }}
-                    onClick={(e) => { e.stopPropagation(); onMoveGroup?.(group.id, 'up'); }}
-                    disabled={index === 0}
-                  >
-                    <ChevronUp size={14} />
-                  </button>
-                  <button 
-                    className="btn" 
-                    style={{ padding: '2px', opacity: index === groups.length - 1 ? 0.3 : 0.7 }}
-                    onClick={(e) => { e.stopPropagation(); onMoveGroup?.(group.id, 'down'); }}
-                    disabled={index === groups.length - 1}
-                  >
-                    <ChevronDown size={14} />
-                  </button>
-                  <button className="btn" style={{ padding: '4px' }} onClick={(e) => { e.stopPropagation(); onDeleteGroup(group.id); }}>
-                    <Trash2 size={12} color="rgba(255,255,255,0.3)" />
-                  </button>
-                </div>
-              )}
-            </div>
-            
-            {!group.isCollapsed && (
-              <div className="group-content" style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px', borderLeft: '1px solid var(--surface-divider)', marginLeft: '16px' }}>
-                {group.listIds
-                  .map(id => lists.find(l => l.id === id))
-                  .filter((l): l is StockList => !!l)
-                  .sort((a, b) => calculateAverageGain(b) - calculateAverageGain(a))
-                  .map(l => renderListItem(l, isEditMode))
-                }
-                {group.listIds.length === 0 && (
-                  <div style={{ height: '8px' }} />
-                )}
-              </div>
-            )}
-          </div>
-        ))}
-
         <div 
           className="ungrouped-section"
-          style={{ minHeight: '40px' }}
+          style={{ marginBottom: '24px', minHeight: '40px' }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '16px 0 8px 0', paddingRight: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 0 8px 0', paddingRight: '8px' }}>
             <div 
               className="sidebar-section-label" 
               style={{ 
@@ -518,7 +549,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Archive Section */}
         <div 
           className="archive-section"
-          style={{ marginTop: '16px' }}
+          style={{ marginBottom: '24px' }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 0 8px 0', paddingRight: '8px' }}>
             <div 
