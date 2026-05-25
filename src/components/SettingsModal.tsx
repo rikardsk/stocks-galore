@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
-import { Sun, Moon, Pin, Eye, EyeOff, Plus, Trash2 } from 'lucide-react';
-import type { StockList } from '../types';
+import React from 'react';
+import { Sun, Moon } from 'lucide-react';
 
 export type RefreshInterval = 'manual' | '1m' | '5m' | '15m';
 
