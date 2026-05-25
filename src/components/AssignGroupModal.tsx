@@ -44,6 +44,14 @@ export const AssignGroupModal: React.FC<AssignGroupModalProps> = ({
           >
             📦 Archive (Exclude from refresh)
           </button>
+
+          <button 
+            className="btn" 
+            style={{ width: '100%', padding: '10px', justifyContent: 'flex-start', background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}
+            onClick={() => onAssign('pinned')}
+          >
+            📌 Pinned (Keep at top)
+          </button>
           
           {groups.length > 0 && (
             <div style={{ margin: '8px 0 4px', fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px' }}>

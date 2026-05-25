@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Trash2, ChevronDown, ChevronUp, ChevronRight, FolderPlus, Folder, GripVertical, ArrowUpDown, ArrowUpAZ, ArrowDownAZ, ArrowUp10, ArrowDown10 } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronUp, ChevronRight, FolderPlus, Folder, GripVertical, ArrowUpDown, ArrowUpAZ, ArrowDownAZ, ArrowUp10, ArrowDown10, Eye, EyeOff } from 'lucide-react';
 import type { StockList, ListGroup } from '../types';
 import { COUNTRY_FLAGS } from '../types';
 
@@ -19,6 +19,7 @@ interface SidebarProps {
   onRenameList: (listId: string, newName: string, color?: string) => void;
   onAssignList: (listId: string) => void;
   onClearList?: (listId: string) => void;
+  onTogglePinnedHidden?: (id: string, isHidden: boolean) => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -36,11 +37,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onRenameGroup,
   onRenameList,
   onAssignList,
-  onClearList
+  onClearList,
+  onTogglePinnedHidden
 }) => {
   const [isEditMode, setIsEditMode] = React.useState(false);
   const [isUngroupedEditMode, setIsUngroupedEditMode] = React.useState(false);
   const [isArchiveEditMode, setIsArchiveEditMode] = React.useState(false);
+  const [isPinnedEditMode, setIsPinnedEditMode] = React.useState(false);
   const [isGroupsSectionCollapsed, setIsGroupsSectionCollapsed] = React.useState(false);
   const [isUngroupedSectionCollapsed, setIsUngroupedSectionCollapsed] = React.useState(false);
   const [isArchiveSectionCollapsed, setIsArchiveSectionCollapsed] = React.useState(true);
@@ -83,7 +86,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     return total / list.tickers.length;
   };
 
-  const protectedLists = lists.filter(list => list.isProtected && !list.isPinnedHidden);
+  const protectedLists = lists.filter(list => list.isProtected && (!list.isPinnedHidden || isPinnedEditMode));
   const regularLists = lists.filter(list => !list.isProtected);
   
   const archivedLists = sortLists(regularLists.filter(list => list.isArchived), archiveSort);
@@ -94,11 +97,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
 
 
-  const renderListItem = (list: StockList, isEditingMode: boolean = false) => {
+  const renderListItem = (list: StockList, isEditingMode: boolean = false, isPinnedSection: boolean = false) => {
     const avgGain = calculateAverageGain(list);
     const isBigGain = avgGain > 5;
     const isBigLoss = avgGain < -5;
     const isEditing = editingListId === list.id;
+    const isForever = ['Watchlist', 'Portfolio', 'Today'].includes(list.name);
+    const showPinnedForeverActions = isPinnedSection && isEditingMode && isForever;
+    const showPinnedOtherActions = isPinnedSection && isEditingMode && !isForever;
+    const showNormalActions = !isPinnedSection && isEditingMode && !list.isProtected;
 
     return (
       <div 
@@ -200,7 +207,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </span>
           )}
           <div className="item-actions" style={{ display: 'flex', gap: '4px' }}>
-            {!list.isProtected && isEditingMode && (
+            {showNormalActions && (
               <>
                 <button className="btn" style={{ padding: '4px' }} onClick={(e) => { e.stopPropagation(); onAssignList(list.id); }} title="Assign to Group">
                   <Plus size={14} color="var(--text-secondary)" opacity={0.5} />
@@ -209,6 +216,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <Trash2 size={14} color="var(--text-secondary)" opacity={0.5} />
                 </button>
               </>
+            )}
+            {showPinnedOtherActions && (
+              <>
+                <button className="btn" style={{ padding: '4px' }} onClick={(e) => { e.stopPropagation(); onAssignList(list.id); }} title="Assign to Group">
+                  <Plus size={14} color="var(--text-secondary)" opacity={0.5} />
+                </button>
+                <button className="btn" style={{ padding: '4px' }} onClick={(e) => { e.stopPropagation(); onDeleteList(list.id); }}>
+                  <Trash2 size={14} color="var(--text-secondary)" opacity={0.5} />
+                </button>
+              </>
+            )}
+            {showPinnedForeverActions && (
+              <button className="btn" style={{ padding: '4px' }} onClick={(e) => { e.stopPropagation(); onTogglePinnedHidden?.(list.id, !list.isPinnedHidden); }} title={list.isPinnedHidden ? 'Show List' : 'Hide List'}>
+                {list.isPinnedHidden ? <EyeOff size={14} color="var(--text-secondary)" opacity={0.5} /> : <Eye size={14} color="var(--text-secondary)" opacity={0.5} />}
+              </button>
             )}
             {list.name === 'Today' && (
               <button className="btn" style={{ padding: '4px' }} onClick={(e) => { e.stopPropagation(); onClearList?.(list.id); }} title="Clear Today List">
@@ -242,28 +264,44 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Static Section: Watchlist & Portfolio */}
         {protectedLists.length > 0 && (
           <div style={{ marginBottom: '24px' }}>
-            <div 
-              className="sidebar-section-label" 
-              style={{ 
-                fontSize: '11px', 
-                color: 'var(--text-secondary)', 
-                margin: '0 0 8px 0', 
-                textTransform: 'uppercase', 
-                letterSpacing: '1px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                cursor: 'pointer',
-                userSelect: 'none'
-              }}
-              onClick={() => setIsPinnedSectionCollapsed(!isPinnedSectionCollapsed)}
-            >
-              {isPinnedSectionCollapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
-              Pinned ({protectedLists.length})
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 0 8px 0', paddingRight: '8px' }}>
+              <div 
+                className="sidebar-section-label" 
+                style={{ 
+                  fontSize: '11px', 
+                  color: 'var(--text-secondary)', 
+                  margin: 0, 
+                  textTransform: 'uppercase', 
+                  letterSpacing: '1px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  cursor: 'pointer',
+                  userSelect: 'none'
+                }}
+                onClick={() => setIsPinnedSectionCollapsed(!isPinnedSectionCollapsed)}
+              >
+                {isPinnedSectionCollapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
+                Pinned ({protectedLists.length})
+              </div>
+              <button 
+                className="btn" 
+                style={{ 
+                  fontSize: '11px', 
+                  padding: '2px 8px', 
+                  color: isPinnedEditMode ? 'var(--accent)' : 'var(--text-secondary)', 
+                  background: isPinnedEditMode ? 'rgba(59, 130, 246, 0.1)' : 'transparent', 
+                  borderRadius: '4px',
+                  border: isPinnedEditMode ? '1px solid rgba(59, 130, 246, 0.2)' : '1px solid transparent'
+                }}
+                onClick={() => setIsPinnedEditMode(!isPinnedEditMode)}
+              >
+                {isPinnedEditMode ? 'Done' : 'Edit'}
+              </button>
             </div>
             {!isPinnedSectionCollapsed && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                {protectedLists.map(l => renderListItem(l))}
+                {protectedLists.map(l => renderListItem(l, isPinnedEditMode, true))}
               </div>
             )}
           </div>

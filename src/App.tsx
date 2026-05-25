@@ -464,13 +464,14 @@ const App: React.FC = () => {
   };
 
   const handleMoveListToGroup = (listId: string, groupId: string | null) => {
-    // Update the list's isArchived status
+    // Update the list's isArchived and isProtected status
     const isArchiving = groupId === 'archive';
-    const targetGroupId = isArchiving ? null : groupId;
+    const isPinning = groupId === 'pinned';
+    const targetGroupId = (isArchiving || isPinning) ? null : groupId;
 
     const list = lists.find(l => l.id === listId);
     if (list) {
-      handleUpdateList({ ...list, isArchived: isArchiving });
+      handleUpdateList({ ...list, isArchived: isArchiving, isProtected: isPinning });
     }
 
     const updatedGroups = groups.map(group => {
@@ -1131,6 +1132,10 @@ const App: React.FC = () => {
         onMoveListToGroup={handleMoveListToGroup}
         onAssignList={handleOpenAssignModal}
         onClearList={handleClearList}
+        onTogglePinnedHidden={(id, isHidden) => {
+          const list = lists.find(l => l.id === id);
+          if (list) handleUpdateList({ ...list, isPinnedHidden: isHidden });
+        }}
       />
       
       <div style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
