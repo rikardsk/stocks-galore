@@ -62,6 +62,14 @@ const App: React.FC = () => {
   const [isEarningsOpen, setIsEarningsOpen] = useState(false);
   const [shouldReopenEarnings, setShouldReopenEarnings] = useState(false);
   const [theme, setTheme] = useState<'dark' | 'light'>(() => (localStorage.getItem('theme') as 'dark' | 'light') || 'dark');
+  const [searchCharLimit, setSearchCharLimit] = useState<number>(() => {
+    const saved = localStorage.getItem('searchCharLimit');
+    return saved ? parseInt(saved, 10) : 3;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('searchCharLimit', searchCharLimit.toString());
+  }, [searchCharLimit]);
   
   const [newListName, setNewListName] = useState('');
   const [newListColor, setNewListColor] = useState(COLORS[0]);
@@ -1141,7 +1149,7 @@ const App: React.FC = () => {
           <div className="canvas">
             {lists.filter(list => {
               const query = searchQuery.trim().toLowerCase();
-              if (query.length < 3) return list.isVisible;
+              if (query.length < searchCharLimit) return list.isVisible;
               
               return list.tickers.some(t => 
                 t.symbol.toLowerCase().includes(query) || 
@@ -1303,6 +1311,8 @@ const App: React.FC = () => {
         onImportData={handleImportData}
         theme={theme}
         onToggleTheme={toggleTheme}
+        searchCharLimit={searchCharLimit}
+        onSearchCharLimitChange={setSearchCharLimit}
       />
 
       <TableView 

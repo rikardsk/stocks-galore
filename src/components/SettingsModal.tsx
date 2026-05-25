@@ -12,6 +12,8 @@ interface SettingsModalProps {
   onImportData: (data: any) => void;
   theme: 'dark' | 'light';
   onToggleTheme: () => void;
+  searchCharLimit: number;
+  onSearchCharLimitChange: (limit: number) => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -22,6 +24,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onImportData,
   theme,
   onToggleTheme,
+  searchCharLimit,
+  onSearchCharLimitChange,
 }) => {
   if (!isOpen) return null;
 
@@ -29,6 +33,27 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()} style={{ width: '440px', maxHeight: '85vh', overflowY: 'auto' }}>
         <h3 style={{ margin: 0, marginBottom: '24px' }}>Workbench Settings</h3>
+
+        {/* ── Search Settings ── */}
+        <div className="input-group" style={{ marginTop: '24px' }}>
+          <label>Search Activation Length</label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <input 
+              type="range" 
+              min="1" 
+              max="5" 
+              value={searchCharLimit} 
+              onChange={(e) => onSearchCharLimitChange(parseInt(e.target.value, 10))}
+              style={{ flex: 1 }}
+            />
+            <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--accent)', minWidth: '20px', textAlign: 'center' }}>
+              {searchCharLimit}
+            </span>
+          </div>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '8px' }}>
+            Number of characters needed to start filtering the dashboard.
+          </div>
+        </div>
 
         {/* ── Refresh Interval ── */}
         <div className="input-group" style={{ marginTop: '24px' }}>
