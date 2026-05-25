@@ -520,6 +520,45 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
              </button>
           </div>
 
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
+            {[5, 10, 15].map(pct => (
+              <button 
+                key={`up-${pct}`}
+                onClick={() => {
+                  const currentPrice = parseFloat(ticker.stats.price);
+                  const targetPrice = currentPrice * (1 + pct / 100);
+                  onAddAlert({
+                    symbol: ticker.symbol,
+                    metric: 'price',
+                    operator: 'above',
+                    value: parseFloat(targetPrice.toFixed(2))
+                  });
+                }}
+                style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '6px 14px', borderRadius: '100px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}
+              >
+                +{pct}%
+              </button>
+            ))}
+            {[-5, -10, -15].map(pct => (
+              <button 
+                key={`down-${pct}`}
+                onClick={() => {
+                  const currentPrice = parseFloat(ticker.stats.price);
+                  const targetPrice = currentPrice * (1 + pct / 100);
+                  onAddAlert({
+                    symbol: ticker.symbol,
+                    metric: 'price',
+                    operator: 'below',
+                    value: parseFloat(targetPrice.toFixed(2))
+                  });
+                }}
+                style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '6px 14px', borderRadius: '100px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}
+              >
+                {pct}%
+              </button>
+            ))}
+          </div>
+
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px' }}>
             {tickerAlerts.map(alert => (
               <div key={alert.id} style={{ 
