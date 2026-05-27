@@ -401,7 +401,19 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                CREATION DATE: {sliderDays === 30 && sliderMode === 'after' ? 'ALL' : sliderMode === 'after' ? `LAST ${sliderDays} DAY${sliderDays !== 1 ? 'S' : ''}` : `OLDER THAN ${sliderDays} DAY${sliderDays !== 1 ? 'S' : ''}`}
+                {(() => {
+                  const fmt = (d: Date) => d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                  const cutoff = new Date();
+                  cutoff.setDate(cutoff.getDate() - sliderDays);
+                  const today = new Date();
+                  if (sliderDays === 30 && sliderMode === 'after') {
+                    return `CREATION DATE: ALL`;
+                  } else if (sliderMode === 'after') {
+                    return `CREATION DATE: LAST ${sliderDays} DAY${sliderDays !== 1 ? 'S' : ''} (${fmt(cutoff)} – ${fmt(today)})`;
+                  } else {
+                    return `CREATION DATE: OLDER THAN ${sliderDays} DAY${sliderDays !== 1 ? 'S' : ''} (before ${fmt(cutoff)})`;
+                  }
+                })()}
               </span>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <div style={{ display: 'flex', gap: '4px' }}>
