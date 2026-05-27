@@ -2,7 +2,7 @@
 
 
 ## Later maybe
-- Can you make the vertical spacing even between the 4 labels in the sidebar (when collapsed they look slighlty missaligned).
+- Can you make the vertical spacing even between the 4 labels in the sidebar (when collapsed they look slighlty missaligned). Add screenshot.
 - Could you also do toggle buttons for Pinned, Groups, Ungrouped and Archive in the settings modal.
 - % vs Earnings? (Earnings flagged as % or both?).
 - Crossover SMA 20/50, SMA 50/200.

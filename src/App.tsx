@@ -432,6 +432,45 @@ const App: React.FC = () => {
           }
         }
       });
+
+      // SMA20/50 and SMA50/200 crossovers
+      if (ticker.stats.crossover_sma20_sma50) {
+        const targetAlertId = `cross-sma20-sma50-${ticker.symbol}-${today}`;
+        const existingNotifs = storage.getNotifications();
+        const isAlreadyNotified = existingNotifs.some(n => 
+          n.alertId === targetAlertId ||
+          (n.symbol === ticker.symbol && n.type === 'sma20_sma50' && n.timestamp.startsWith(today))
+        );
+
+        if (!isAlreadyNotified) {
+          triggeredCount++;
+          storage.addNotification({
+            alertId: targetAlertId,
+            symbol: ticker.symbol,
+            message: `${ticker.symbol} SMA20 crossed above SMA50`,
+            type: 'sma20_sma50'
+          });
+        }
+      }
+
+      if (ticker.stats.crossover_sma50_sma200) {
+        const targetAlertId = `cross-sma50-sma200-${ticker.symbol}-${today}`;
+        const existingNotifs = storage.getNotifications();
+        const isAlreadyNotified = existingNotifs.some(n => 
+          n.alertId === targetAlertId ||
+          (n.symbol === ticker.symbol && n.type === 'sma50_sma200' && n.timestamp.startsWith(today))
+        );
+
+        if (!isAlreadyNotified) {
+          triggeredCount++;
+          storage.addNotification({
+            alertId: targetAlertId,
+            symbol: ticker.symbol,
+            message: `${ticker.symbol} SMA50 crossed above SMA200 (Golden Cross)`,
+            type: 'sma50_sma200'
+          });
+        }
+      }
     });
 
     if (triggeredCount > 0) {
@@ -699,7 +738,9 @@ const App: React.FC = () => {
               low52: data.low52,
               avgVolume: data.avgVolume,
               earningsDate: data.earningsDate,
-              ipoDate: data.ipoDate
+              ipoDate: data.ipoDate,
+              crossover_sma20_sma50: data.crossover_sma20_sma50,
+              crossover_sma50_sma200: data.crossover_sma50_sma200
             }
           };
           
@@ -806,6 +847,8 @@ const App: React.FC = () => {
                 avgVolume: freshData.avgVolume,
                 earningsDate: freshData.earningsDate,
                 ipoDate: freshData.ipoDate,
+                crossover_sma20_sma50: freshData.crossover_sma20_sma50,
+                crossover_sma50_sma200: freshData.crossover_sma50_sma200,
                 error: undefined
               }
             };
@@ -878,6 +921,8 @@ const App: React.FC = () => {
                 avgVolume: freshData.avgVolume,
                 earningsDate: freshData.earningsDate,
                 ipoDate: freshData.ipoDate,
+                crossover_sma20_sma50: freshData.crossover_sma20_sma50,
+                crossover_sma50_sma200: freshData.crossover_sma50_sma200,
                 error: undefined
               }
             };

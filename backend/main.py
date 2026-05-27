@@ -52,11 +52,32 @@ def calculate_stats(symbol: str, info: Dict, hist: pd.DataFrame) -> Dict[str, An
     change_percent = safe_float((change / prev_close) * 100) if prev_close != 0 and change is None else safe_float((current_price - prev_close) / prev_close * 100) if prev_close != 0 else 0
 
     # Moving Averages
-    sma10 = safe_float(hist['Close'].rolling(window=10).mean().iloc[-1])
-    sma20 = safe_float(hist['Close'].rolling(window=20).mean().iloc[-1])
-    sma50 = safe_float(hist['Close'].rolling(window=50).mean().iloc[-1])
-    sma100 = safe_float(hist['Close'].rolling(window=100).mean().iloc[-1])
-    sma200 = safe_float(hist['Close'].rolling(window=200).mean().iloc[-1])
+    sma10_series = hist['Close'].rolling(window=10).mean()
+    sma20_series = hist['Close'].rolling(window=20).mean()
+    sma50_series = hist['Close'].rolling(window=50).mean()
+    sma100_series = hist['Close'].rolling(window=100).mean()
+    sma200_series = hist['Close'].rolling(window=200).mean()
+
+    sma10 = safe_float(sma10_series.iloc[-1]) if len(sma10_series) >= 1 else None
+    sma20 = safe_float(sma20_series.iloc[-1]) if len(sma20_series) >= 1 else None
+    sma50 = safe_float(sma50_series.iloc[-1]) if len(sma50_series) >= 1 else None
+    sma100 = safe_float(sma100_series.iloc[-1]) if len(sma100_series) >= 1 else None
+    sma200 = safe_float(sma200_series.iloc[-1]) if len(sma200_series) >= 1 else None
+
+    # Check for SMA crossovers
+    crossover_sma20_sma50 = False
+    crossover_sma50_sma200 = False
+
+    if len(hist) > 1:
+        sma20_yesterday = safe_float(sma20_series.iloc[-2])
+        sma50_yesterday = safe_float(sma50_series.iloc[-2])
+        sma200_yesterday = safe_float(sma200_series.iloc[-2])
+
+        if sma20 is not None and sma50 is not None and sma20_yesterday is not None and sma50_yesterday is not None:
+            crossover_sma20_sma50 = (sma20_yesterday < sma50_yesterday) and (sma20 > sma50)
+
+        if sma50 is not None and sma200 is not None and sma50_yesterday is not None and sma200_yesterday is not None:
+            crossover_sma50_sma200 = (sma50_yesterday < sma200_yesterday) and (sma50 > sma200)
 
     # Performance
     def get_perf(days):
@@ -95,6 +116,8 @@ def calculate_stats(symbol: str, info: Dict, hist: pd.DataFrame) -> Dict[str, An
         "sma50": sma50,
         "sma100": sma100,
         "sma200": sma200,
+        "crossover_sma20_sma50": crossover_sma20_sma50,
+        "crossover_sma50_sma200": crossover_sma50_sma200,
         "perf1M": get_perf(21), # ~21 trading days
         "perf3M": get_perf(63),
         "perf1Y": get_perf(252),

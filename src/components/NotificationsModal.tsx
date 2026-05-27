@@ -24,7 +24,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   allTickers
 }) => {
   const [timeFilter, setTimeFilter] = React.useState<'today' | 'yesterday' | 'week' | 'all'>('all');
-  const [typeFilter, setTypeFilter] = React.useState<'all' | 'price' | 'changePercent' | 'crossover' | 'sma10' | 'sma20' | 'sma50' | 'sma100' | 'sma200' | 'earnings' | 'earningsBeat' | 'earningsMiss'>('all');
+  const [typeFilter, setTypeFilter] = React.useState<'all' | 'price' | 'changePercent' | 'crossover' | 'sma10' | 'sma20' | 'sma50' | 'sma100' | 'sma200' | 'sma20_sma50' | 'sma50_sma200' | 'earnings' | 'earningsBeat' | 'earningsMiss'>('all');
   const [directionFilter, setDirectionFilter] = React.useState<'all' | 'above' | 'below'>('all');
   const [searchQuery, setSearchQuery] = React.useState('');
   const [fiftyTwoWeekFilter, setFiftyTwoWeekFilter] = React.useState<number>(50);
@@ -86,6 +86,8 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       sma50: 0,
       sma100: 0,
       sma200: 0,
+      sma20_sma50: 0,
+      sma50_sma200: 0,
       earnings: 0,
       earningsBeat: 0,
       earningsMiss: 0,
@@ -102,7 +104,9 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       if (isPercent) counts.changePercent++;
       if (isCrossover) counts.crossover++;
 
-      if (n.type === 'sma200' || msg.includes('sma200')) counts.sma200++;
+      if (n.type === 'sma20_sma50' || msg.includes('sma20 crossed above sma50') || msg.includes('sma20/sma50')) counts.sma20_sma50++;
+      else if (n.type === 'sma50_sma200' || msg.includes('sma50 crossed above sma200') || msg.includes('sma50/sma200')) counts.sma50_sma200++;
+      else if (n.type === 'sma200' || msg.includes('sma200')) counts.sma200++;
       else if (n.type === 'sma100' || msg.includes('sma100')) counts.sma100++;
       else if (n.type === 'sma50' || msg.includes('sma50')) counts.sma50++;
       else if (n.type === 'sma20' || msg.includes('sma20')) counts.sma20++;
@@ -142,11 +146,13 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
         }
         if (typeFilter.startsWith('sma')) {
           if (n.type === typeFilter) return true;
+          if (typeFilter === 'sma20_sma50') return msg.includes('sma20 crossed above sma50') || msg.includes('sma20/sma50');
+          if (typeFilter === 'sma50_sma200') return msg.includes('sma50 crossed above sma200') || msg.includes('sma50/sma200');
           // Precision check for legacy messages
           if (typeFilter === 'sma200') return msg.includes('sma200');
           if (typeFilter === 'sma100') return msg.includes('sma100');
-          if (typeFilter === 'sma50') return msg.includes('sma50');
-          if (typeFilter === 'sma20') return msg.includes('sma20') && !msg.includes('sma200');
+          if (typeFilter === 'sma50') return msg.includes('sma50') && !msg.includes('sma50_sma200') && !msg.includes('sma20_sma50');
+          if (typeFilter === 'sma20') return msg.includes('sma20') && !msg.includes('sma200') && !msg.includes('sma20_sma50');
           if (typeFilter === 'sma10') return msg.includes('sma10') && !msg.includes('sma100');
           return false;
         }
@@ -309,7 +315,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={e => e.stopPropagation()} style={{ width: '450px', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
+      <div className="modal" onClick={e => e.stopPropagation()} style={{ width: '540px', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Bell size={20} color="var(--accent)" />
@@ -503,7 +509,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
             </div>
 
             <div style={{ display: 'flex', background: 'var(--surface-subtle)', borderRadius: '8px', padding: '2px', border: '1px solid var(--border-color)', marginBottom: '8px' }}>
-              {(['sma10', 'sma20', 'sma50', 'sma100', 'sma200'] as const).map(f => (
+              {(['sma10', 'sma20', 'sma50', 'sma100', 'sma200', 'sma20_sma50', 'sma50_sma200'] as const).map(f => (
                 <button 
                   key={f}
                   onClick={() => setTypeFilter(typeFilter === f ? 'all' : f)}
@@ -524,7 +530,11 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                     gap: '2px'
                   }}
                 >
-                  <span>{f}</span>
+                  <span>
+                    {f === 'sma20_sma50' ? 'SMA 20/50' : 
+                     f === 'sma50_sma200' ? 'SMA 50/200' : 
+                     f}
+                  </span>
                   <span style={{ fontSize: '8px', opacity: 0.6 }}>{filterCounts[f]}</span>
                 </button>
               ))}

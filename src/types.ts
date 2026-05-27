@@ -29,6 +29,8 @@ export type Ticker = {
     avgVolume?: string;
     earningsDate?: string;
     ipoDate?: string;
+    crossover_sma20_sma50?: boolean;
+    crossover_sma50_sma200?: boolean;
   };
   isOwned?: boolean;
   badges?: string[];
@@ -122,7 +124,7 @@ export interface TickerNotification {
   symbol: string;
   message: string;
   timestamp: string;
-  type: 'price' | 'changePercent' | 'crossover' | 'sma10' | 'sma20' | 'sma50' | 'sma100' | 'sma200' | 'earnings';
+  type: 'price' | 'changePercent' | 'crossover' | 'sma10' | 'sma20' | 'sma50' | 'sma100' | 'sma200' | 'earnings' | 'sma20_sma50' | 'sma50_sma200';
   isRead: boolean;
 }
 
