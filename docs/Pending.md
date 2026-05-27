@@ -2,10 +2,10 @@
 
 
 ## Later maybe
+- In the Market Overview Table after Chage % can you add P/E and after Sector can you add 52 week range.
 - Can you make the vertical spacing even between the 4 labels in the sidebar (when collapsed they look slighlty missaligned). Add screenshot.
 - Could you also do toggle buttons for Pinned, Groups, Ungrouped and Archive in the settings modal.
 - % vs Earnings? (Earnings flagged as % or both?).
-- Crossover SMA 20/50, SMA 50/200.
 - Kebab style buttons for managing groups and lists in the sidebar. (3 vertical dots with a menu).
 - Add a portfolio button that opens up a portfolio modal to manage Quantity and Average Price per ticker. The modal should also include  the Gain/Loss in numbers and percentages.
 - Select a single notification to view details or delete it.
@@ -88,4 +88,4 @@
 ~~- Add a volume vs avg. volume filter with 2x, 3x, 4x, 5x+ buttons in the notifications modal.~~
 ~~- Display daily volume in parentheses after average volume in the deep dive modal.~~
 ~~- Sort button for PINNED, and GROUPS, like the others have.~~
-
+~~- Crossover SMA 20/50, SMA 50/200.~~
