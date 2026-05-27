@@ -23,7 +23,8 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   onSelectTicker,
   allTickers
 }) => {
-  const [timeFilter, setTimeFilter] = React.useState<'today' | 'yesterday' | 'week' | 'all'>('all');
+  const [sliderDays, setSliderDays] = React.useState<number>(30);
+  const [sliderMode, setSliderMode] = React.useState<'before' | 'after'>('after');
   const [typeFilter, setTypeFilter] = React.useState<'all' | 'price' | 'changePercent' | 'crossover' | 'sma10' | 'sma20' | 'sma50' | 'sma100' | 'sma200' | 'sma20_sma50' | 'sma50_sma200' | 'earnings' | 'earningsBeat' | 'earningsMiss'>('all');
   const [directionFilter, setDirectionFilter] = React.useState<'all' | 'above' | 'below'>('all');
   const [searchQuery, setSearchQuery] = React.useState('');
@@ -35,28 +36,24 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   const [showFilters, setShowFilters] = React.useState(true);
 
   const timeFilteredNotifications = React.useMemo(() => {
-    if (timeFilter === 'all') return notifications;
-    const now = new Date();
-    const cutoff = new Date();
-    if (timeFilter === 'today') {
-      cutoff.setHours(0, 0, 0, 0);
-      return notifications.filter(n => new Date(n.timestamp) >= cutoff);
-    } else if (timeFilter === 'yesterday') {
-      const start = new Date();
-      start.setDate(now.getDate() - 1);
-      start.setHours(0, 0, 0, 0);
-      const end = new Date();
-      end.setHours(0, 0, 0, 0);
-      return notifications.filter(n => {
-        const d = new Date(n.timestamp);
-        return d >= start && d < end;
-      });
-    } else if (timeFilter === 'week') {
-      cutoff.setDate(now.getDate() - 7);
-      return notifications.filter(n => new Date(n.timestamp) >= cutoff);
-    }
-    return notifications;
-  }, [notifications, timeFilter]);
+    const getDaysDiff = (timestamp: string) => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const date = new Date(timestamp);
+      date.setHours(0, 0, 0, 0);
+      const diffTime = today.getTime() - date.getTime();
+      return Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
+    };
+
+    return notifications.filter(n => {
+      const diff = getDaysDiff(n.timestamp);
+      if (sliderMode === 'after') {
+        return diff <= sliderDays;
+      } else {
+        return diff >= sliderDays;
+      }
+    });
+  }, [notifications, sliderDays, sliderMode]);
 
   const filterCounts = React.useMemo(() => {
     // Calculate direction counts based only on time filter
@@ -245,33 +242,8 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   }, [timeFilteredNotifications, typeFilter, directionFilter, searchQuery, fiftyTwoWeekFilter, fiftyTwoWeekDirection, peFilter, peDirection, volumeFilter, allTickers]);
 
   const topTickers = React.useMemo(() => {
-    // We only filter by time for the "Frequent" calculation
-    let timeFiltered = notifications;
-    if (timeFilter !== 'all') {
-      const now = new Date();
-      if (timeFilter === 'today') {
-        const cutoff = new Date();
-        cutoff.setHours(0, 0, 0, 0);
-        timeFiltered = timeFiltered.filter(n => new Date(n.timestamp) >= cutoff);
-      } else if (timeFilter === 'yesterday') {
-        const start = new Date();
-        start.setDate(now.getDate() - 1);
-        start.setHours(0, 0, 0, 0);
-        const end = new Date();
-        end.setHours(0, 0, 0, 0);
-        timeFiltered = timeFiltered.filter(n => {
-          const d = new Date(n.timestamp);
-          return d >= start && d < end;
-        });
-      } else if (timeFilter === 'week') {
-        const cutoff = new Date();
-        cutoff.setDate(now.getDate() - 7);
-        timeFiltered = timeFiltered.filter(n => new Date(n.timestamp) >= cutoff);
-      }
-    }
-
     const counts: Record<string, number> = {};
-    timeFiltered.forEach(n => {
+    timeFilteredNotifications.forEach(n => {
       counts[n.symbol] = (counts[n.symbol] || 0) + 1;
     });
 
@@ -280,10 +252,11 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       .sort((a, b) => b[1] - a[1])
       .slice(0, 6)
       .map(([symbol]) => symbol);
-  }, [notifications, timeFilter]);
+  }, [timeFilteredNotifications]);
 
   const handleResetFilters = () => {
-    setTimeFilter('all');
+    setSliderDays(30);
+    setSliderMode('after');
     setTypeFilter('all');
     setDirectionFilter('all');
     setSearchQuery('');
@@ -296,14 +269,14 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
 
   const activeFilterCount = React.useMemo(() => {
     let count = 0;
-    if (timeFilter !== 'all') count++;
+    if (sliderDays !== 30 || sliderMode !== 'after') count++;
     if (typeFilter !== 'all') count++;
     if (directionFilter !== 'all') count++;
     if (fiftyTwoWeekDirection !== 'none') count++;
     if (peDirection !== 'none') count++;
     if (volumeFilter !== 'none') count++;
     return count;
-  }, [timeFilter, typeFilter, directionFilter, fiftyTwoWeekDirection, peDirection, volumeFilter]);
+  }, [sliderDays, sliderMode, typeFilter, directionFilter, fiftyTwoWeekDirection, peDirection, volumeFilter]);
 
   React.useEffect(() => {
     if (isOpen && notifications.some(n => !n.isRead)) {
@@ -320,7 +293,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Bell size={20} color="var(--accent)" />
             <h3 style={{ margin: 0 }}>Notifications ({filteredNotifications.length})</h3>
-            {(timeFilter !== 'all' || typeFilter !== 'all' || directionFilter !== 'all' || searchQuery || fiftyTwoWeekDirection !== 'none' || peDirection !== 'none' || volumeFilter !== 'none') && (
+            {(sliderDays !== 30 || sliderMode !== 'after' || typeFilter !== 'all' || directionFilter !== 'all' || searchQuery || fiftyTwoWeekDirection !== 'none' || peDirection !== 'none' || volumeFilter !== 'none') && (
               <button 
                 className="btn" 
                 onClick={handleResetFilters}
@@ -375,8 +348,8 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-          <div style={{ position: 'relative', flex: 1 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
+          <div style={{ position: 'relative', width: '100%' }}>
             <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }} />
             <input 
               type="text" 
@@ -415,25 +388,166 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
               </button>
             )}
           </div>
-          <div style={{ display: 'flex', background: 'var(--surface-subtle)', borderRadius: '8px', padding: '2px', border: '1px solid var(--border-color)' }}>
-            {(['today', 'yesterday', 'week', 'all'] as const).map(f => (
-              <button 
-                key={f}
-                onClick={() => setTimeFilter(f)}
-                style={{ 
-                  padding: '4px 8px', 
-                  fontSize: '10px', 
+
+          {/* Date Slider Filter Row */}
+          <div style={{ 
+            background: 'var(--surface-subtle)', 
+            borderRadius: '8px', 
+            padding: '10px', 
+            border: '1px solid var(--border-color)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                CREATION DATE: {sliderDays === 30 && sliderMode === 'after' ? 'ALL' : sliderMode === 'after' ? `LAST ${sliderDays} DAY${sliderDays !== 1 ? 'S' : ''}` : `OLDER THAN ${sliderDays} DAY${sliderDays !== 1 ? 'S' : ''}`}
+              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  <button
+                    onClick={() => { setSliderDays(30); setSliderMode('after'); }}
+                    style={{
+                      padding: '2px 6px',
+                      fontSize: '9px',
+                      borderRadius: '4px',
+                      background: sliderDays === 30 && sliderMode === 'after' ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
+                      color: sliderDays === 30 && sliderMode === 'after' ? 'white' : 'var(--text-secondary)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      cursor: 'pointer',
+                      fontWeight: 600
+                    }}
+                  >
+                    All
+                  </button>
+                  <button
+                    onClick={() => { setSliderDays(0); setSliderMode('after'); }}
+                    style={{
+                      padding: '2px 6px',
+                      fontSize: '9px',
+                      borderRadius: '4px',
+                      background: sliderDays === 0 && sliderMode === 'after' ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
+                      color: sliderDays === 0 && sliderMode === 'after' ? 'white' : 'var(--text-secondary)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      cursor: 'pointer',
+                      fontWeight: 600
+                    }}
+                  >
+                    Today
+                  </button>
+                  <button
+                    onClick={() => { setSliderDays(1); setSliderMode('after'); }}
+                    style={{
+                      padding: '2px 6px',
+                      fontSize: '9px',
+                      borderRadius: '4px',
+                      background: sliderDays === 1 && sliderMode === 'after' ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
+                      color: sliderDays === 1 && sliderMode === 'after' ? 'white' : 'var(--text-secondary)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      cursor: 'pointer',
+                      fontWeight: 600
+                    }}
+                  >
+                    Yesterday
+                  </button>
+                  <button
+                    onClick={() => { setSliderDays(7); setSliderMode('after'); }}
+                    style={{
+                      padding: '2px 6px',
+                      fontSize: '9px',
+                      borderRadius: '4px',
+                      background: sliderDays === 7 && sliderMode === 'after' ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
+                      color: sliderDays === 7 && sliderMode === 'after' ? 'white' : 'var(--text-secondary)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      cursor: 'pointer',
+                      fontWeight: 600
+                    }}
+                  >
+                    Week
+                  </button>
+                </div>
+                <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderRadius: '6px', padding: '2px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                  {(['before', 'after'] as const).map(mode => (
+                    <button
+                      key={mode}
+                      onClick={() => setSliderMode(mode)}
+                      style={{
+                        padding: '2px 8px',
+                        fontSize: '9px',
+                        borderRadius: '4px',
+                        background: sliderMode === mode ? 'var(--accent)' : 'transparent',
+                        color: sliderMode === mode ? 'white' : 'var(--text-secondary)',
+                        border: 'none',
+                        cursor: 'pointer',
+                        textTransform: 'uppercase',
+                        fontWeight: 600
+                      }}
+                    >
+                      {mode}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <button
+                onClick={() => setSliderDays(prev => Math.max(0, prev - 1))}
+                style={{
+                  padding: '4px 10px',
+                  fontSize: '11px',
                   borderRadius: '6px',
-                  background: timeFilter === f ? 'var(--accent)' : 'transparent',
-                  color: timeFilter === f ? 'white' : 'var(--text-secondary)',
-                  border: 'none',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  color: 'var(--text-primary)',
                   cursor: 'pointer',
-                  textTransform: 'capitalize'
+                  minWidth: '28px',
+                  fontWeight: 'bold',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
                 }}
+                disabled={sliderDays <= 0}
               >
-                {f}
+                -
               </button>
-            ))}
+              <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <input 
+                  type="range" 
+                  min="0" 
+                  max="30" 
+                  value={sliderDays}
+                  onChange={(e) => setSliderDays(parseInt(e.target.value))}
+                  style={{ 
+                    width: '100%',
+                    accentColor: 'var(--accent)',
+                    height: '4px',
+                    borderRadius: '2px',
+                    outline: 'none',
+                    cursor: 'pointer'
+                  }}
+                />
+              </div>
+              <button
+                onClick={() => setSliderDays(prev => Math.min(30, prev + 1))}
+                style={{
+                  padding: '4px 10px',
+                  fontSize: '11px',
+                  borderRadius: '6px',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  color: 'var(--text-primary)',
+                  cursor: 'pointer',
+                  minWidth: '28px',
+                  fontWeight: 'bold',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                disabled={sliderDays >= 30}
+              >
+                +
+              </button>
+            </div>
           </div>
         </div>
 
