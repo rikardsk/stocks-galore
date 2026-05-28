@@ -5,8 +5,11 @@
 - In the Market Overview Table after Chage % can you add P/E and after Sector can you add 52 week range.
 - Can you make the vertical spacing even between the 4 labels in the sidebar (when collapsed they look slighlty missaligned). Add screenshot.
 - Could you also do toggle buttons for Pinned, Groups, Ungrouped and Archive in the settings modal.
+- Be able to show/hide columns in Market Overview Table.
 - % vs Earnings? (Earnings flagged as % or both?).
 - Kebab style buttons for managing groups and lists in the sidebar. (3 vertical dots with a menu).
+- Auto delete after a certain time period (eg 1 month).
+- Auto create lists for last month with top performing stocks.
 - Add a portfolio button that opens up a portfolio modal to manage Quantity and Average Price per ticker. The modal should also include  the Gain/Loss in numbers and percentages.
 - Select a single notification to view details or delete it.
 - Hover button to delete notification

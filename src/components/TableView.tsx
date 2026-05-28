@@ -117,6 +117,13 @@ export const TableView: React.FC<TableViewProps> = ({
       } else if (sortConfig.key === 'changePercent') {
         aVal = parseFloat(a.stats.changePercent);
         bVal = parseFloat(b.stats.changePercent);
+      } else if (sortConfig.key === 'pe') {
+        aVal = a.stats.pe ?? Infinity;
+        bVal = b.stats.pe ?? Infinity;
+      } else if (sortConfig.key === 'week52Range') {
+        // Sort by 52w high descending by default
+        aVal = a.stats.high52 ?? 0;
+        bVal = b.stats.high52 ?? 0;
       } else if (sortConfig.key === 'marketCap') {
         // Simple string comparison for now, or we could parse it
         aVal = a.stats.marketCap;
@@ -305,6 +312,8 @@ export const TableView: React.FC<TableViewProps> = ({
                 <th onClick={() => requestSort('name')} style={thStyle} className="print-col">Name {getSortIcon('name')}</th>
                 <th onClick={() => requestSort('price')} style={thStyle} className="print-col">Price {getSortIcon('price')}</th>
                 <th onClick={() => requestSort('changePercent')} style={thStyle} className="print-col">Change % {getSortIcon('changePercent')}</th>
+                <th onClick={() => requestSort('week52Range')} style={thStyle} className="no-print">52W Range {getSortIcon('week52Range')}</th>
+                <th onClick={() => requestSort('pe')} style={thStyle} className="no-print">P/E {getSortIcon('pe')}</th>
                 <th onClick={() => requestSort('marketCap')} style={thStyle} className="print-col">Cap {getSortIcon('marketCap')}</th>
                 <th onClick={() => requestSort('sector')} style={thStyle} className="print-col">Sector {getSortIcon('sector')}</th>
                 <th style={thStyle}>Tags</th>
@@ -380,6 +389,46 @@ export const TableView: React.FC<TableViewProps> = ({
                     <td style={tdStyle} className="print-col">${ticker.stats?.price || '0.00'}</td>
                     <td style={{ ...tdStyle, color: changePct >= 0 ? '#10b981' : '#ef4444' }} className="print-col">
                       {ticker.stats?.changePercent || '0.00%'}
+                    </td>
+                    <td style={{ ...tdStyle, minWidth: '140px' }} className="no-print">
+                      {(ticker.stats?.low52 != null && ticker.stats?.high52 != null) ? (() => {
+                        const low = ticker.stats.low52!;
+                        const high = ticker.stats.high52!;
+                        const pct = high > low ? Math.max(0, Math.min(100, ((price - low) / (high - low)) * 100)) : 50;
+                        const dotColor = pct <= 30 ? '#ef4444' : pct >= 70 ? '#10b981' : '#f59e0b';
+                        return (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                            <div style={{ position: 'relative', height: '4px', borderRadius: '2px', background: 'var(--border-color)' }}>
+                              <div style={{
+                                position: 'absolute',
+                                left: 0, top: 0, bottom: 0,
+                                width: `${pct}%`,
+                                borderRadius: '2px',
+                                background: `linear-gradient(to right, #ef4444, ${dotColor})`
+                              }} />
+                              <div style={{
+                                position: 'absolute',
+                                top: '50%',
+                                left: `${pct}%`,
+                                transform: 'translate(-50%, -50%)',
+                                width: '8px', height: '8px',
+                                borderRadius: '50%',
+                                background: dotColor,
+                                boxShadow: `0 0 4px ${dotColor}`,
+                                border: '1.5px solid var(--surface-modal)'
+                              }} />
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--text-secondary)' }}>
+                              <span style={{ color: '#ef4444' }}>${low.toFixed(0)}</span>
+                              <span style={{ color: dotColor, fontWeight: 600 }}>{pct.toFixed(0)}%</span>
+                              <span style={{ color: '#10b981' }}>${high.toFixed(0)}</span>
+                            </div>
+                          </div>
+                        );
+                      })() : <span style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>N/A</span>}
+                    </td>
+                    <td style={{ ...tdStyle, color: 'var(--text-secondary)' }} className="no-print">
+                      {ticker.stats?.pe != null ? ticker.stats.pe.toFixed(1) : 'N/A'}
                     </td>
                     <td style={tdStyle} className="print-col">{formatMarketCap(ticker.stats?.marketCap)}</td>
                     <td style={tdStyle} className="print-col">{ticker.stats?.sector}</td>
