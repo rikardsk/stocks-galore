@@ -2,6 +2,7 @@
 
 
 ## Later maybe
+- In settings modal can you do two toggle buttons for tuning on/off the crossover of SMA10 and SMA20 in the Notifications. If turned off it should not be calculated and notified. Can you also make some visual adjustment in Notifications modal if turned off so the user knows (like dim or some color or icon)
 - Can you make the vertical spacing even between the 4 labels in the sidebar (when collapsed they look slighlty missaligned). Add screenshot.
 - Could you also do toggle buttons for Pinned, Groups, Ungrouped and Archive in the settings modal.
 - Be able to show/hide columns in Market Overview Table.

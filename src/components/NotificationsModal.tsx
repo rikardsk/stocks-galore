@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Bell, Calendar, Search, TrendingUp, TrendingDown, AlertCircle, ChevronDown, ChevronUp, Filter } from 'lucide-react';
+import { X, Bell, BellOff, Calendar, Search, TrendingUp, TrendingDown, AlertCircle, ChevronDown, ChevronUp, Filter } from 'lucide-react';
 import type { TickerNotification, Ticker } from '../types';
 
 interface NotificationsModalProps {
@@ -11,6 +11,7 @@ interface NotificationsModalProps {
   onOpenAlerts: () => void;
   onSelectTicker: (ticker: Ticker) => void;
   allTickers: Ticker[];
+  smaNotificationsEnabled: { sma10: boolean; sma20: boolean };
 }
 
 export const NotificationsModal: React.FC<NotificationsModalProps> = ({
@@ -21,7 +22,8 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   onMarkRead,
   onOpenAlerts,
   onSelectTicker,
-  allTickers
+  allTickers,
+  smaNotificationsEnabled
 }) => {
   const [sliderDays, setSliderDays] = React.useState<number>(30);
   const [sliderMode, setSliderMode] = React.useState<'before' | 'after'>('after');
@@ -635,35 +637,46 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
             </div>
 
             <div style={{ display: 'flex', background: 'var(--surface-subtle)', borderRadius: '8px', padding: '2px', border: '1px solid var(--border-color)', marginBottom: '8px' }}>
-              {(['sma10', 'sma20', 'sma50', 'sma100', 'sma200', 'sma20_sma50', 'sma50_sma200'] as const).map(f => (
-                <button 
-                  key={f}
-                  onClick={() => setTypeFilter(typeFilter === f ? 'all' : f)}
-                  style={{ 
-                    flex: 1,
-                    padding: '4px 2px', 
-                    fontSize: '9px', 
-                    borderRadius: '6px',
-                    background: typeFilter === f ? 'var(--surface-hover)' : 'transparent',
-                    color: typeFilter === f ? 'var(--text-primary)' : 'var(--text-secondary)',
-                    border: 'none',
-                    cursor: 'pointer',
-                    textTransform: 'uppercase',
-                    fontWeight: typeFilter === f ? 700 : 400,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '2px'
-                  }}
-                >
-                  <span>
-                    {f === 'sma20_sma50' ? 'SMA 20/50' : 
-                     f === 'sma50_sma200' ? 'SMA 50/200' : 
-                     f}
-                  </span>
-                  <span style={{ fontSize: '8px', opacity: 0.6 }}>{filterCounts[f]}</span>
-                </button>
-              ))}
+              {(['sma10', 'sma20', 'sma50', 'sma100', 'sma200', 'sma20_sma50', 'sma50_sma200'] as const).map(f => {
+                const isDisabled =
+                  (f === 'sma10' && !smaNotificationsEnabled.sma10) ||
+                  (f === 'sma20' && !smaNotificationsEnabled.sma20);
+                return (
+                  <button 
+                    key={f}
+                    onClick={() => setTypeFilter(typeFilter === f ? 'all' : f)}
+                    title={isDisabled ? 'Notifications disabled in Settings' : undefined}
+                    style={{ 
+                      flex: 1,
+                      padding: '4px 2px', 
+                      fontSize: '9px', 
+                      borderRadius: '6px',
+                      background: typeFilter === f ? 'var(--surface-hover)' : 'transparent',
+                      color: isDisabled
+                        ? 'rgba(239,68,68,0.55)'
+                        : typeFilter === f ? 'var(--text-primary)' : 'var(--text-secondary)',
+                      border: 'none',
+                      cursor: 'pointer',
+                      textTransform: 'uppercase',
+                      fontWeight: typeFilter === f ? 700 : 400,
+                      opacity: isDisabled ? 0.55 : 1,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '2px',
+                      position: 'relative'
+                    }}
+                  >
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                      {isDisabled && <BellOff size={7} style={{ flexShrink: 0 }} />}
+                      {f === 'sma20_sma50' ? 'SMA 20/50' : 
+                       f === 'sma50_sma200' ? 'SMA 50/200' : 
+                       f}
+                    </span>
+                    <span style={{ fontSize: '8px', opacity: 0.6 }}>{filterCounts[f]}</span>
+                  </button>
+                );
+              })}
             </div>
 
             {/* 52 Week Filter UI */}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sun, Moon } from 'lucide-react';
+import { Sun, Moon, BellOff, Bell } from 'lucide-react';
 
 export type RefreshInterval = 'manual' | '1m' | '5m' | '15m';
 
@@ -13,6 +13,8 @@ interface SettingsModalProps {
   onToggleTheme: () => void;
   searchCharLimit: number;
   onSearchCharLimitChange: (limit: number) => void;
+  smaNotificationsEnabled: { sma10: boolean; sma20: boolean };
+  onSmaNotificationToggle: (key: 'sma10' | 'sma20') => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -25,6 +27,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onToggleTheme,
   searchCharLimit,
   onSearchCharLimitChange,
+  smaNotificationsEnabled,
+  onSmaNotificationToggle,
 }) => {
   if (!isOpen) return null;
 
@@ -117,6 +121,76 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             >
               <Sun size={16} /> Light
             </button>
+          </div>
+        </div>
+
+        {/* ── Notification Alerts ── */}
+        <div className="input-group" style={{ marginTop: '24px' }}>
+          <label style={{ marginBottom: '12px', display: 'block' }}>Crossover Notification Alerts</label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {(['sma10', 'sma20'] as const).map(key => {
+              const isOn = smaNotificationsEnabled[key];
+              const label = key === 'sma10' ? 'SMA 10 Crossover' : 'SMA 20 Crossover';
+              return (
+                <div
+                  key={key}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '10px 14px',
+                    borderRadius: '10px',
+                    border: `1px solid ${isOn ? 'rgba(99,102,241,0.35)' : 'var(--border-color)'}`,
+                    background: isOn ? 'rgba(99,102,241,0.07)' : 'var(--surface-subtle)',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    {isOn
+                      ? <Bell size={15} color="var(--accent)" />
+                      : <BellOff size={15} color="var(--text-secondary)" />}
+                    <span style={{
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      color: isOn ? 'var(--text-primary)' : 'var(--text-secondary)'
+                    }}>
+                      {label}
+                    </span>
+                  </div>
+                  {/* Toggle switch */}
+                  <button
+                    onClick={() => onSmaNotificationToggle(key)}
+                    style={{
+                      width: '44px',
+                      height: '24px',
+                      borderRadius: '12px',
+                      border: 'none',
+                      background: isOn ? 'var(--accent)' : 'rgba(255,255,255,0.12)',
+                      cursor: 'pointer',
+                      position: 'relative',
+                      transition: 'background 0.25s',
+                      flexShrink: 0
+                    }}
+                    aria-label={`Toggle ${label} notifications`}
+                  >
+                    <span style={{
+                      position: 'absolute',
+                      top: '3px',
+                      left: isOn ? '22px' : '3px',
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      background: 'white',
+                      transition: 'left 0.25s',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.3)'
+                    }} />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '8px' }}>
+            When off, no new crossover notifications will be generated for that SMA.
           </div>
         </div>
 

@@ -67,6 +67,19 @@ const App: React.FC = () => {
     return saved ? parseInt(saved, 10) : 3;
   });
 
+  const [smaNotificationsEnabled, setSmaNotificationsEnabled] = useState<{ sma10: boolean; sma20: boolean }>(() => {
+    const saved = localStorage.getItem('smaNotificationsEnabled');
+    return saved ? JSON.parse(saved) : { sma10: true, sma20: true };
+  });
+
+  const handleSmaNotificationToggle = (key: 'sma10' | 'sma20') => {
+    setSmaNotificationsEnabled(prev => {
+      const updated = { ...prev, [key]: !prev[key] };
+      localStorage.setItem('smaNotificationsEnabled', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   useEffect(() => {
     localStorage.setItem('searchCharLimit', searchCharLimit.toString());
   }, [searchCharLimit]);
@@ -401,6 +414,10 @@ const App: React.FC = () => {
       const prevPrice = price - change;
 
       [10, 20, 50, 100, 200].forEach(period => {
+        // Skip SMA10 / SMA20 if the user has disabled those notifications
+        if (period === 10 && !smaNotificationsEnabled.sma10) return;
+        if (period === 20 && !smaNotificationsEnabled.sma20) return;
+
         const smaKey = `sma${period}` as keyof typeof ticker.stats;
         const smaVal = ticker.stats[smaKey] as number | undefined;
 
@@ -1358,6 +1375,8 @@ const App: React.FC = () => {
         onToggleTheme={toggleTheme}
         searchCharLimit={searchCharLimit}
         onSearchCharLimitChange={setSearchCharLimit}
+        smaNotificationsEnabled={smaNotificationsEnabled}
+        onSmaNotificationToggle={handleSmaNotificationToggle}
       />
 
       <TableView 
@@ -1520,6 +1539,7 @@ const App: React.FC = () => {
           setShouldReopenNotifications(true);
         }}
         allTickers={allUniqueTickers}
+        smaNotificationsEnabled={smaNotificationsEnabled}
       />
 
       <AlertsModal 
