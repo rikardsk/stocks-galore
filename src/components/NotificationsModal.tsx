@@ -679,7 +679,39 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>52 Week Range</span>
-                <div style={{ display: 'flex', gap: '4px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    <button
+                      onClick={() => { setFiftyTwoWeekFilter(99); setFiftyTwoWeekDirection('above'); }}
+                      style={{
+                        padding: '2px 6px',
+                        fontSize: '9px',
+                        borderRadius: '4px',
+                        background: fiftyTwoWeekFilter === 99 && fiftyTwoWeekDirection === 'above' ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
+                        color: fiftyTwoWeekFilter === 99 && fiftyTwoWeekDirection === 'above' ? 'white' : 'var(--text-secondary)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        cursor: 'pointer',
+                        fontWeight: 600
+                      }}
+                    >
+                      ATH
+                    </button>
+                    <button
+                      onClick={() => { setFiftyTwoWeekFilter(1); setFiftyTwoWeekDirection('below'); }}
+                      style={{
+                        padding: '2px 6px',
+                        fontSize: '9px',
+                        borderRadius: '4px',
+                        background: fiftyTwoWeekFilter === 1 && fiftyTwoWeekDirection === 'below' ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
+                        color: fiftyTwoWeekFilter === 1 && fiftyTwoWeekDirection === 'below' ? 'white' : 'var(--text-secondary)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        cursor: 'pointer',
+                        fontWeight: 600
+                      }}
+                    >
+                      ATL
+                    </button>
+                  </div>
                   {(['above', 'below'] as const).map(dir => (
                     <button
                       key={dir}
@@ -702,7 +734,27 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ fontSize: '10px', color: 'var(--text-secondary)', width: '25px' }}>Low</span>
+                <button
+                  onClick={() => setFiftyTwoWeekFilter(prev => Math.max(0, prev - 1))}
+                  disabled={fiftyTwoWeekDirection === 'none' || fiftyTwoWeekFilter <= 0}
+                  style={{
+                    padding: '4px 10px',
+                    fontSize: '11px',
+                    borderRadius: '6px',
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    color: 'var(--text-primary)',
+                    cursor: fiftyTwoWeekDirection === 'none' || fiftyTwoWeekFilter <= 0 ? 'not-allowed' : 'pointer',
+                    minWidth: '28px',
+                    fontWeight: 'bold',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    opacity: fiftyTwoWeekDirection === 'none' ? 0.3 : 1
+                  }}
+                >
+                  -
+                </button>
                 <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center' }}>
                   <input 
                     type="range" 
@@ -738,7 +790,27 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                     </div>
                   )}
                 </div>
-                <span style={{ fontSize: '10px', color: 'var(--text-secondary)', width: '25px' }}>High</span>
+                <button
+                  onClick={() => setFiftyTwoWeekFilter(prev => Math.min(100, prev + 1))}
+                  disabled={fiftyTwoWeekDirection === 'none' || fiftyTwoWeekFilter >= 100}
+                  style={{
+                    padding: '4px 10px',
+                    fontSize: '11px',
+                    borderRadius: '6px',
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    color: 'var(--text-primary)',
+                    cursor: fiftyTwoWeekDirection === 'none' || fiftyTwoWeekFilter >= 100 ? 'not-allowed' : 'pointer',
+                    minWidth: '28px',
+                    fontWeight: 'bold',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    opacity: fiftyTwoWeekDirection === 'none' ? 0.3 : 1
+                  }}
+                >
+                  +
+                </button>
               </div>
             </div>
 
@@ -755,7 +827,39 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>P/E Ratio Filter</span>
-                <div style={{ display: 'flex', gap: '4px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    <button
+                      onClick={() => { setPeFilter(15); if (peDirection === 'none') setPeDirection('below'); }}
+                      style={{
+                        padding: '2px 6px',
+                        fontSize: '9px',
+                        borderRadius: '4px',
+                        background: peFilter === 15 && peDirection !== 'none' ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
+                        color: peFilter === 15 && peDirection !== 'none' ? 'white' : 'var(--text-secondary)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        cursor: 'pointer',
+                        fontWeight: 600
+                      }}
+                    >
+                      PE 15
+                    </button>
+                    <button
+                      onClick={() => { setPeFilter(20); if (peDirection === 'none') setPeDirection('below'); }}
+                      style={{
+                        padding: '2px 6px',
+                        fontSize: '9px',
+                        borderRadius: '4px',
+                        background: peFilter === 20 && peDirection !== 'none' ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
+                        color: peFilter === 20 && peDirection !== 'none' ? 'white' : 'var(--text-secondary)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        cursor: 'pointer',
+                        fontWeight: 600
+                      }}
+                    >
+                      PE 20
+                    </button>
+                  </div>
                   {(['above', 'below'] as const).map(dir => (
                     <button
                       key={dir}
@@ -778,7 +882,27 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ fontSize: '10px', color: 'var(--text-secondary)', width: '25px' }}>0</span>
+                <button
+                  onClick={() => setPeFilter(prev => Math.max(0, prev - 1))}
+                  disabled={peDirection === 'none' || peFilter <= 0}
+                  style={{
+                    padding: '4px 10px',
+                    fontSize: '11px',
+                    borderRadius: '6px',
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    color: 'var(--text-primary)',
+                    cursor: peDirection === 'none' || peFilter <= 0 ? 'not-allowed' : 'pointer',
+                    minWidth: '28px',
+                    fontWeight: 'bold',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    opacity: peDirection === 'none' ? 0.3 : 1
+                  }}
+                >
+                  -
+                </button>
                 <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center' }}>
                   <input 
                     type="range" 
@@ -816,7 +940,27 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                     </div>
                   )}
                 </div>
-                <span style={{ fontSize: '10px', color: 'var(--text-secondary)', width: '25px' }}>100+</span>
+                <button
+                  onClick={() => setPeFilter(prev => Math.min(100, prev + 1))}
+                  disabled={peDirection === 'none' || peFilter >= 100}
+                  style={{
+                    padding: '4px 10px',
+                    fontSize: '11px',
+                    borderRadius: '6px',
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    color: 'var(--text-primary)',
+                    cursor: peDirection === 'none' || peFilter >= 100 ? 'not-allowed' : 'pointer',
+                    minWidth: '28px',
+                    fontWeight: 'bold',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    opacity: peDirection === 'none' ? 0.3 : 1
+                  }}
+                >
+                  +
+                </button>
               </div>
             </div>
 

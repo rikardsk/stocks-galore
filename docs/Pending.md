@@ -2,7 +2,6 @@
 
 
 ## Later maybe
-- In the Market Overview Table after Chage % can you add P/E and after Sector can you add 52 week range.
 - Can you make the vertical spacing even between the 4 labels in the sidebar (when collapsed they look slighlty missaligned). Add screenshot.
 - Could you also do toggle buttons for Pinned, Groups, Ungrouped and Archive in the settings modal.
 - Be able to show/hide columns in Market Overview Table.
@@ -92,3 +91,5 @@
 ~~- Display daily volume in parentheses after average volume in the deep dive modal.~~
 ~~- Sort button for PINNED, and GROUPS, like the others have.~~
 ~~- Crossover SMA 20/50, SMA 50/200.~~
+~~- In the Market Overview Table after Chage % can you add P/E and after Sector can you add 52 week range.~~
+
