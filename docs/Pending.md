@@ -2,7 +2,6 @@
 
 
 ## Later maybe
-- Can you do shortcut keys for all the buttons on the buttonbar and update the current tooltip to show the shortcut. Ctrl-v for toggle sidebar,Ctrl-r to refresh, Ctrl-delete to clear, Ctrl-t for Market Table, Ctrl-a for anaytics, Ctrl-l for add new list, Ctrl-r for ranking, Ctrl-e for earnings calendar, Ctrl-x for search, Ctrl-f for filter, Ctrl-n for notifications, Ctrl-s for Settings.
 - Copy button in the header of all the lists in Top Performers. Copy as comma separated list.
 - Can you make the vertical spacing even between the 4 labels in the sidebar (when collapsed they look slighlty missaligned). Add screenshot.
 - In the settings modal could you also do toggle buttons for Pinned, Groups, Ungrouped and Archive.
@@ -106,4 +105,5 @@
 ~~- Crossover SMA 20/50, SMA 50/200.~~
 ~~- In the Market Overview Table after Chage % can you add P/E and after Sector can you add 52 week range.~~
 ~~- In settings modal can you do two toggle buttons for tuning on/off the crossover of SMA10 and SMA20 in the Notifications. If turned off it should not be calculated and notified. Can you also make some visual adjustment in Notifications modal if turned off so the user knows (like dim or some color or icon)~~
+~~- Can you do shortcut keys for all the buttons on the buttonbar and update the current tooltip to show the shortcut. Ctrl-v for toggle sidebar,Ctrl-r to refresh, Ctrl-delete to clear, Ctrl-t for Market Table, Ctrl-a for anaytics, Ctrl-l for add new list, Ctrl-r for ranking, Ctrl-e for earnings calendar, Ctrl-x for search, Ctrl-f for filter, Ctrl-n for notifications, Ctrl-s for Settings.~~
 
