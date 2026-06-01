@@ -18,6 +18,7 @@ import { StockDetailModal } from './components/StockDetailModal';
 import { SearchChoiceModal } from './components/SearchChoiceModal';
 import { AssignGroupModal } from './components/AssignGroupModal';
 import { EarningsModal } from './components/EarningsModal';
+import { ShortcutsModal } from './components/ShortcutsModal';
 import './index.css';
 
 const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
@@ -37,6 +38,7 @@ const App: React.FC = () => {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastType, setToastType] = useState<'error' | 'success' | 'warning'>('error');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   
   const [globalFilters, setGlobalFilters] = useState<StockFilters>(EMPTY_FILTERS);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
@@ -60,6 +62,7 @@ const App: React.FC = () => {
   const [shouldReopenRanking, setShouldReopenRanking] = useState(false);
   const [shouldReopenAnalytics, setShouldReopenAnalytics] = useState(false);
   const [isEarningsOpen, setIsEarningsOpen] = useState(false);
+  const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
   const [shouldReopenEarnings, setShouldReopenEarnings] = useState(false);
   const [theme, setTheme] = useState<'dark' | 'light'>(() => (localStorage.getItem('theme') as 'dark' | 'light') || 'dark');
   const [searchCharLimit, setSearchCharLimit] = useState<number>(() => {
@@ -1127,6 +1130,76 @@ const App: React.FC = () => {
     }
   };
 
+  const closeAllModals = () => {
+    setIsCreateModalOpen(false);
+    setIsAddTickerModalOpen(false);
+    setIsCreateGroupModalOpen(false);
+    setIsFilterModalOpen(false);
+    setIsSettingsModalOpen(false);
+    setIsTableViewOpen(false);
+    setIsAnalyticsOpen(false);
+    setIsRankingOpen(false);
+    setIsEarningsOpen(false);
+    setIsSearchModalOpen(false);
+    setSelectedDetailTicker(null);
+    setIsNotificationsModalOpen(false);
+    setIsAlertsModalOpen(false);
+    setIsAssignGroupModalOpen(false);
+    setIsShortcutsModalOpen(false);
+  };
+
+  const isTyping = (el: Element | null): boolean => {
+    if (!el) return false;
+    const tag = el.tagName;
+    return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (el as HTMLElement).isContentEditable;
+  };
+
+  const handleShortcut = (key: string, shift: boolean) => {
+    switch (key) {
+      case 'v': return setIsTableViewOpen(true);
+      case 'd': return shift ? handleRefreshAll() : undefined;
+      case 'delete': return handleClearWorkbench();
+      case 'r': return setIsRankingOpen(true);
+      case 'a': return setIsNotificationsModalOpen(true);
+      case 'n': return setIsAnalyticsOpen(true);
+      case 's': return shift ? setIsSidebarCollapsed(prev => !prev) : setIsSettingsModalOpen(true);
+      case 'l': return setIsCreateModalOpen(true);
+      case 'e': return setIsEarningsOpen(true);
+      case 'x': return setIsSearchExpanded(prev => {
+        if (prev) setSearchQuery('');
+        return !prev;
+      });
+      case 'f': return setIsFilterModalOpen(true);
+      case 'k': return setIsShortcutsModalOpen(true);
+      default: return;
+    }
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closeAllModals();
+        return;
+      }
+      if (isTyping(document.activeElement)) return;
+      if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
+      
+      const key = e.key.toLowerCase();
+      if (key === 'r' && e.shiftKey) return;
+      
+      const supported = ['v', 'd', 'delete', 'r', 'a', 'n', 's', 'l', 'e', 'x', 'f', 'k'];
+      if (!supported.includes(key)) return;
+      
+      e.preventDefault();
+      handleShortcut(key, e.shiftKey);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [lists, isSearchExpanded]);
+
   return (
     <div className={`app-container ${theme === 'light' ? 'light-theme' : ''}`}>
       <Sidebar 
@@ -1253,6 +1326,14 @@ const App: React.FC = () => {
           onOpenEarnings={() => setIsEarningsOpen(true)}
           unreadCount={notifications.filter(n => !n.isRead).length}
           activeFilterCount={countActiveFilters(globalFilters)}
+          isSearchExpanded={isSearchExpanded}
+          onSearchToggle={() => {
+            if (isSearchExpanded) {
+              setSearchQuery('');
+            }
+            setIsSearchExpanded(!isSearchExpanded);
+          }}
+          onOpenShortcuts={() => setIsShortcutsModalOpen(true)}
         />
       </div>
 
@@ -1548,6 +1629,11 @@ const App: React.FC = () => {
         alerts={alerts}
         onAddAlert={handleAddAlert}
         onDeleteAlert={handleDeleteAlert}
+      />
+
+      <ShortcutsModal 
+        isOpen={isShortcutsModalOpen} 
+        onClose={() => setIsShortcutsModalOpen(false)} 
       />
 
       <AssignGroupModal 

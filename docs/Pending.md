@@ -2,9 +2,21 @@
 
 
 ## Later maybe
+- Can you do shortcut keys for all the buttons on the buttonbar and update the current tooltip to show the shortcut. Ctrl-v for toggle sidebar,Ctrl-r to refresh, Ctrl-delete to clear, Ctrl-t for Market Table, Ctrl-a for anaytics, Ctrl-l for add new list, Ctrl-r for ranking, Ctrl-e for earnings calendar, Ctrl-x for search, Ctrl-f for filter, Ctrl-n for notifications, Ctrl-s for Settings.
 - Copy button in the header of all the lists in Top Performers. Copy as comma separated list.
 - Can you make the vertical spacing even between the 4 labels in the sidebar (when collapsed they look slighlty missaligned). Add screenshot.
-- Could you also do toggle buttons for Pinned, Groups, Ungrouped and Archive in the settings modal.
+- In the settings modal could you also do toggle buttons for Pinned, Groups, Ungrouped and Archive.
+- When adding a ticker check portfolio and watchlist and highlight those icons acordingly.
+- Z-index when moving a list by drag and drop it should always be on top (sometimes it is behind the list above). The last shown should be on top. 
+- Be able to move/drag the button bar at the bottom. And dock it to top, bottom, right but not left.
+- Toggle sidebar should slide out from the right instead of pushing the content to the left.
+- Sort by price as an option when choosing sorting method on lists.
+- Custom menu on right click. (As an option in settings modal).
+- Some way to monitor localStorage usage and how full it is. (What's the limit?).
+- Some way to show if the company is profitable or not.
+- Some way to show how much debt the company has.
+- Is it possible to show the price of Bitcoin and Etherum?
+- Ctrl + Del as a shortcut to clear the workbench, same as pressing the button(with confirmation).
 - Be able to show/hide columns in Market Overview Table.
 - % vs Earnings? (Earnings flagged as % or both?).
 - Kebab style buttons for managing groups and lists in the sidebar. (3 vertical dots with a menu).
