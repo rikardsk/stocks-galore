@@ -14,6 +14,7 @@
 
 
 ## Testing & Git
+- Don't run browser tests without me asking you to do so.
 - Don't run git commands without me asking you to do so.
 - Write tests for logic changes.
 - Use conventional commits (feat:, fix:).

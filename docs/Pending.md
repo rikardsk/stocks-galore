@@ -2,20 +2,21 @@
 
 
 ## Later maybe
-- Copy button in the header of all the lists in Top Performers. Copy as comma separated list.
+- Can you add "Copy" button in the header of all the lists in Top Performers modal. Copy as comma separated list of tickers used to create a new list.
 - Can you make the vertical spacing even between the 4 labels in the sidebar (when collapsed they look slighlty missaligned). Add screenshot.
 - In the settings modal could you also do toggle buttons for Pinned, Groups, Ungrouped and Archive.
 - When adding a ticker check portfolio and watchlist and highlight those icons acordingly.
-- Z-index when moving a list by drag and drop it should always be on top (sometimes it is behind the list above). The last shown should be on top. 
-- Be able to move/drag the button bar at the bottom. And dock it to top, bottom, right but not left.
 - Toggle sidebar should slide out from the right instead of pushing the content to the left.
-- Sort by price as an option when choosing sorting method on lists.
+- Z-index when moving a list by drag and drop it should always be on top (sometimes it is behind the list above). The last shown should be on top. 
+- In the settings modal, can you make it possible to choose buttonbar position (bottom, top, right) in settings. Bottom is the default.
+- Can you make the search text field in the button bar bigger? and make so esc also cancels the search action (same as clicking the x).
+- Be able to move/drag the button bar at the bottom. And dock it to top, bottom, right but not left.
+- Sort by price as an option when choosing sorting method on lists (Ctrl + Shift + P).
 - Custom menu on right click. (As an option in settings modal).
 - Some way to monitor localStorage usage and how full it is. (What's the limit?).
-- Some way to show if the company is profitable or not.
-- Some way to show how much debt the company has.
+- Some way to show if the company is profitable or not (Tag: Not profitable).
+- Some way to show how much debt the company has (Tag: Low debt / High debt).
 - Is it possible to show the price of Bitcoin and Etherum?
-- Ctrl + Del as a shortcut to clear the workbench, same as pressing the button(with confirmation).
 - Be able to show/hide columns in Market Overview Table.
 - % vs Earnings? (Earnings flagged as % or both?).
 - Kebab style buttons for managing groups and lists in the sidebar. (3 vertical dots with a menu).
@@ -106,4 +107,7 @@
 ~~- In the Market Overview Table after Chage % can you add P/E and after Sector can you add 52 week range.~~
 ~~- In settings modal can you do two toggle buttons for tuning on/off the crossover of SMA10 and SMA20 in the Notifications. If turned off it should not be calculated and notified. Can you also make some visual adjustment in Notifications modal if turned off so the user knows (like dim or some color or icon)~~
 ~~- Can you do shortcut keys for all the buttons on the buttonbar and update the current tooltip to show the shortcut. Ctrl-v for toggle sidebar,Ctrl-r to refresh, Ctrl-delete to clear, Ctrl-t for Market Table, Ctrl-a for anaytics, Ctrl-l for add new list, Ctrl-r for ranking, Ctrl-e for earnings calendar, Ctrl-x for search, Ctrl-f for filter, Ctrl-n for notifications, Ctrl-s for Settings.~~
+~~- Ctrl + Del as a shortcut to clear the workbench, same as pressing the button(with confirmation).~~
+~~- In the settings modal, can you make a toggle button to show/hide the buttonbar.~~
+
 

@@ -25,6 +25,7 @@ const SHORTCUTS_DATA: ShortcutItem[] = [
   { keys: ['Ctrl', 'F'], description: 'Open Filter' },
   { keys: ['Ctrl', 'A'], description: 'Open Notifications' },
   { keys: ['Ctrl', 'S'], description: 'Open Settings' },
+  { keys: ['Ctrl', 'Space'], description: 'Toggle Button Bar' },
 ];
 
 export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose }) => {

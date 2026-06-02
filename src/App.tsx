@@ -86,6 +86,19 @@ const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('searchCharLimit', searchCharLimit.toString());
   }, [searchCharLimit]);
+
+  const [showButtonBar, setShowButtonBar] = useState<boolean>(() => {
+    const saved = localStorage.getItem('showButtonBar');
+    return saved !== 'false';
+  });
+
+  const handleToggleButtonBar = () => {
+    setShowButtonBar(prev => {
+      const next = !prev;
+      localStorage.setItem('showButtonBar', next.toString());
+      return next;
+    });
+  };
   
   const [newListName, setNewListName] = useState('');
   const [newListColor, setNewListColor] = useState(COLORS[0]);
@@ -1184,6 +1197,12 @@ const App: React.FC = () => {
       if (isTyping(document.activeElement)) return;
       if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
       
+      if (e.key === ' ') {
+        e.preventDefault();
+        handleToggleButtonBar();
+        return;
+      }
+      
       const key = e.key.toLowerCase();
       if (key === 'r' && e.shiftKey) return;
       
@@ -1309,32 +1328,34 @@ const App: React.FC = () => {
           </div>
         </main>
         
-        <Toolbar 
-          onCreateList={() => setIsCreateModalOpen(true)} 
-          onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          onRefreshAll={handleRefreshAll}
-          onClearWorkbench={handleClearWorkbench}
-          isRefreshing={isRefreshing}
-          searchQuery={searchQuery}
-          onSearchQueryChange={setSearchQuery}
-          onOpenFilter={() => setIsFilterModalOpen(true)}
-          onOpenSettings={() => setIsSettingsModalOpen(true)}
-          onOpenTable={() => setIsTableViewOpen(true)}
-          onOpenNotifications={() => setIsNotificationsModalOpen(true)}
-          onOpenAnalytics={() => setIsAnalyticsOpen(true)}
-          onOpenRanking={() => setIsRankingOpen(true)}
-          onOpenEarnings={() => setIsEarningsOpen(true)}
-          unreadCount={notifications.filter(n => !n.isRead).length}
-          activeFilterCount={countActiveFilters(globalFilters)}
-          isSearchExpanded={isSearchExpanded}
-          onSearchToggle={() => {
-            if (isSearchExpanded) {
-              setSearchQuery('');
-            }
-            setIsSearchExpanded(!isSearchExpanded);
-          }}
-          onOpenShortcuts={() => setIsShortcutsModalOpen(true)}
-        />
+        {showButtonBar && (
+          <Toolbar 
+            onCreateList={() => setIsCreateModalOpen(true)} 
+            onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            onRefreshAll={handleRefreshAll}
+            onClearWorkbench={handleClearWorkbench}
+            isRefreshing={isRefreshing}
+            searchQuery={searchQuery}
+            onSearchQueryChange={setSearchQuery}
+            onOpenFilter={() => setIsFilterModalOpen(true)}
+            onOpenSettings={() => setIsSettingsModalOpen(true)}
+            onOpenTable={() => setIsTableViewOpen(true)}
+            onOpenNotifications={() => setIsNotificationsModalOpen(true)}
+            onOpenAnalytics={() => setIsAnalyticsOpen(true)}
+            onOpenRanking={() => setIsRankingOpen(true)}
+            onOpenEarnings={() => setIsEarningsOpen(true)}
+            unreadCount={notifications.filter(n => !n.isRead).length}
+            activeFilterCount={countActiveFilters(globalFilters)}
+            isSearchExpanded={isSearchExpanded}
+            onSearchToggle={() => {
+              if (isSearchExpanded) {
+                setSearchQuery('');
+              }
+              setIsSearchExpanded(!isSearchExpanded);
+            }}
+            onOpenShortcuts={() => setIsShortcutsModalOpen(true)}
+          />
+        )}
       </div>
 
       {/* Create List Modal */}
@@ -1458,6 +1479,8 @@ const App: React.FC = () => {
         onSearchCharLimitChange={setSearchCharLimit}
         smaNotificationsEnabled={smaNotificationsEnabled}
         onSmaNotificationToggle={handleSmaNotificationToggle}
+        showButtonBar={showButtonBar}
+        onToggleButtonBar={handleToggleButtonBar}
       />
 
       <TableView 
