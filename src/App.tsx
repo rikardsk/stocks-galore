@@ -99,6 +99,16 @@ const App: React.FC = () => {
       return next;
     });
   };
+
+  const [buttonBarPosition, setButtonBarPosition] = useState<'bottom' | 'top' | 'right'>(() => {
+    const saved = localStorage.getItem('buttonBarPosition');
+    return (saved === 'bottom' || saved === 'top' || saved === 'right') ? saved : 'bottom';
+  });
+
+  const handleButtonBarPositionChange = (position: 'bottom' | 'top' | 'right') => {
+    setButtonBarPosition(position);
+    localStorage.setItem('buttonBarPosition', position);
+  };
   
   const [newListName, setNewListName] = useState('');
   const [newListColor, setNewListColor] = useState(COLORS[0]);
@@ -1354,6 +1364,7 @@ const App: React.FC = () => {
               setIsSearchExpanded(!isSearchExpanded);
             }}
             onOpenShortcuts={() => setIsShortcutsModalOpen(true)}
+            position={buttonBarPosition}
           />
         )}
       </div>
@@ -1481,6 +1492,8 @@ const App: React.FC = () => {
         onSmaNotificationToggle={handleSmaNotificationToggle}
         showButtonBar={showButtonBar}
         onToggleButtonBar={handleToggleButtonBar}
+        buttonBarPosition={buttonBarPosition}
+        onButtonBarPositionChange={handleButtonBarPositionChange}
       />
 
       <TableView 

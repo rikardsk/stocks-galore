@@ -21,16 +21,17 @@ interface ToolbarProps {
   isSearchExpanded: boolean;
   onSearchToggle: () => void;
   onOpenShortcuts?: () => void;
+  position?: 'bottom' | 'top' | 'right';
 }
 
 export const Toolbar: React.FC<ToolbarProps> = ({ 
   onCreateList, onToggleSidebar, onRefreshAll, onClearWorkbench, isRefreshing, 
   searchQuery, onSearchQueryChange, onOpenFilter, onOpenSettings, onOpenTable, 
   onOpenNotifications, onOpenAnalytics, onOpenRanking, onOpenEarnings, unreadCount = 0, activeFilterCount = 0,
-  isSearchExpanded, onSearchToggle, onOpenShortcuts
+  isSearchExpanded, onSearchToggle, onOpenShortcuts, position = 'bottom'
 }) => {
   return (
-    <div className="toolbar">
+    <div className={`toolbar position-${position}`}>
       <button className="btn" title="Toggle Sidebar (Ctrl+Shift+S)" onClick={onToggleSidebar}>
         <Layout size={20} />
       </button>

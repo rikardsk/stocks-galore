@@ -251,20 +251,41 @@ body {
 /* Floating Toolbar */
 .toolbar {
   position: absolute;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
   background: var(--surface-toolbar);
   backdrop-filter: blur(20px);
   border: 1px solid var(--border-color);
-  padding: 12px 24px;
   border-radius: 100px;
   display: flex;
   gap: 20px;
   box-shadow: var(--shadow-lg);
   z-index: 1000;
-  transition: bottom 0.3s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   align-items: center;
+}
+
+.toolbar.position-bottom {
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 24px;
+}
+
+.toolbar.position-top {
+  top: 24px;
+  bottom: auto;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 24px;
+}
+
+.toolbar.position-right {
+  right: 24px;
+  left: auto;
+  bottom: auto;
+  top: 50%;
+  transform: translateY(-50%);
+  flex-direction: column;
+  padding: 24px 12px;
 }
 
 .search-input {

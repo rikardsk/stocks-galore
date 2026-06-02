@@ -17,6 +17,8 @@ interface SettingsModalProps {
   onSmaNotificationToggle: (key: 'sma10' | 'sma20') => void;
   showButtonBar: boolean;
   onToggleButtonBar: () => void;
+  buttonBarPosition: 'bottom' | 'top' | 'right';
+  onButtonBarPositionChange: (position: 'bottom' | 'top' | 'right') => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -33,6 +35,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onSmaNotificationToggle,
   showButtonBar,
   onToggleButtonBar,
+  buttonBarPosition,
+  onButtonBarPositionChange,
 }) => {
   if (!isOpen) return null;
 
@@ -186,6 +190,39 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             When disabled, the bottom shortcut menu is hidden from view.
           </div>
         </div>
+
+        {/* ── Button Bar Position ── */}
+        {showButtonBar && (
+          <div className="input-group" style={{ marginTop: '24px' }}>
+            <label style={{ marginBottom: '12px', display: 'block' }}>Button Bar Position</label>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              {(['bottom', 'top', 'right'] as const).map(pos => {
+                const isActive = buttonBarPosition === pos;
+                return (
+                  <button
+                    key={pos}
+                    onClick={() => onButtonBarPositionChange(pos)}
+                    style={{
+                      flex: 1,
+                      padding: '10px',
+                      borderRadius: '10px',
+                      border: `2px solid ${isActive ? 'var(--accent)' : 'var(--border-color)'}`,
+                      background: isActive ? 'rgba(99, 102, 241, 0.1)' : 'var(--surface-subtle)',
+                      color: isActive ? 'var(--accent)' : 'var(--text-secondary)',
+                      cursor: 'pointer',
+                      fontSize: '13px',
+                      fontWeight: isActive ? 700 : 400,
+                      textTransform: 'capitalize',
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    {pos}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* ── Notification Alerts ── */}
         <div className="input-group" style={{ marginTop: '24px' }}>
