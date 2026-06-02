@@ -75,14 +75,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   const sortLists = (listsToSort: StockList[], order: StockList['sortOrder']) => {
-    if (order === 'none') return listsToSort;
+    if (order === 'none') {
+      return [...listsToSort].sort((a, b) => {
+        const timeA = a.createdAt || 0;
+        const timeB = b.createdAt || 0;
+        if (timeA !== timeB) return timeA - timeB;
+        return a.id.localeCompare(b.id);
+      });
+    }
     return [...listsToSort].sort((a, b) => {
+      const timeA = a.createdAt || 0;
+      const timeB = b.createdAt || 0;
       if (order === 'asc' || order === 'desc') {
         const comp = a.name.localeCompare(b.name);
-        return order === 'asc' ? comp : -comp;
+        if (comp !== 0) return order === 'asc' ? comp : -comp;
+        return timeA - timeB;
       } else {
         const comp = calculateAverageGain(a) - calculateAverageGain(b);
-        return order === 'gain-asc' ? comp : -comp;
+        if (comp !== 0) return order === 'gain-asc' ? comp : -comp;
+        return timeA - timeB;
       }
     });
   };

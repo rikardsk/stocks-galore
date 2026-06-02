@@ -30,7 +30,8 @@ export const storage = {
       isCollapsed: false,
       showStats: false,
       isVisible: true,
-      sortOrder: 'none'
+      sortOrder: 'none',
+      createdAt: Date.now()
     };
     const lists = storage.getLists();
     storage.saveLists([...lists, newList]);
@@ -71,10 +72,14 @@ export const storage = {
       return null;
     }
 
+    const portfolioList = lists.find(l => l.id === 'permanent-portfolio');
+    const isOwned = listId === 'permanent-portfolio' || (portfolioList?.tickers.some(t => t.symbol === symbol.toUpperCase()) || false);
+
     const newTicker: Ticker = {
       id: uuidv4(),
       symbol: symbol.toUpperCase(),
       name: mockInfo?.name || 'Unknown Company',
+      isOwned,
       stats: generateMockStats(),
     };
 

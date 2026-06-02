@@ -384,6 +384,14 @@ const App: React.FC = () => {
       }
     }
 
+    // Ensure all lists have a stable createdAt timestamp
+    currentLists.forEach((l, idx) => {
+      if (!l.createdAt) {
+        l.createdAt = Date.now() - (currentLists.length - idx) * 1000;
+        changed = true;
+      }
+    });
+
     if (changed) storage.saveLists(currentLists);
     
     setLists(currentLists);
@@ -821,10 +829,13 @@ const App: React.FC = () => {
 
         if (response.ok) {
           const data = await response.json();
+          const portfolioList = lists.find(l => l.id === PORTFOLIO_ID);
+          const isOwned = activeListId === PORTFOLIO_ID || (portfolioList?.tickers.some(t => t.symbol === data.symbol) || false);
           const newTicker = {
             id: uuidv4(),
             symbol: data.symbol,
             name: data.name,
+            isOwned,
             stats: {
               price: data.price.toString(),
               change: data.change.toString(),

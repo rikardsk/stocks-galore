@@ -53,6 +53,7 @@ export type StockList = {
   isPinnedHidden?: boolean;
   lastUpdated?: string;
   zIndex?: number;
+  createdAt?: number;
 };
 
 export const COUNTRY_FLAGS: Record<string, string> = {

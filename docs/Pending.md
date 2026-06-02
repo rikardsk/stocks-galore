@@ -3,7 +3,6 @@
 
 ## Later maybe
 - Can you make the vertical spacing even between the 4 labels in the sidebar (when collapsed they look slighlty missaligned). Add screenshot.
-- When adding a ticker to a list in the workbench, check if the ticker already exists in the portfolio-list or watchlist-list and highlight those icons acordingly (Remove from portfolio icon and the remove from watchlist icon). 
 - Add tag for "Not profitable", "Low debt", "High debt", "Dividend", " Growth".
 - Shortcut keys for "Add group", "Delete list", "Move list".
 - Change shortcut key for "Open Analytics". 
@@ -114,4 +113,6 @@
 ~~- In the settings modal could you also do toggle buttons to show/hide the Pinned, Groups, Ungrouped and Archive sections in the sidebar.~~
 ~~- Can you make so a new list doesn't spawn under the sidebar but a bit more to the right of the sidebar.~~
 ~~- Make the sorting of pinned lists stable when clicked or focused so they do not reorder to the bottom of the section in the sidebar.~~
+~~- When adding a ticker to a list in the workbench, check if the ticker already exists in the portfolio-list or watchlist-list and highlight those icons acordingly ("Remove from portfolio" icon and the "Remove from watchlist" icon).~~
+~~- Make the sorting of all sidebar lists stable when clicked or focused so they do not reorder/swap places (e.g. Test4 and Test5).~~
 
