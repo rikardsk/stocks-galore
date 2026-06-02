@@ -37,7 +37,7 @@ export const ListPanel: React.FC<ListPanelProps> = ({
   const [expandedTickerDescriptionId, setExpandedTickerDescriptionId] = useState<string | null>(null);
   const [isCopied, setIsCopied] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const nodeRef = useRef(null);
+  const nodeRef = useRef<HTMLDivElement>(null);
 
   const handleToggleCollapse = () => {
     setIsCollapsed(!isCollapsed);
@@ -68,6 +68,13 @@ export const ListPanel: React.FC<ListPanelProps> = ({
 
   const handleDrag = (_e: any, data: { x: number; y: number }) => {
     onUpdate({ ...list, position: { x: data.x, y: data.y } });
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    const isHeaderClick = (e.target as HTMLElement).closest('.panel-header') !== null;
+    if (!isHeaderClick) {
+      onUpdate(list);
+    }
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -132,6 +139,7 @@ export const ListPanel: React.FC<ListPanelProps> = ({
         ref={nodeRef}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
+        onMouseDown={handleMouseDown}
       >
         <div className="panel-header" style={{ 
           background: isBigGain 

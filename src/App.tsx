@@ -27,6 +27,8 @@ const PORTFOLIO_ID = 'permanent-portfolio';
 const TODAY_ID = 'permanent-today';
 const API_BASE_URL = 'http://localhost:8000';
 
+
+
 const App: React.FC = () => {
   const [lists, setLists] = useState<StockList[]>([]);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -614,7 +616,9 @@ const App: React.FC = () => {
   const handleCreateList = () => {
     if (!newListName.trim()) return;
     const newList = storage.createList(newListName, newListColor, newCountry);
-    setLists([...lists, newList]);
+    const nextLists = [...lists, newList];
+    setLists(nextLists);
+    storage.saveLists(nextLists);
     setNewListName('');
     setNewCountry('No Country');
     setIsCreateModalOpen(false);
@@ -623,7 +627,13 @@ const App: React.FC = () => {
   const handleHideList = (id: string, isVisible: boolean = false) => {
     const list = lists.find(l => l.id === id);
     if (list) {
-      handleUpdateList({ ...list, isVisible });
+      const updatedList = { ...list, isVisible };
+      const nextLists = lists.map(l => l.id === id ? updatedList : l);
+      const finalLists = isVisible 
+        ? [...nextLists.filter(l => l.id !== id), updatedList]
+        : nextLists;
+      storage.saveLists(finalLists);
+      setLists(finalLists);
     }
   };
 
@@ -696,8 +706,14 @@ const App: React.FC = () => {
       return l;
     });
 
-    storage.saveLists(syncedLists);
-    setLists(syncedLists);
+    // Move updatedList to the end of the array to make it render on top in the DOM
+    const target = syncedLists.find(l => l.id === updatedList.id);
+    const finalLists = target
+      ? [...syncedLists.filter(l => l.id !== updatedList.id), target]
+      : syncedLists;
+
+    storage.saveLists(finalLists);
+    setLists(finalLists);
   };
 
   const handleClearWorkbench = () => {

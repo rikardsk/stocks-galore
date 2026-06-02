@@ -148,6 +148,10 @@ body {
   cursor: default;
 }
 
+.list-panel.react-draggable-dragging {
+  z-index: 95 !important;
+}
+
 .panel-header {
   padding: 12px 16px;
   border-top-left-radius: 12px;
