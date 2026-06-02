@@ -3,16 +3,16 @@
 
 ## Later maybe
 - Can you make the vertical spacing even between the 4 labels in the sidebar (when collapsed they look slighlty missaligned). Add screenshot.
-- When adding a ticker check portfolio and watchlist and highlight those icons acordingly. 
+- When adding a ticker to a list in the workbench, check if the ticker already exists in the portfolio-list or watchlist-list and highlight those icons acordingly (Remove from portfolio icon and the remove from watchlist icon). 
 - Add tag for "Not profitable", "Low debt", "High debt", "Dividend", " Growth".
 - Shortcut keys for "Add group", "Delete list", "Move list".
 - Change shortcut key for "Open Analytics". 
 - Sort by price as an option when choosing sorting method on lists (Ctrl + Shift + P).
-- Be able to move/drag the button bar at the bottom. And dock it to top, bottom, right but not left.
-- Custom menu on right click. (As an option in settings modal).
 - Some way to monitor localStorage usage and how full it is. (What's the limit?).
 - Some way to show if the company is profitable or not (Tag: Not profitable).
 - Some way to show how much debt the company has (Tag: Low debt / High debt).
+- Be able to move/drag the button bar at the bottom. And dock it to top, bottom, right but not left.
+- Custom menu on right click. (As an option in settings modal).
 - Is it possible to show the price of Bitcoin and Etherum?
 - Be able to show/hide columns in Market Overview Table.
 - % vs Earnings? (Earnings flagged as % or both?).
@@ -112,4 +112,6 @@
 ~~- Toggle sidebar should slide out from the right instead of pushing the content to the left (absolute positioning).~~
 ~~- Adjust the Z-index so that when moving a list by drag and drop it is always on top of the other lists (now sometimes it's behind some of the lists). The last shown/added list should always be on top.~~
 ~~- In the settings modal could you also do toggle buttons to show/hide the Pinned, Groups, Ungrouped and Archive sections in the sidebar.~~
+~~- Can you make so a new list doesn't spawn under the sidebar but a bit more to the right of the sidebar.~~
+~~- Make the sorting of pinned lists stable when clicked or focused so they do not reorder to the bottom of the section in the sidebar.~~
 

@@ -266,7 +266,7 @@ const App: React.FC = () => {
         name: 'Watchlist',
         color: '#6366f1',
         tickers: [],
-        position: { x: 50, y: 50 },
+        position: { x: 320, y: 50 },
         isCollapsed: false,
         showStats: true,
         isVisible: true,
@@ -304,7 +304,7 @@ const App: React.FC = () => {
         name: 'Portfolio',
         color: '#f59e0b',
         tickers: [],
-        position: { x: 450, y: 50 }, // Offset from Watchlist (50, 50)
+        position: { x: 720, y: 50 }, // Offset from Watchlist (320, 50)
         isCollapsed: false,
         showStats: true,
         isVisible: true,
@@ -349,7 +349,7 @@ const App: React.FC = () => {
         name: 'Today',
         color: '#10b981',
         tickers: [],
-        position: { x: 850, y: 50 }, // Offset from Portfolio (450, 50)
+        position: { x: 1120, y: 50 }, // Offset from Portfolio (720, 50)
         isCollapsed: false,
         showStats: true,
         isVisible: true,

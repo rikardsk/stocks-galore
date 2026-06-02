@@ -26,7 +26,7 @@ export const storage = {
       color,
       country,
       tickers: [],
-      position: { x: 50, y: 50 },
+      position: { x: 320, y: 50 },
       isCollapsed: false,
       showStats: false,
       isVisible: true,

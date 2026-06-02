@@ -96,7 +96,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
     return total / list.tickers.length;
   };
 
-  const protectedLists = sortLists(lists.filter(list => list.isProtected && (!list.isPinnedHidden || isPinnedEditMode)), pinnedSort);
+  const STATIC_PINNED_ORDER = ['permanent-watchlist', 'permanent-portfolio', 'permanent-today'];
+  const protectedLists = pinnedSort === 'none'
+    ? [...lists.filter(list => list.isProtected && (!list.isPinnedHidden || isPinnedEditMode))].sort((a, b) => {
+        const orderA = STATIC_PINNED_ORDER.indexOf(a.id);
+        const orderB = STATIC_PINNED_ORDER.indexOf(b.id);
+        if (orderA !== -1 && orderB !== -1) return orderA - orderB;
+        if (orderA !== -1) return -1;
+        if (orderB !== -1) return 1;
+        return a.name.localeCompare(b.name);
+      })
+    : sortLists(lists.filter(list => list.isProtected && (!list.isPinnedHidden || isPinnedEditMode)), pinnedSort);
   const regularLists = lists.filter(list => !list.isProtected);
   
   const archivedLists = sortLists(regularLists.filter(list => list.isArchived), archiveSort);
