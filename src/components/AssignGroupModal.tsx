@@ -8,6 +8,7 @@ interface AssignGroupModalProps {
   onClose: () => void;
   onAssign: (groupId: string | null) => void;
   onCreateGroup: () => void;
+  listName?: string;
 }
 
 export const AssignGroupModal: React.FC<AssignGroupModalProps> = ({
@@ -15,7 +16,8 @@ export const AssignGroupModal: React.FC<AssignGroupModalProps> = ({
   isOpen,
   onClose,
   onAssign,
-  onCreateGroup
+  onCreateGroup,
+  listName
 }) => {
   if (!isOpen) return null;
 
@@ -23,7 +25,14 @@ export const AssignGroupModal: React.FC<AssignGroupModalProps> = ({
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()} style={{ width: '300px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h2 style={{ fontSize: '1.2rem', fontWeight: 600, margin: 0 }}>Assign to Group</h2>
+          <div>
+            <h2 style={{ fontSize: '1.2rem', fontWeight: 600, margin: 0 }}>Assign to Group</h2>
+            {listName && (
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                List: <span style={{ color: 'var(--accent)', fontWeight: 600 }}>{listName}</span>
+              </div>
+            )}
+          </div>
           <button className="btn" onClick={onClose} style={{ padding: '4px' }}>
             <X size={20} />
           </button>

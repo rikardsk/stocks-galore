@@ -17,6 +17,8 @@ interface ListPanelProps {
   onToggleWatchlist: (ticker: any) => void;
   onSelectTicker: (ticker: any) => void;
   onRefresh?: (listId: string) => void;
+  onFocus?: (listId: string) => void;
+  isActive?: boolean;
 }
 
 export const ListPanel: React.FC<ListPanelProps> = ({
@@ -30,7 +32,9 @@ export const ListPanel: React.FC<ListPanelProps> = ({
   watchlistSymbols,
   onToggleWatchlist,
   onSelectTicker,
-  onRefresh
+  onRefresh,
+  onFocus,
+  isActive
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(list.isCollapsed);
   const [showStats, setShowStats] = useState(list.showStats);
@@ -71,6 +75,9 @@ export const ListPanel: React.FC<ListPanelProps> = ({
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    if (onFocus) {
+      onFocus(list.id);
+    }
     const isHeaderClick = (e.target as HTMLElement).closest('.panel-header') !== null;
     if (!isHeaderClick) {
       onUpdate(list);
@@ -134,12 +141,12 @@ export const ListPanel: React.FC<ListPanelProps> = ({
       disabled={false}
     >
       <div 
-        className="list-panel" 
+        className={`list-panel ${isActive ? 'active-panel' : ''}`}
         id={`list-panel-${list.id}`}
         ref={nodeRef}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
-        onMouseDown={handleMouseDown}
+        onMouseDownCapture={handleMouseDown}
       >
         <div className="panel-header" style={{ 
           background: isBigGain 

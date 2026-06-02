@@ -679,9 +679,32 @@ const App: React.FC = () => {
     const nextLists = [...lists, newList];
     setLists(nextLists);
     storage.saveLists(nextLists);
+    setActiveListId(newList.id);
     setNewListName('');
     setNewCountry('No Country');
     setIsCreateModalOpen(false);
+  };
+
+  const handleDeleteListConfirm = (id: string) => {
+    const list = lists.find(l => l.id === id);
+    if (!list) return;
+    const confirmMsg = list.name 
+      ? `Delete "${list.name}" permanently?` 
+      : 'Delete this list permanently?';
+    if (window.confirm(confirmMsg)) {
+      storage.deleteList(id);
+      setLists(lists.filter(l => l.id !== id));
+      if (activeListId === id) {
+        setActiveListId(null);
+      }
+    }
+  };
+
+  const handleWorkbenchMouseDown = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.classList.contains('canvas') || target.classList.contains('workbench')) {
+      setActiveListId(null);
+    }
   };
 
   const handleHideList = (id: string, isVisible: boolean = false) => {
@@ -1256,10 +1279,10 @@ const App: React.FC = () => {
     return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (el as HTMLElement).isContentEditable;
   };
 
-  const handleShortcut = (key: string, shift: boolean) => {
+  const handleShortcut = (key: string, shift: boolean, alt: boolean) => {
     switch (key) {
       case 'v': return setIsTableViewOpen(true);
-      case 'd': return shift ? handleRefreshAll() : undefined;
+      case 'd': return shift ? handleRefreshAll() : (activeListId ? handleDeleteListConfirm(activeListId) : undefined);
       case 'delete': return handleClearWorkbench();
       case 'r': return setIsRankingOpen(true);
       case 'a': return shift ? undefined : setIsAnalyticsOpen(true);
@@ -1273,6 +1296,8 @@ const App: React.FC = () => {
       });
       case 'f': return setIsFilterModalOpen(true);
       case 'k': return setIsShortcutsModalOpen(true);
+      case 'm': return activeListId ? handleOpenAssignModal(activeListId) : undefined;
+      case 'g': return alt ? setIsCreateGroupModalOpen(true) : undefined;
       default: return;
     }
   };
@@ -1288,7 +1313,8 @@ const App: React.FC = () => {
         return;
       }
       if (isTyping(document.activeElement)) return;
-      if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
+      if (!(e.ctrlKey || e.metaKey)) return;
+      if (e.altKey && e.key.toLowerCase() !== 'g') return;
       
       if (e.key === ' ') {
         e.preventDefault();
@@ -1299,11 +1325,11 @@ const App: React.FC = () => {
       const key = e.key.toLowerCase();
       if (key === 'r' && e.shiftKey) return;
       
-      const supported = ['v', 'd', 'delete', 'r', 'a', 'n', 's', 'l', 'e', 'x', 'f', 'k'];
+      const supported = ['v', 'd', 'delete', 'r', 'a', 'n', 's', 'l', 'e', 'x', 'f', 'k', 'm', 'g'];
       if (!supported.includes(key)) return;
       
       e.preventDefault();
-      handleShortcut(key, e.shiftKey);
+      handleShortcut(key, e.shiftKey, e.altKey);
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -1320,17 +1346,7 @@ const App: React.FC = () => {
         isCollapsed={isSidebarCollapsed} 
         onCreateList={() => setIsCreateModalOpen(true)}
         onCreateGroup={() => setIsCreateGroupModalOpen(true)}
-        onDeleteList={(id) => {
-          const list = lists.find(l => l.id === id);
-          const listName = list ? list.name : '';
-          const confirmMsg = listName 
-            ? `Delete "${listName}" permanently?` 
-            : 'Delete this list permanently?';
-          if (window.confirm(confirmMsg)) {
-            storage.deleteList(id);
-            setLists(lists.filter(l => l.id !== id));
-          }
-        }}
+        onDeleteList={handleDeleteListConfirm}
         onDeleteGroup={handleDeleteGroup}
         onToggleGroup={handleToggleGroup}
         onMoveGroup={handleMoveGroup}
@@ -1395,7 +1411,7 @@ const App: React.FC = () => {
             }} />
           </div>
         )}
-        <main className="workbench">
+        <main className="workbench" onMouseDown={handleWorkbenchMouseDown}>
           <div className="canvas">
             {lists.filter(list => {
               const query = searchQuery.trim().toLowerCase();
@@ -1419,6 +1435,8 @@ const App: React.FC = () => {
                 onToggleWatchlist={handleToggleWatchlist}
                 onSelectTicker={setSelectedDetailTicker}
                 onRefresh={handleRefreshList}
+                onFocus={setActiveListId}
+                isActive={activeListId === list.id}
               />
             ))}
           </div>
@@ -1772,6 +1790,7 @@ const App: React.FC = () => {
         onClose={() => setIsAssignGroupModalOpen(false)}
         onAssign={handleAssignListToGroup}
         onCreateGroup={handleCreateGroupFromAssign}
+        listName={lists.find(l => l.id === listToAssign)?.name}
       />
 
       {/* Toast Notification */}
