@@ -288,19 +288,21 @@ body {
   padding: 24px 12px;
 }
 
-.search-input {
+input[type="text"].search-input {
   background: var(--surface-inset);
   border: 1px solid var(--border-color);
   border-radius: 20px;
-  padding: 8px 16px;
+  padding: 0 12px;
+  height: 36px;
   color: var(--text-primary);
-  width: 180px;
+  width: calc(5ch + 24px + 2px);
   outline: none;
   font-size: 14px;
   transition: border-color 0.2s, box-shadow 0.2s;
+  flex-shrink: 0;
 }
 
-.search-input:focus {
+input[type="text"].search-input:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
 }

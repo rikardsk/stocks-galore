@@ -70,10 +70,11 @@ export const Toolbar: React.FC<ToolbarProps> = ({
       {isSearchExpanded && (
         <input 
           type="text" 
-          placeholder="Search ticker..." 
+          placeholder="Search..." 
           value={searchQuery}
           onChange={e => onSearchQueryChange(e.target.value)}
           className="search-input"
+          size={5}
           autoFocus
         />
       )}

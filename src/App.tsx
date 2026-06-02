@@ -1201,6 +1201,10 @@ const App: React.FC = () => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        if (isSearchExpanded) {
+          setSearchQuery('');
+          setIsSearchExpanded(false);
+        }
         closeAllModals();
         return;
       }
