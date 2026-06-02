@@ -3,7 +3,6 @@
 
 ## Later maybe
 - Can you make the vertical spacing even between the 4 labels in the sidebar (when collapsed they look slighlty missaligned). Add screenshot.
-- In the settings modal could you also do toggle buttons for Pinned, Groups, Ungrouped and Archive.
 - When adding a ticker check portfolio and watchlist and highlight those icons acordingly. 
 - Add tag for "Not profitable", "Low debt", "High debt", "Dividend", " Growth".
 - Shortcut keys for "Add group", "Delete list", "Move list".
@@ -112,4 +111,5 @@
 ~~- Can you add "Copy" button in the header of all the lists in Top Performers modal. Copy as comma separated list of tickers that can be used to create a new list.~~
 ~~- Toggle sidebar should slide out from the right instead of pushing the content to the left (absolute positioning).~~
 ~~- Adjust the Z-index so that when moving a list by drag and drop it is always on top of the other lists (now sometimes it's behind some of the lists). The last shown/added list should always be on top.~~
+~~- In the settings modal could you also do toggle buttons to show/hide the Pinned, Groups, Ungrouped and Archive sections in the sidebar.~~
 

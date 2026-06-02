@@ -111,6 +111,58 @@ const App: React.FC = () => {
     setButtonBarPosition(position);
     localStorage.setItem('buttonBarPosition', position);
   };
+
+  const [showPinned, setShowPinned] = useState<boolean>(() => {
+    const saved = localStorage.getItem('sidebar_showPinned');
+    return saved !== 'false';
+  });
+
+  const [showGroups, setShowGroups] = useState<boolean>(() => {
+    const saved = localStorage.getItem('sidebar_showGroups');
+    return saved !== 'false';
+  });
+
+  const [showUngrouped, setShowUngrouped] = useState<boolean>(() => {
+    const saved = localStorage.getItem('sidebar_showUngrouped');
+    return saved !== 'false';
+  });
+
+  const [showArchive, setShowArchive] = useState<boolean>(() => {
+    const saved = localStorage.getItem('sidebar_showArchive');
+    return saved !== 'false';
+  });
+
+  const handleTogglePinned = () => {
+    setShowPinned(prev => {
+      const next = !prev;
+      localStorage.setItem('sidebar_showPinned', next.toString());
+      return next;
+    });
+  };
+
+  const handleToggleGroups = () => {
+    setShowGroups(prev => {
+      const next = !prev;
+      localStorage.setItem('sidebar_showGroups', next.toString());
+      return next;
+    });
+  };
+
+  const handleToggleUngrouped = () => {
+    setShowUngrouped(prev => {
+      const next = !prev;
+      localStorage.setItem('sidebar_showUngrouped', next.toString());
+      return next;
+    });
+  };
+
+  const handleToggleArchive = () => {
+    setShowArchive(prev => {
+      const next = !prev;
+      localStorage.setItem('sidebar_showArchive', next.toString());
+      return next;
+    });
+  };
   
   const [newListName, setNewListName] = useState('');
   const [newListColor, setNewListColor] = useState(COLORS[0]);
@@ -1306,6 +1358,10 @@ const App: React.FC = () => {
           const list = lists.find(l => l.id === id);
           if (list) handleUpdateList({ ...list, isPinnedHidden: isHidden });
         }}
+        showPinned={showPinned}
+        showGroups={showGroups}
+        showUngrouped={showUngrouped}
+        showArchive={showArchive}
       />
       
       <div style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -1514,6 +1570,14 @@ const App: React.FC = () => {
         onToggleButtonBar={handleToggleButtonBar}
         buttonBarPosition={buttonBarPosition}
         onButtonBarPositionChange={handleButtonBarPositionChange}
+        showPinned={showPinned}
+        showGroups={showGroups}
+        showUngrouped={showUngrouped}
+        showArchive={showArchive}
+        onTogglePinned={handleTogglePinned}
+        onToggleGroups={handleToggleGroups}
+        onToggleUngrouped={handleToggleUngrouped}
+        onToggleArchive={handleToggleArchive}
       />
 
       <TableView 

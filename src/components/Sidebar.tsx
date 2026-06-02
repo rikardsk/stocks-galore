@@ -20,6 +20,10 @@ interface SidebarProps {
   onAssignList: (listId: string) => void;
   onClearList?: (listId: string) => void;
   onTogglePinnedHidden?: (id: string, isHidden: boolean) => void;
+  showPinned?: boolean;
+  showGroups?: boolean;
+  showUngrouped?: boolean;
+  showArchive?: boolean;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -38,7 +42,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onRenameList,
   onAssignList,
   onClearList,
-  onTogglePinnedHidden
+  onTogglePinnedHidden,
+  showPinned = true,
+  showGroups = true,
+  showUngrouped = true,
+  showArchive = true
 }) => {
   const [isEditMode, setIsEditMode] = React.useState(false);
   const [isUngroupedEditMode, setIsUngroupedEditMode] = React.useState(false);
@@ -264,7 +272,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Static Section: Watchlist & Portfolio */}
-        {protectedLists.length > 0 && (
+        {showPinned && protectedLists.length > 0 && (
           <div style={{ marginBottom: '24px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 0 8px 0', paddingRight: '8px' }}>
               <div 
@@ -324,7 +332,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         )}
 
         {/* Groups */}
-        {groups.length > 0 && (
+        {showGroups && groups.length > 0 && (
           <div style={{ marginBottom: '24px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 0 8px 0', paddingRight: '8px' }}>
               <div 
@@ -484,131 +492,135 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         )}
 
-        <div 
-          className="ungrouped-section"
-          style={{ marginBottom: '24px', minHeight: '40px' }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 0 8px 0', paddingRight: '8px' }}>
-            <div 
-              className="sidebar-section-label" 
-              style={{ 
-                fontSize: '11px', 
-                color: 'var(--text-secondary)', 
-                textTransform: 'uppercase', 
-                letterSpacing: '1px', 
-                margin: 0,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                cursor: 'pointer',
-                userSelect: 'none'
-              }}
-              onClick={() => setIsUngroupedSectionCollapsed(!isUngroupedSectionCollapsed)}
-            >
-              {isUngroupedSectionCollapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
-              Ungrouped ({ungroupedLists.length})
+        {showUngrouped && (
+          <div 
+            className="ungrouped-section"
+            style={{ marginBottom: '24px', minHeight: '40px' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 0 8px 0', paddingRight: '8px' }}>
+              <div 
+                className="sidebar-section-label" 
+                style={{ 
+                  fontSize: '11px', 
+                  color: 'var(--text-secondary)', 
+                  textTransform: 'uppercase', 
+                  letterSpacing: '1px', 
+                  margin: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  cursor: 'pointer',
+                  userSelect: 'none'
+                }}
+                onClick={() => setIsUngroupedSectionCollapsed(!isUngroupedSectionCollapsed)}
+              >
+                {isUngroupedSectionCollapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
+                Ungrouped ({ungroupedLists.length})
+              </div>
+              {ungroupedLists.length > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <button 
+                    className="btn" 
+                    onClick={() => handleToggleSort(ungroupedSort, setUngroupedSort)} 
+                    title={`Sort: ${ungroupedSort}`}
+                    style={{ padding: '2px', color: 'var(--text-secondary)', opacity: 0.7 }}
+                  >
+                    {ungroupedSort === 'asc' && <ArrowUpAZ size={14} />}
+                    {ungroupedSort === 'desc' && <ArrowDownAZ size={14} />}
+                    {ungroupedSort === 'gain-asc' && <ArrowUp10 size={14} />}
+                    {ungroupedSort === 'gain-desc' && <ArrowDown10 size={14} />}
+                    {ungroupedSort === 'none' && <ArrowUpDown size={14} />}
+                  </button>
+                  <button 
+                    className="btn" 
+                    style={{ 
+                      fontSize: '11px', 
+                      padding: '2px 8px', 
+                      color: isUngroupedEditMode ? 'var(--accent)' : 'var(--text-secondary)', 
+                      background: isUngroupedEditMode ? 'rgba(59, 130, 246, 0.1)' : 'transparent', 
+                      borderRadius: '4px',
+                      border: isUngroupedEditMode ? '1px solid rgba(59, 130, 246, 0.2)' : '1px solid transparent'
+                    }}
+                    onClick={() => setIsUngroupedEditMode(!isUngroupedEditMode)}
+                  >
+                    {isUngroupedEditMode ? 'Done' : 'Edit'}
+                  </button>
+                </div>
+              )}
             </div>
-            {ungroupedLists.length > 0 && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <button 
-                  className="btn" 
-                  onClick={() => handleToggleSort(ungroupedSort, setUngroupedSort)} 
-                  title={`Sort: ${ungroupedSort}`}
-                  style={{ padding: '2px', color: 'var(--text-secondary)', opacity: 0.7 }}
-                >
-                  {ungroupedSort === 'asc' && <ArrowUpAZ size={14} />}
-                  {ungroupedSort === 'desc' && <ArrowDownAZ size={14} />}
-                  {ungroupedSort === 'gain-asc' && <ArrowUp10 size={14} />}
-                  {ungroupedSort === 'gain-desc' && <ArrowDown10 size={14} />}
-                  {ungroupedSort === 'none' && <ArrowUpDown size={14} />}
-                </button>
-                <button 
-                  className="btn" 
-                  style={{ 
-                    fontSize: '11px', 
-                    padding: '2px 8px', 
-                    color: isUngroupedEditMode ? 'var(--accent)' : 'var(--text-secondary)', 
-                    background: isUngroupedEditMode ? 'rgba(59, 130, 246, 0.1)' : 'transparent', 
-                    borderRadius: '4px',
-                    border: isUngroupedEditMode ? '1px solid rgba(59, 130, 246, 0.2)' : '1px solid transparent'
-                  }}
-                  onClick={() => setIsUngroupedEditMode(!isUngroupedEditMode)}
-                >
-                  {isUngroupedEditMode ? 'Done' : 'Edit'}
-                </button>
+            {!isUngroupedSectionCollapsed && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                {ungroupedLists.map(l => renderListItem(l, isUngroupedEditMode))}
               </div>
             )}
           </div>
-          {!isUngroupedSectionCollapsed && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              {ungroupedLists.map(l => renderListItem(l, isUngroupedEditMode))}
-            </div>
-          )}
-        </div>
+        )}
 
         {/* Archive Section */}
-        <div 
-          className="archive-section"
-          style={{ marginBottom: '24px' }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 0 8px 0', paddingRight: '8px' }}>
-            <div 
-              className="sidebar-section-label" 
-              style={{ 
-                fontSize: '11px', 
-                color: 'var(--text-secondary)', 
-                textTransform: 'uppercase', 
-                letterSpacing: '1px', 
-                margin: 0,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                cursor: 'pointer',
-                userSelect: 'none',
-                opacity: archivedLists.length === 0 ? 0.5 : 1
-              }}
-              onClick={() => archivedLists.length > 0 && setIsArchiveSectionCollapsed(!isArchiveSectionCollapsed)}
-            >
-              {isArchiveSectionCollapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
-              Archive ({archivedLists.length})
+        {showArchive && (
+          <div 
+            className="archive-section"
+            style={{ marginBottom: '24px' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 0 8px 0', paddingRight: '8px' }}>
+              <div 
+                className="sidebar-section-label" 
+                style={{ 
+                  fontSize: '11px', 
+                  color: 'var(--text-secondary)', 
+                  textTransform: 'uppercase', 
+                  letterSpacing: '1px', 
+                  margin: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  cursor: 'pointer',
+                  userSelect: 'none',
+                  opacity: archivedLists.length === 0 ? 0.5 : 1
+                }}
+                onClick={() => archivedLists.length > 0 && setIsArchiveSectionCollapsed(!isArchiveSectionCollapsed)}
+              >
+                {isArchiveSectionCollapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
+                Archive ({archivedLists.length})
+              </div>
+              {archivedLists.length > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <button 
+                    className="btn" 
+                    onClick={() => handleToggleSort(archiveSort, setArchiveSort)} 
+                    title={`Sort: ${archiveSort}`}
+                    style={{ padding: '2px', color: 'var(--text-secondary)', opacity: 0.7 }}
+                  >
+                    {archiveSort === 'asc' && <ArrowUpAZ size={14} />}
+                    {archiveSort === 'desc' && <ArrowDownAZ size={14} />}
+                    {archiveSort === 'gain-asc' && <ArrowUp10 size={14} />}
+                    {archiveSort === 'gain-desc' && <ArrowDown10 size={14} />}
+                    {archiveSort === 'none' && <ArrowUpDown size={14} />}
+                  </button>
+                  <button 
+                    className="btn" 
+                    style={{ 
+                      fontSize: '11px', 
+                      padding: '2px 8px', 
+                      color: isArchiveEditMode ? 'var(--accent)' : 'var(--text-secondary)', 
+                      background: isArchiveEditMode ? 'rgba(59, 130, 246, 0.1)' : 'transparent', 
+                      borderRadius: '4px',
+                      border: isArchiveEditMode ? '1px solid rgba(59, 130, 246, 0.2)' : '1px solid transparent'
+                    }}
+                    onClick={() => setIsArchiveEditMode(!isArchiveEditMode)}
+                  >
+                    {isArchiveEditMode ? 'Done' : 'Edit'}
+                  </button>
+                </div>
+              )}
             </div>
-            {archivedLists.length > 0 && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <button 
-                  className="btn" 
-                  onClick={() => handleToggleSort(archiveSort, setArchiveSort)} 
-                  title={`Sort: ${archiveSort}`}
-                  style={{ padding: '2px', color: 'var(--text-secondary)', opacity: 0.7 }}
-                >
-                  {archiveSort === 'asc' && <ArrowUpAZ size={14} />}
-                  {archiveSort === 'desc' && <ArrowDownAZ size={14} />}
-                  {archiveSort === 'gain-asc' && <ArrowUp10 size={14} />}
-                  {archiveSort === 'gain-desc' && <ArrowDown10 size={14} />}
-                  {archiveSort === 'none' && <ArrowUpDown size={14} />}
-                </button>
-                <button 
-                  className="btn" 
-                  style={{ 
-                    fontSize: '11px', 
-                    padding: '2px 8px', 
-                    color: isArchiveEditMode ? 'var(--accent)' : 'var(--text-secondary)', 
-                    background: isArchiveEditMode ? 'rgba(59, 130, 246, 0.1)' : 'transparent', 
-                    borderRadius: '4px',
-                    border: isArchiveEditMode ? '1px solid rgba(59, 130, 246, 0.2)' : '1px solid transparent'
-                  }}
-                  onClick={() => setIsArchiveEditMode(!isArchiveEditMode)}
-                >
-                  {isArchiveEditMode ? 'Done' : 'Edit'}
-                </button>
+            {!isArchiveSectionCollapsed && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                {archivedLists.map(l => renderListItem(l, isArchiveEditMode))}
               </div>
             )}
           </div>
-          {!isArchiveSectionCollapsed && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              {archivedLists.map(l => renderListItem(l, isArchiveEditMode))}
-            </div>
-          )}
-        </div>
+        )}
 
         {activeLists.length === 0 && groups.length === 0 && archivedLists.length === 0 && (
           <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '13px' }}>
