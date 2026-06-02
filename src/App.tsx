@@ -1262,8 +1262,8 @@ const App: React.FC = () => {
       case 'd': return shift ? handleRefreshAll() : undefined;
       case 'delete': return handleClearWorkbench();
       case 'r': return setIsRankingOpen(true);
-      case 'a': return setIsNotificationsModalOpen(true);
-      case 'n': return setIsAnalyticsOpen(true);
+      case 'a': return shift ? undefined : setIsAnalyticsOpen(true);
+      case 'n': return shift ? setIsNotificationsModalOpen(true) : undefined;
       case 's': return shift ? setIsSidebarCollapsed(prev => !prev) : setIsSettingsModalOpen(true);
       case 'l': return setIsCreateModalOpen(true);
       case 'e': return setIsEarningsOpen(true);

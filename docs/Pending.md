@@ -4,7 +4,6 @@
 ## Later maybe
 - Add tag for "Not profitable", "Low debt", "High debt", "Dividend", " Growth".
 - Shortcut keys for "Add group", "Delete list", "Move list".
-- Change shortcut key for "Open Analytics". 
 - Sort by price as an option when choosing sorting method on lists (Ctrl + Shift + P).
 - Some way to monitor localStorage usage and how full it is. (What's the limit?).
 - Some way to show if the company is profitable or not (Tag: Not profitable).
@@ -115,4 +114,5 @@
 ~~- When adding a ticker to a list in the workbench, check if the ticker already exists in the portfolio-list or watchlist-list and highlight those icons acordingly ("Remove from portfolio" icon and the "Remove from watchlist" icon).~~
 ~~- Make the sorting of all sidebar lists stable when clicked or focused so they do not reorder/swap places (e.g. Test4 and Test5).~~
 ~~- Can you make the vertical spacing even between the 4 labels in the sidebar (when collapsed they look slighlty missaligned).~~
+~~- Change shortcut key for "Open Analytics" to Ctrl + a and change the Notifications shortcut key to Ctrl + Shift + n. Update the keyboard shortcuts modal to reflect the changes.~~
 

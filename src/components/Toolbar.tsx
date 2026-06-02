@@ -44,7 +44,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
       <button className="btn" title="Market Table (Ctrl+V)" onClick={onOpenTable}>
         <Layout size={20} style={{ transform: 'rotate(90deg)' }} />
       </button>
-      <button className="btn" title="Analytics (Ctrl+N)" onClick={onOpenAnalytics}>
+      <button className="btn" title="Analytics (Ctrl+A)" onClick={onOpenAnalytics}>
         <BarChart2 size={20} />
       </button>
       <button className="btn" title="Keyboard Shortcuts (Ctrl+K)" onClick={onOpenShortcuts}>
@@ -92,7 +92,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           </span>
         )}
       </button>
-      <button className="btn" title="Notifications (Ctrl+A)" onClick={onOpenNotifications} style={{ position: 'relative' }}>
+      <button className="btn" title="Notifications (Ctrl+Shift+N)" onClick={onOpenNotifications} style={{ position: 'relative' }}>
         <Bell size={20} />
         {unreadCount > 0 && (
           <span style={{
