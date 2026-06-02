@@ -516,7 +516,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {showUngrouped && (
           <div 
             className="ungrouped-section"
-            style={{ marginBottom: '24px', minHeight: '40px' }}
+            style={{ marginBottom: '24px', minHeight: isUngroupedSectionCollapsed ? 'auto' : '40px' }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 0 8px 0', paddingRight: '8px' }}>
               <div 
