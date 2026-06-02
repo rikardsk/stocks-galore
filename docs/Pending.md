@@ -2,14 +2,16 @@
 
 
 ## Later maybe
-- Can you add "Copy" button in the header of all the lists in Top Performers modal. Copy as comma separated list of tickers that can beused to create a new list.
 - Can you make the vertical spacing even between the 4 labels in the sidebar (when collapsed they look slighlty missaligned). Add screenshot.
 - In the settings modal could you also do toggle buttons for Pinned, Groups, Ungrouped and Archive.
 - When adding a ticker check portfolio and watchlist and highlight those icons acordingly.
 - Toggle sidebar should slide out from the right instead of pushing the content to the left.
 - Z-index when moving a list by drag and drop it should always be on top (sometimes it is behind the list above). The last shown should be on top. 
-- Be able to move/drag the button bar at the bottom. And dock it to top, bottom, right but not left.
+- Add tag for "Not profitable", "Low debt", "High debt", "Dividend", " Growth".
+- Shortcut keys for "Add group", "Delete list", "Move list".
+- Change shortcut key for "Open Analytics". 
 - Sort by price as an option when choosing sorting method on lists (Ctrl + Shift + P).
+- Be able to move/drag the button bar at the bottom. And dock it to top, bottom, right but not left.
 - Custom menu on right click. (As an option in settings modal).
 - Some way to monitor localStorage usage and how full it is. (What's the limit?).
 - Some way to show if the company is profitable or not (Tag: Not profitable).
@@ -109,5 +111,6 @@
 ~~- In the settings modal, can you make a toggle button to show/hide the buttonbar.~~
 ~~- In the settings modal, can you make it possible to choose buttonbar position (bottom, top, right) in settings. Bottom is the default.~~
 ~~- Can you make the search text field in the button bar longer? and make so esc also cancels the search action (same as clicking the x).~~
+~~- Can you add "Copy" button in the header of all the lists in Top Performers modal. Copy as comma separated list of tickers that can be used to create a new list.~~
 
 

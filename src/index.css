@@ -100,19 +100,23 @@ body {
 
 /* Sidebar */
 .sidebar {
+  position: absolute;
+  left: 0;
+  top: 0;
   width: 280px;
   background: var(--sidebar-bg);
   backdrop-filter: blur(var(--glass-blur));
   border-right: 1px solid var(--border-color);
   height: 100%;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin-left 0.3s ease;
+  transform: translateX(0);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 100;
   display: flex;
   flex-direction: column;
 }
 
 .sidebar.collapsed {
-  margin-left: -280px;
+  transform: translateX(-280px);
 }
 
 .sidebar-header {
