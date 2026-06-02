@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Trash2, ChevronDown, ChevronUp, ChevronRight, FolderPlus, Folder, GripVertical, ArrowUpDown, ArrowUpAZ, ArrowDownAZ, ArrowUp10, ArrowDown10, Eye, EyeOff } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronUp, ChevronRight, FolderPlus, Folder, ArrowUpDown, ArrowUpAZ, ArrowDownAZ, ArrowUp10, ArrowDown10, Eye, EyeOff } from 'lucide-react';
 import type { StockList, ListGroup } from '../types';
 import { COUNTRY_FLAGS } from '../types';
 
@@ -14,7 +14,6 @@ interface SidebarProps {
   onToggleGroup: (id: string) => void;
   onSelectListItem: (id: string) => void;
   onMoveGroup?: (groupId: string, direction: 'up' | 'down') => void;
-  onMoveListToGroup: (listId: string, groupId: string | null) => void;
   onRenameGroup: (groupId: string, newName: string) => void;
   onRenameList: (listId: string, newName: string, color?: string) => void;
   onAssignList: (listId: string) => void;
@@ -37,7 +36,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onToggleGroup,
   onSelectListItem,
   onMoveGroup,
-  onMoveListToGroup,
   onRenameGroup,
   onRenameList,
   onAssignList,

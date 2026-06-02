@@ -1362,7 +1362,6 @@ const App: React.FC = () => {
             }
           }
         }}
-        onMoveListToGroup={handleMoveListToGroup}
         onAssignList={handleOpenAssignModal}
         onClearList={handleClearList}
         onTogglePinnedHidden={(id, isHidden) => {
