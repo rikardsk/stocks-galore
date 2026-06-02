@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { X, Trophy, TrendingUp, Calendar, Clock } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { X, Trophy, TrendingUp, Calendar, Clock, Copy, Check } from 'lucide-react';
 import type { Ticker } from '../types';
 
 interface RankingModalProps {
@@ -109,11 +109,53 @@ interface RankingColumnProps {
 
 const RankingColumn: React.FC<RankingColumnProps> = ({ title, icon, tickers, metric, onSelectTicker, theme }) => {
   const isDark = theme === 'dark';
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    const symbols = tickers.map(t => t.symbol).join(', ');
+    navigator.clipboard.writeText(symbols).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
   return (
     <div style={{ background: 'var(--surface-subtle)', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
-      <div style={{ padding: '16px', background: 'var(--surface-inset)', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '10px' }}>
-        {icon}
-        <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)' }}>{title}</h3>
+      <div style={{ 
+        padding: '12px 16px', 
+        background: 'var(--surface-inset)', 
+        borderBottom: '1px solid var(--border-color)', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'space-between',
+        height: '52px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
+          {icon}
+          <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</h3>
+        </div>
+        {tickers.length > 0 && (
+          <button 
+            onClick={handleCopy}
+            style={{
+              border: 'none',
+              color: copied ? '#10b981' : 'var(--text-secondary)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '6px',
+              borderRadius: '6px',
+              background: copied ? 'rgba(16, 185, 129, 0.1)' : 'transparent',
+              transition: 'all 0.2s ease',
+              flexShrink: 0
+            }}
+            className="copy-btn"
+            title={copied ? "Copied!" : "Copy all tickers as comma-separated list"}
+          >
+            {copied ? <Check size={16} /> : <Copy size={16} />}
+          </button>
+        )}
       </div>
       <div style={{ padding: '8px' }}>
         {tickers.length === 0 ? (
@@ -179,6 +221,10 @@ const RankingColumn: React.FC<RankingColumnProps> = ({ title, icon, tickers, met
       </div>
       <style>{`
         .ranking-row:hover {
+          background: var(--surface-hover);
+        }
+        .copy-btn:hover {
+          color: var(--text-primary) !important;
           background: var(--surface-hover);
         }
       `}</style>
