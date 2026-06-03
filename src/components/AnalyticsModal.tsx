@@ -3,6 +3,7 @@ import { X, BarChart2, PieChart, Info, ChevronDown, ChevronRight } from 'lucide-
 import { ScatterChart, Scatter, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, ReferenceLine, Legend, Cell, LabelList } from 'recharts';
 import type { Ticker, StockList, ListGroup } from '../types';
 import { parseMarketCap, formatMarketCap } from '../types';
+import { storage } from '../storage';
 
 interface AnalyticsModalProps {
   isOpen: boolean;
@@ -68,33 +69,22 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
   };
 
   const storageData = useMemo(() => {
-    let workbenchSize = 0;
-    let groupsSize = 0;
-    let alertsSize = 0;
-    let notificationsSize = 0;
-    let settingsSize = 0;
+    const workbenchSize = JSON.stringify(lists).length * 2;
+    const groupsSize = JSON.stringify(groups).length * 2;
+    const alertsSize = JSON.stringify(storage.getAlerts()).length * 2;
+    const notificationsSize = JSON.stringify(notifications).length * 2;
 
+    let settingsSize = 0;
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (!key) continue;
-      const val = localStorage.getItem(key) || '';
-      const sizeBytes = (key.length + val.length) * 2;
-
-      if (key === 'stocks_galore_workbench') {
-        workbenchSize = sizeBytes;
-      } else if (key === 'stocks_galore_groups') {
-        groupsSize = sizeBytes;
-      } else if (key === 'stocks_galore_alerts') {
-        alertsSize = sizeBytes;
-      } else if (key === 'stocks_galore_notifications') {
-        notificationsSize = sizeBytes;
-      } else {
-        settingsSize += sizeBytes;
+      if (key) {
+        const val = localStorage.getItem(key) || '';
+        settingsSize += (key.length + val.length) * 2;
       }
     }
 
     const totalUsed = workbenchSize + groupsSize + alertsSize + notificationsSize + settingsSize;
-    const limitBytes = 5 * 1024 * 1024; // 5 MB
+    const limitBytes = apiQuota || (100 * 1024 * 1024); // Use browser origin quota or 100MB fallback
     const freeBytes = Math.max(0, limitBytes - totalUsed);
 
     const categories = [
@@ -112,7 +102,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
       limitBytes,
       percentUsed: (totalUsed / limitBytes) * 100
     };
-  }, [isOpen, tickers, lists, groups, notifications]);
+  }, [isOpen, tickers, lists, groups, notifications, apiQuota]);
 
   const filteredTickers = useMemo(() => {
     let result = tickers;
@@ -897,18 +887,18 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                       <div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '4px' }}>localStorage limit</div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '4px' }}>Origin Storage Quota</div>
                         <div style={{ fontSize: '18px', fontWeight: 600 }}>{formatBytes(storageData.limitBytes)}</div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>Standard browser limit</div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>Total browser allocation</div>
                       </div>
                       <div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '4px' }}>localStorage used</div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '4px' }}>App Storage Used</div>
                         <div style={{ fontSize: '18px', fontWeight: 600, color: storageData.percentUsed >= 80 ? 'var(--error-bg, #ef4444)' : 'var(--text-primary)' }}>
                           {formatBytes(storageData.totalUsed)}
                         </div>
                         {storageData.percentUsed >= 80 && (
                           <div style={{ fontSize: '10px', color: 'var(--error-bg, #ef4444)', fontWeight: 'bold', marginTop: '2px' }}>
-                            ⚠️ Warning: Storage is almost full!
+                            ⚠️ Warning: Origin Storage is almost full!
                           </div>
                         )}
                       </div>

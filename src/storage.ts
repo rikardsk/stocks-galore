@@ -1,22 +1,108 @@
 import type { StockList, Ticker, ListGroup, StockAlert, TickerNotification } from './types';
 import { generateMockStats, MOCK_TICKERS } from './types';
 import { v4 as uuidv4 } from 'uuid';
+import { idb } from './indexedDB';
 
 const STORAGE_KEY = 'stocks_galore_workbench';
 const GROUPS_KEY = 'stocks_galore_groups';
 const ALERTS_KEY = 'stocks_galore_alerts';
 const NOTIFICATIONS_KEY = 'stocks_galore_notifications';
 
+// In-memory cache for synchronous reads
+let listsCache: StockList[] = [];
+let groupsCache: ListGroup[] = [];
+let alertsCache: StockAlert[] = [];
+let notificationsCache: TickerNotification[] = [];
+let isDbInitialized = false;
+
 export const storage = {
+  // Initialize and migrate localStorage data if present
+  init: async (): Promise<void> => {
+    if (isDbInitialized) return;
+
+    const timeout = new Promise<void>((_, reject) => {
+      setTimeout(() => reject(new Error('IndexedDB initialization timed out')), 2000);
+    });
+
+    const migrationAndLoad = async () => {
+      // Check for localStorage legacy data
+      const localLists = localStorage.getItem(STORAGE_KEY);
+      const localGroups = localStorage.getItem(GROUPS_KEY);
+      const localAlerts = localStorage.getItem(ALERTS_KEY);
+      const localNotifications = localStorage.getItem(NOTIFICATIONS_KEY);
+
+      // 1. Lists migration
+      if (localLists) {
+        listsCache = JSON.parse(localLists);
+        await idb.set(STORAGE_KEY, listsCache);
+        localStorage.removeItem(STORAGE_KEY);
+      } else {
+        listsCache = (await idb.get<StockList[]>(STORAGE_KEY)) || [];
+      }
+
+      // 2. Groups migration
+      if (localGroups) {
+        groupsCache = JSON.parse(localGroups);
+        await idb.set(GROUPS_KEY, groupsCache);
+        localStorage.removeItem(GROUPS_KEY);
+      } else {
+        groupsCache = (await idb.get<ListGroup[]>(GROUPS_KEY)) || [];
+      }
+
+      // 3. Alerts migration
+      if (localAlerts) {
+        alertsCache = JSON.parse(localAlerts);
+        await idb.set(ALERTS_KEY, alertsCache);
+        localStorage.removeItem(ALERTS_KEY);
+      } else {
+        alertsCache = (await idb.get<StockAlert[]>(ALERTS_KEY)) || [];
+      }
+
+      // 4. Notifications migration
+      if (localNotifications) {
+        notificationsCache = JSON.parse(localNotifications);
+        await idb.set(NOTIFICATIONS_KEY, notificationsCache);
+        localStorage.removeItem(NOTIFICATIONS_KEY);
+      } else {
+        notificationsCache = (await idb.get<TickerNotification[]>(NOTIFICATIONS_KEY)) || [];
+      }
+    };
+
+    try {
+      await Promise.race([migrationAndLoad(), timeout]);
+      isDbInitialized = true;
+    } catch (err) {
+      console.error('IndexedDB initialization failed or timed out:', err);
+      // Fallback: load whatever is still in localStorage or empty arrays
+      try {
+        const localLists = localStorage.getItem(STORAGE_KEY);
+        listsCache = localLists ? JSON.parse(localLists) : [];
+        
+        const localGroups = localStorage.getItem(GROUPS_KEY);
+        groupsCache = localGroups ? JSON.parse(localGroups) : [];
+        
+        const localAlerts = localStorage.getItem(ALERTS_KEY);
+        alertsCache = localAlerts ? JSON.parse(localAlerts) : [];
+        
+        const localNotifications = localStorage.getItem(NOTIFICATIONS_KEY);
+        notificationsCache = localNotifications ? JSON.parse(localNotifications) : [];
+      } catch (fallbackErr) {
+        console.error('Fallback load failed:', fallbackErr);
+      }
+      isDbInitialized = true; // Mark as initialized so App.tsx can proceed
+    }
+  },
+
   // --- Lists ---
   getLists: (): StockList[] => {
-    const data = localStorage.getItem(STORAGE_KEY);
-    if (!data) return [];
-    return JSON.parse(data);
+    return [...listsCache];
   },
 
   saveLists: (lists: StockList[]) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(lists));
+    listsCache = [...lists];
+    idb.set(STORAGE_KEY, listsCache).catch((err) => {
+      console.error('Failed to save lists to IndexedDB:', err);
+    });
   },
 
   createList: (name: string, color: string, country?: string): StockList => {
@@ -99,13 +185,14 @@ export const storage = {
 
   // --- Groups ---
   getGroups: (): ListGroup[] => {
-    const data = localStorage.getItem(GROUPS_KEY);
-    if (!data) return [];
-    return JSON.parse(data);
+    return [...groupsCache];
   },
 
   saveGroups: (groups: ListGroup[]) => {
-    localStorage.setItem(GROUPS_KEY, JSON.stringify(groups));
+    groupsCache = [...groups];
+    idb.set(GROUPS_KEY, groupsCache).catch((err) => {
+      console.error('Failed to save groups to IndexedDB:', err);
+    });
   },
 
   createGroup: (name: string): ListGroup => {
@@ -179,12 +266,14 @@ export const storage = {
 
   // --- Alerts ---
   getAlerts: (): StockAlert[] => {
-    const data = localStorage.getItem(ALERTS_KEY);
-    return data ? JSON.parse(data) : [];
+    return [...alertsCache];
   },
 
   saveAlerts: (alerts: StockAlert[]) => {
-    localStorage.setItem(ALERTS_KEY, JSON.stringify(alerts));
+    alertsCache = [...alerts];
+    idb.set(ALERTS_KEY, alertsCache).catch((err) => {
+      console.error('Failed to save alerts to IndexedDB:', err);
+    });
   },
 
   addAlert: (alert: Omit<StockAlert, 'id' | 'isTriggered'>): StockAlert => {
@@ -210,12 +299,14 @@ export const storage = {
 
   // --- Notifications ---
   getNotifications: (): TickerNotification[] => {
-    const data = localStorage.getItem(NOTIFICATIONS_KEY);
-    return data ? JSON.parse(data) : [];
+    return [...notificationsCache];
   },
 
   saveNotifications: (notifications: TickerNotification[]) => {
-    localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(notifications));
+    notificationsCache = [...notifications];
+    idb.set(NOTIFICATIONS_KEY, notificationsCache).catch((err) => {
+      console.error('Failed to save notifications to IndexedDB:', err);
+    });
   },
 
   addNotification: (notification: Omit<TickerNotification, 'id' | 'isRead' | 'timestamp'>): TickerNotification => {

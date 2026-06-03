@@ -30,6 +30,7 @@ const API_BASE_URL = 'http://localhost:8000';
 
 
 const App: React.FC = () => {
+  const [isLoading, setIsLoading] = useState(true);
   const [lists, setLists] = useState<StockList[]>([]);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -186,17 +187,22 @@ const App: React.FC = () => {
   }, [storageUsagePercent]);
 
   useEffect(() => {
-    let totalChars = 0;
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key) {
-        totalChars += key.length + (localStorage.getItem(key)?.length || 0);
-      }
+    if (navigator.storage && navigator.storage.estimate) {
+      navigator.storage.estimate().then(estimate => {
+        const usage = estimate.usage || 0;
+        const quota = estimate.quota || 1;
+        const percent = (usage / quota) * 100;
+        setStorageUsagePercent(percent);
+      }).catch(err => {
+        console.error('Failed to estimate storage usage:', err);
+      });
+    } else {
+      // Fallback: estimate based on serialized state
+      const serialized = JSON.stringify({ lists, groups, alerts, notifications });
+      const usedBytes = serialized.length * 2;
+      const limitBytes = 100 * 1024 * 1024; // 100MB fallback limit
+      setStorageUsagePercent((usedBytes / limitBytes) * 100);
     }
-    const usedBytes = totalChars * 2;
-    const limitBytes = 5 * 1024 * 1024; // 5MB limit
-    const percent = (usedBytes / limitBytes) * 100;
-    setStorageUsagePercent(percent);
   }, [lists, groups, alerts, notifications]);
 
   // Auto-dismiss toast after 5 seconds
@@ -276,151 +282,162 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
-    let currentLists = storage.getLists();
-    let changed = false;
-    
-    // Find any existing Watchlist (by ID or name)
-    const watchlistIndex = currentLists.findIndex(l => l.id === WATCHLIST_ID || l.name === 'Watchlist');
-    
-    if (watchlistIndex === -1) {
-      // Create it if it doesn't exist
-      const watchlist: StockList = {
-        id: WATCHLIST_ID,
-        name: 'Watchlist',
-        color: '#6366f1',
-        tickers: [],
-        position: { x: 320, y: 50 },
-        isCollapsed: false,
-        showStats: true,
-        isVisible: true,
-        sortOrder: 'none',
-        isProtected: true
-      };
-      currentLists = [watchlist, ...currentLists];
-      changed = true;
-    } else {
-      // Update the existing one and ensure it has the right ID and is protected
-      const existing = currentLists[watchlistIndex];
-      if (existing.id !== WATCHLIST_ID || !existing.isProtected) {
-        currentLists[watchlistIndex] = { 
-          ...existing, 
-          id: WATCHLIST_ID, 
+    const initAppStorage = async () => {
+      try {
+        await storage.init();
+      } catch (err) {
+        console.error('Failed to initialize IndexedDB:', err);
+      }
+
+      let currentLists = storage.getLists();
+      let changed = false;
+      
+      // Find any existing Watchlist (by ID or name)
+      const watchlistIndex = currentLists.findIndex(l => l.id === WATCHLIST_ID || l.name === 'Watchlist');
+      
+      if (watchlistIndex === -1) {
+        // Create it if it doesn't exist
+        const watchlist: StockList = {
+          id: WATCHLIST_ID,
           name: 'Watchlist',
+          color: '#6366f1',
+          tickers: [],
+          position: { x: 320, y: 50 },
+          isCollapsed: false,
+          showStats: true,
+          isVisible: true,
+          sortOrder: 'none',
           isProtected: true
         };
+        currentLists = [watchlist, ...currentLists];
         changed = true;
-        
-        // Remove any other duplicates that might have been created
-        currentLists = currentLists.filter((l, idx) => 
-          idx === watchlistIndex || (l.id !== WATCHLIST_ID && l.name !== 'Watchlist')
-        );
-      }
-    }
-
-    // Find any existing Portfolio (by ID or name)
-    const portfolioIndex = currentLists.findIndex(l => l.id === PORTFOLIO_ID || l.name === 'Portfolio');
-    
-    if (portfolioIndex === -1) {
-      // Create it if it doesn't exist
-      const portfolio: StockList = {
-        id: PORTFOLIO_ID,
-        name: 'Portfolio',
-        color: '#f59e0b',
-        tickers: [],
-        position: { x: 720, y: 50 }, // Offset from Watchlist (320, 50)
-        isCollapsed: false,
-        showStats: true,
-        isVisible: true,
-        sortOrder: 'none',
-        isProtected: true
-      };
-      
-      // Place it right after Watchlist if it exists
-      const wIdx = currentLists.findIndex(l => l.id === WATCHLIST_ID);
-      if (wIdx !== -1) {
-        currentLists.splice(wIdx + 1, 0, portfolio);
       } else {
-        currentLists.push(portfolio);
+        // Update the existing one and ensure it has the right ID and is protected
+        const existing = currentLists[watchlistIndex];
+        if (existing.id !== WATCHLIST_ID || !existing.isProtected) {
+          currentLists[watchlistIndex] = { 
+            ...existing, 
+            id: WATCHLIST_ID, 
+            name: 'Watchlist',
+            isProtected: true
+          };
+          changed = true;
+          
+          // Remove any other duplicates that might have been created
+          currentLists = currentLists.filter((l, idx) => 
+            idx === watchlistIndex || (l.id !== WATCHLIST_ID && l.name !== 'Watchlist')
+          );
+        }
       }
-      changed = true;
-    } else {
-      // Update the existing one and ensure it's protected and has the right ID
-      const existing = currentLists[portfolioIndex];
-      if (existing.id !== PORTFOLIO_ID || !existing.isProtected) {
-        currentLists[portfolioIndex] = { 
-          ...existing, 
-          id: PORTFOLIO_ID, 
+
+      // Find any existing Portfolio (by ID or name)
+      const portfolioIndex = currentLists.findIndex(l => l.id === PORTFOLIO_ID || l.name === 'Portfolio');
+      
+      if (portfolioIndex === -1) {
+        // Create it if it doesn't exist
+        const portfolio: StockList = {
+          id: PORTFOLIO_ID,
           name: 'Portfolio',
+          color: '#f59e0b',
+          tickers: [],
+          position: { x: 720, y: 50 }, // Offset from Watchlist (320, 50)
+          isCollapsed: false,
+          showStats: true,
+          isVisible: true,
+          sortOrder: 'none',
           isProtected: true
         };
+        
+        // Place it right after Watchlist if it exists
+        const wIdx = currentLists.findIndex(l => l.id === WATCHLIST_ID);
+        if (wIdx !== -1) {
+          currentLists.splice(wIdx + 1, 0, portfolio);
+        } else {
+          currentLists.push(portfolio);
+        }
         changed = true;
-
-        // Remove any other duplicates that might have been created
-        currentLists = currentLists.filter((l, idx) => 
-          idx === portfolioIndex || (l.id !== PORTFOLIO_ID && l.name !== 'Portfolio')
-        );
-      }
-    }
-
-    // Find any existing Today (by ID or name)
-    const todayIndex = currentLists.findIndex(l => l.id === TODAY_ID || l.name === 'Today');
-    
-    if (todayIndex === -1) {
-      // Create it if it doesn't exist
-      const today: StockList = {
-        id: TODAY_ID,
-        name: 'Today',
-        color: '#10b981',
-        tickers: [],
-        position: { x: 1120, y: 50 }, // Offset from Portfolio (720, 50)
-        isCollapsed: false,
-        showStats: true,
-        isVisible: true,
-        sortOrder: 'none',
-        isProtected: true
-      };
-      
-      // Place it right after Portfolio if it exists
-      const pIdx = currentLists.findIndex(l => l.id === PORTFOLIO_ID);
-      if (pIdx !== -1) {
-        currentLists.splice(pIdx + 1, 0, today);
       } else {
-        currentLists.push(today);
+        // Update the existing one and ensure it's protected and has the right ID
+        const existing = currentLists[portfolioIndex];
+        if (existing.id !== PORTFOLIO_ID || !existing.isProtected) {
+          currentLists[portfolioIndex] = { 
+            ...existing, 
+            id: PORTFOLIO_ID, 
+            name: 'Portfolio',
+            isProtected: true
+          };
+          changed = true;
+
+          // Remove any other duplicates that might have been created
+          currentLists = currentLists.filter((l, idx) => 
+            idx === portfolioIndex || (l.id !== PORTFOLIO_ID && l.name !== 'Portfolio')
+          );
+        }
       }
-      changed = true;
-    } else {
-      // Update the existing one and ensure it's protected and has the right ID
-      const existing = currentLists[todayIndex];
-      if (existing.id !== TODAY_ID || !existing.isProtected) {
-        currentLists[todayIndex] = { 
-          ...existing, 
-          id: TODAY_ID, 
+
+      // Find any existing Today (by ID or name)
+      const todayIndex = currentLists.findIndex(l => l.id === TODAY_ID || l.name === 'Today');
+      
+      if (todayIndex === -1) {
+        // Create it if it doesn't exist
+        const today: StockList = {
+          id: TODAY_ID,
           name: 'Today',
+          color: '#10b981',
+          tickers: [],
+          position: { x: 1120, y: 50 }, // Offset from Portfolio (720, 50)
+          isCollapsed: false,
+          showStats: true,
+          isVisible: true,
+          sortOrder: 'none',
           isProtected: true
         };
+        
+        // Place it right after Portfolio if it exists
+        const pIdx = currentLists.findIndex(l => l.id === PORTFOLIO_ID);
+        if (pIdx !== -1) {
+          currentLists.splice(pIdx + 1, 0, today);
+        } else {
+          currentLists.push(today);
+        }
         changed = true;
+      } else {
+        // Update the existing one and ensure it's protected and has the right ID
+        const existing = currentLists[todayIndex];
+        if (existing.id !== TODAY_ID || !existing.isProtected) {
+          currentLists[todayIndex] = { 
+            ...existing, 
+            id: TODAY_ID, 
+            name: 'Today',
+            isProtected: true
+          };
+          changed = true;
 
-        // Remove any other duplicates that might have been created
-        currentLists = currentLists.filter((l, idx) => 
-          idx === todayIndex || (l.id !== TODAY_ID && l.name !== 'Today')
-        );
+          // Remove any other duplicates that might have been created
+          currentLists = currentLists.filter((l, idx) => 
+            idx === todayIndex || (l.id !== TODAY_ID && l.name !== 'Today')
+          );
+        }
       }
-    }
 
-    // Ensure all lists have a stable createdAt timestamp
-    currentLists.forEach((l, idx) => {
-      if (!l.createdAt) {
-        l.createdAt = Date.now() - (currentLists.length - idx) * 1000;
-        changed = true;
-      }
-    });
+      // Ensure all lists have a stable createdAt timestamp
+      currentLists.forEach((l, idx) => {
+        if (!l.createdAt) {
+          l.createdAt = Date.now() - (currentLists.length - idx) * 1000;
+          changed = true;
+        }
+      });
 
-    if (changed) storage.saveLists(currentLists);
-    
-    setLists(currentLists);
-    setGroups(storage.getGroups());
-    setAlerts(storage.getAlerts());
-    setNotifications(storage.getNotifications());
+      if (changed) storage.saveLists(currentLists);
+      
+      setLists(currentLists);
+      setGroups(storage.getGroups());
+      setAlerts(storage.getAlerts());
+      setNotifications(storage.getNotifications());
+      setIsLoading(false);
+    };
+
+    initAppStorage();
   }, []);
 
   useEffect(() => {
@@ -1360,6 +1377,22 @@ const App: React.FC = () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [lists, isSearchExpanded]);
+
+  if (isLoading) {
+    return (
+      <div className={`app-container ${theme === 'light' ? 'light-theme' : ''}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--bg-primary)' }}>
+        <div className="spinner" style={{ border: '4px solid rgba(255,255,255,0.1)', width: '50px', height: '50px', borderRadius: '50%', borderLeftColor: 'var(--accent)', animation: 'spin 1s linear infinite' }} />
+        <h2 style={{ color: 'var(--text-primary)', marginTop: '20px', fontWeight: 500, letterSpacing: '1px' }}>Stocks Galore</h2>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '5px' }}>Initializing database...</p>
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
 
   return (
     <div className={`app-container ${theme === 'light' ? 'light-theme' : ''}`}>
