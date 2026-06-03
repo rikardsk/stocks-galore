@@ -4,9 +4,8 @@
 ## Later maybe
 - %-notifications for all tickers up 10% or more or down 10% or more. And not tickers that already notified as earnings beat or earnings miss. (Should be a filter (slider 0-100%) instead).
 ~~- Add tag for "Not profitable", "Low debt", "High debt", "Dividend", " Growth".~~
-- Is it possible to migrate the localStorage to IndexedDB instead since the storage is getting close to the 5MB limit, and the application is getting more and more complex with more features? Is it possible to add caching to reduce load times or is that already done?
 ~~- Sort by price as an option when choosing sorting method on lists (Ctrl + Shift + P).~~
-- ~~Some way to show if the company is profitable or not (Tag: Not profitable).~~
+~~- Some way to show if the company is profitable or not (Tag: Not profitable).~~
 - Some way to show how much debt the company has (Tag: Low debt / High debt).
 - Be able to move/drag the button bar at the bottom. And dock it to top, bottom, right but not left.
 - Custom menu on right click. (As an option in settings modal).
@@ -121,5 +120,6 @@
 ~~- Can you use the Storage Estimate API to monitor localStorage usage and how full it is. (What's the limit?) and show some warning if it's getting full. Also can you create a donut chart in the analytics dashboard showing localStorage usage for different categories.~~
 ~~- Some way to monitor localStorage usage and how full it is. (What's the limit?).~~
 ~~- In the "Deep Dive" panel add another shortcut button under section for custom badges, next to note that says "Not profitable". The tag should be red like "Earnings Miss". Add the tag when the company's P/E is N/A.~~
+~~- Is it possible to migrate the localStorage to IndexedDB instead since the storage is getting close to the 5MB limit, and the application is getting more and more complex with more features? Is it possible to add caching to reduce load times or is that already done.~~
 
 
