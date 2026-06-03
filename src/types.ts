@@ -192,10 +192,11 @@ export const countActiveFilters = (filters: StockFilters): number => {
   if (filters.priceMax) count++;
   if (filters.marketCapMin) count++;
   if (filters.marketCapMax) count++;
-  if (filters.sectors && filters.sectors.length > 0) count++;
+  if (filters.sectors && filters.sectors.length > 0) count += filters.sectors.length;
   if (filters.rules && filters.rules.length > 0) count += filters.rules.length;
   if (filters.ownedOnly) count++;
   if (filters.watchlistOnly) count++;
+  if (filters.earningsOnly) count++;
   return count;
 };
 

@@ -1,6 +1,7 @@
 import React from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, X } from 'lucide-react';
 import type { StockFilters, FilterRule } from '../types';
+import { countActiveFilters } from '../types';
 
 interface FilterModalProps {
   isOpen: boolean;
@@ -75,26 +76,23 @@ export const FilterModal: React.FC<FilterModalProps> = ({
     }));
   };
 
-  const activeCount = 
-    (localFilters.priceMin ? 1 : 0) + 
-    (localFilters.priceMax ? 1 : 0) + 
-    (localFilters.marketCapMin ? 1 : 0) + 
-    (localFilters.marketCapMax ? 1 : 0) + 
-    localFilters.sectors.length + 
-    (localFilters.rules ? localFilters.rules.length : 0) +
-    (localFilters.ownedOnly ? 1 : 0) +
-    (localFilters.earningsOnly ? 1 : 0);
+  const activeCount = countActiveFilters(localFilters);
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()} style={{ width: '480px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h3 style={{ margin: 0 }}>Global Item Filters</h3>
-          {activeCount > 0 && (
-            <span style={{ fontSize: '12px', background: 'var(--accent)', color: 'white', padding: '2px 8px', borderRadius: '12px' }}>
-              {activeCount} active
-            </span>
-          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <h3 style={{ margin: 0 }}>Global Item Filters</h3>
+            {activeCount > 0 && (
+              <span style={{ fontSize: '12px', background: 'var(--accent)', color: 'white', padding: '2px 8px', borderRadius: '12px' }}>
+                {activeCount} active
+              </span>
+            )}
+          </div>
+          <button className="btn" onClick={onClose} aria-label="Close modal">
+            <X size={20} />
+          </button>
         </div>
 
         <div style={{ marginBottom: '24px', display: 'flex', gap: '12px' }}>

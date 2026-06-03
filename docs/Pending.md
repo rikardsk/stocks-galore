@@ -3,6 +3,7 @@
 
 ## Later maybe
 - %-notifications for all tickers up 10% or more or down 10% or more. And not tickers that already notified as earnings beat or earnings miss. (Should be a filter (slider 0-100%) instead).
+- Earnings in filter modal doesn't show a badge on the button in the buttonbar when activated.
 - Add tag for "Not profitable", "Low debt", "High debt", "Dividend", " Growth".
 - Sort by price as an option when choosing sorting method on lists (Ctrl + Shift + P).
 - Some way to monitor localStorage usage and how full it is. (What's the limit?).
