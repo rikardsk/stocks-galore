@@ -3,9 +3,10 @@
 
 ## Later maybe
 - %-notifications for all tickers up 10% or more or down 10% or more. And not tickers that already notified as earnings beat or earnings miss. (Should be a filter (slider 0-100%) instead).
+- ~~Can you use the Storage Estimate API to monitor localStorage usage and how full it is. (What's the limit?) and show some warning if it's getting full. Also can you create a donut chart in the analytics dashboard showing localStorage usage for different categories.~~
 - Add tag for "Not profitable", "Low debt", "High debt", "Dividend", " Growth".
-- Sort by price as an option when choosing sorting method on lists (Ctrl + Shift + P).
-- Some way to monitor localStorage usage and how full it is. (What's the limit?).
+~~- Sort by price as an option when choosing sorting method on lists (Ctrl + Shift + P).~~
+- ~~Some way to monitor localStorage usage and how full it is. (What's the limit?).~~
 - Some way to show if the company is profitable or not (Tag: Not profitable).
 - Some way to show how much debt the company has (Tag: Low debt / High debt).
 - Be able to move/drag the button bar at the bottom. And dock it to top, bottom, right but not left.

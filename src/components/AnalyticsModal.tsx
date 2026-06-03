@@ -33,7 +33,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
   tickers,
   lists,
   groups,
-  theme = 'dark',
+  theme: _theme = 'dark',
   onSelectTicker,
   notifications = []
 }) => {
@@ -44,6 +44,75 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
   const [isBadgeExpanded, setIsBadgeExpanded] = useState(true);
   const [isEarningsExpanded, setIsEarningsExpanded] = useState(true);
   const [isIpoExpanded, setIsIpoExpanded] = useState(true);
+  const [isStorageExpanded, setIsStorageExpanded] = useState(true);
+  const [apiQuota, setApiQuota] = useState<number | null>(null);
+  const [apiUsage, setApiUsage] = useState<number | null>(null);
+
+  React.useEffect(() => {
+    if (isOpen && navigator.storage && navigator.storage.estimate) {
+      navigator.storage.estimate().then(estimate => {
+        setApiQuota(estimate.quota ?? null);
+        setApiUsage(estimate.usage ?? null);
+      }).catch(err => {
+        console.error('Failed to get storage estimate:', err);
+      });
+    }
+  }, [isOpen]);
+
+  const formatBytes = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const storageData = useMemo(() => {
+    let workbenchSize = 0;
+    let groupsSize = 0;
+    let alertsSize = 0;
+    let notificationsSize = 0;
+    let settingsSize = 0;
+
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key) continue;
+      const val = localStorage.getItem(key) || '';
+      const sizeBytes = (key.length + val.length) * 2;
+
+      if (key === 'stocks_galore_workbench') {
+        workbenchSize = sizeBytes;
+      } else if (key === 'stocks_galore_groups') {
+        groupsSize = sizeBytes;
+      } else if (key === 'stocks_galore_alerts') {
+        alertsSize = sizeBytes;
+      } else if (key === 'stocks_galore_notifications') {
+        notificationsSize = sizeBytes;
+      } else {
+        settingsSize += sizeBytes;
+      }
+    }
+
+    const totalUsed = workbenchSize + groupsSize + alertsSize + notificationsSize + settingsSize;
+    const limitBytes = 5 * 1024 * 1024; // 5 MB
+    const freeBytes = Math.max(0, limitBytes - totalUsed);
+
+    const categories = [
+      { name: 'Lists & Tickers', value: workbenchSize, percent: (workbenchSize / limitBytes) * 100, color: '#6366f1' },
+      { name: 'Groups', value: groupsSize, percent: (groupsSize / limitBytes) * 100, color: '#10b981' },
+      { name: 'Alerts', value: alertsSize, percent: (alertsSize / limitBytes) * 100, color: '#f59e0b' },
+      { name: 'Notifications', value: notificationsSize, percent: (notificationsSize / limitBytes) * 100, color: '#ef4444' },
+      { name: 'App Settings', value: settingsSize, percent: (settingsSize / limitBytes) * 100, color: '#8b5cf6' },
+      { name: 'Free Space', value: freeBytes, percent: (freeBytes / limitBytes) * 100, color: 'var(--surface-subtle)' }
+    ];
+
+    return {
+      categories,
+      totalUsed,
+      limitBytes,
+      percentUsed: (totalUsed / limitBytes) * 100
+    };
+  }, [isOpen, tickers, lists, groups, notifications]);
 
   const filteredTickers = useMemo(() => {
     let result = tickers;
@@ -583,7 +652,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                         />
                         {s.trendline && (
                           <ReferenceLine 
-                            segment={s.trendline} 
+                            segment={s.trendline as any} 
                             stroke={s.color} 
                             strokeOpacity={0.5} 
                             strokeDasharray="3 3"
@@ -627,10 +696,10 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                     <RechartsTooltip content={<CustomTooltip />} cursor={false} />
                     <Legend verticalAlign="top" height={36}/>
                     <Bar dataKey="Above" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]} barSize={40}>
-                      <LabelList dataKey="Above" position="center" fill="white" fontSize={10} formatter={(v: number) => v > 0 ? v : ''} />
+                      <LabelList dataKey="Above" position="center" fill="white" fontSize={10} formatter={(v: any) => v > 0 ? v : ''} />
                     </Bar>
                     <Bar dataKey="Below" stackId="a" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={40}>
-                      <LabelList dataKey="Below" position="center" fill="white" fontSize={10} formatter={(v: number) => v > 0 ? v : ''} />
+                      <LabelList dataKey="Below" position="center" fill="white" fontSize={10} formatter={(v: any) => v > 0 ? v : ''} />
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
@@ -776,6 +845,129 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                   </ResponsiveContainer>
                 </div>
               )
+            )}
+          </div>
+
+          {/* Storage Analytics Section */}
+          <div style={{ gridColumn: '1 / -1', marginTop: '20px' }}>
+            <h3 
+              onClick={() => setIsStorageExpanded(!isStorageExpanded)}
+              style={{ marginBottom: '24px', fontSize: '16px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}
+            >
+              {isStorageExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+              Local Storage Usage & Quota
+              <div title="Detailed breakdown of localStorage categories and total browser storage quota via Storage Estimate API." style={{ cursor: 'help', opacity: 0.5 }} onClick={e => e.stopPropagation()}>
+                <Info size={14} />
+              </div>
+            </h3>
+            
+            {isStorageExpanded && (
+              <div style={{ background: 'var(--surface-inset)', padding: '30px', borderRadius: '12px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '40px' }}>
+                  {/* Donut Chart */}
+                  <div style={{ position: 'relative', width: '180px', height: '180px', flexShrink: 0 }}>
+                    <svg viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)', width: '100%', height: '100%' }}>
+                      {storageData.categories.map((cat, i) => {
+                        const totalPercentBefore = storageData.categories.slice(0, i).reduce((sum, item) => sum + item.percent, 0);
+                        return (
+                          <circle
+                            key={cat.name}
+                            cx="50"
+                            cy="50"
+                            r="40"
+                            fill="none"
+                            stroke={cat.color}
+                            strokeWidth="12"
+                            strokeDasharray={`${cat.percent * 2.513} 251.3`}
+                            strokeDashoffset={-totalPercentBefore * 2.513}
+                            style={{ transition: 'stroke-dashoffset 1s ease-in-out' }}
+                          >
+                            <title>{`${cat.name}: ${formatBytes(cat.value)} (${(cat.value / storageData.limitBytes * 100).toFixed(1)}%)`}</title>
+                          </circle>
+                        );
+                      })}
+                    </svg>
+                    <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
+                      <div style={{ fontSize: '18px', fontWeight: 700 }}>{storageData.percentUsed.toFixed(1)}%</div>
+                      <div style={{ fontSize: '9px', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Used</div>
+                    </div>
+                  </div>
+
+                  {/* Details and Legend */}
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+                      <div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '4px' }}>localStorage limit</div>
+                        <div style={{ fontSize: '18px', fontWeight: 600 }}>{formatBytes(storageData.limitBytes)}</div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>Standard browser limit</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '4px' }}>localStorage used</div>
+                        <div style={{ fontSize: '18px', fontWeight: 600, color: storageData.percentUsed >= 80 ? 'var(--error-bg, #ef4444)' : 'var(--text-primary)' }}>
+                          {formatBytes(storageData.totalUsed)}
+                        </div>
+                        {storageData.percentUsed >= 80 && (
+                          <div style={{ fontSize: '10px', color: 'var(--error-bg, #ef4444)', fontWeight: 'bold', marginTop: '2px' }}>
+                            ⚠️ Warning: Storage is almost full!
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div style={{ width: '100%', background: 'rgba(255,255,255,0.05)', borderRadius: '6px', height: '12px', position: 'relative', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
+                      <div style={{
+                        width: `${storageData.percentUsed}%`,
+                        background: storageData.percentUsed >= 80 ? 'var(--error-bg, #ef4444)' : 'var(--accent)',
+                        height: '100%',
+                        borderRadius: '4px',
+                        transition: 'width 0.5s ease-out'
+                      }} />
+                    </div>
+
+                    {/* Legend */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '8px', marginTop: '8px' }}>
+                      {storageData.categories.map(cat => (
+                        <div key={cat.name} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px' }}>
+                          <div style={{ width: '10px', height: '10px', borderRadius: '2px', background: cat.color }} />
+                          <div style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--text-secondary)' }}>
+                            {cat.name}
+                          </div>
+                          <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                            {cat.name === 'Free Space' ? `${cat.percent.toFixed(0)}%` : formatBytes(cat.value)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Storage Estimate API Section */}
+                <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ fontSize: '13px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span>Storage Estimate API (Origin Quota)</span>
+                    <span style={{ fontSize: '10px', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px', color: 'var(--text-secondary)' }}>IndexedDB & Cache</span>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', fontSize: '12px' }}>
+                    <div>
+                      <span style={{ color: 'var(--text-secondary)' }}>Total Quota: </span>
+                      <span style={{ fontWeight: 600 }}>{apiQuota !== null ? formatBytes(apiQuota) : 'Loading...'}</span>
+                    </div>
+                    <div>
+                      <span style={{ color: 'var(--text-secondary)' }}>Estimated Usage: </span>
+                      <span style={{ fontWeight: 600 }}>{apiUsage !== null ? formatBytes(apiUsage) : 'Loading...'}</span>
+                    </div>
+                    <div>
+                      <span style={{ color: 'var(--text-secondary)' }}>Percentage Filled: </span>
+                      <span style={{ fontWeight: 600 }}>
+                        {apiUsage !== null && apiQuota !== null && apiQuota > 0
+                          ? `${((apiUsage / apiQuota) * 100).toFixed(4)}%`
+                          : '0.00%'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         </div>

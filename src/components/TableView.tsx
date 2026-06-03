@@ -35,9 +35,8 @@ export const TableView: React.FC<TableViewProps> = ({
   onToggleWatchlist, 
   onToggleOwned,
   onSelectTicker,
-  theme = 'dark'
+  theme: _theme = 'dark'
 }) => {
-  const isDark = theme === 'dark';
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'symbol', direction: 'asc' });
   const [selectedGroupId, setSelectedGroupId] = useState<string>('all');
   const [selectedListId, setSelectedListId] = useState<string>('all');

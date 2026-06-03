@@ -176,6 +176,29 @@ const App: React.FC = () => {
   const [isAssignGroupModalOpen, setIsAssignGroupModalOpen] = useState(false);
   const [listToAssign, setListToAssign] = useState<string | null>(null);
 
+  const [storageUsagePercent, setStorageUsagePercent] = useState<number>(0);
+  const [isStorageWarningDismissed, setIsStorageWarningDismissed] = useState(false);
+
+  useEffect(() => {
+    if (storageUsagePercent < 80) {
+      setIsStorageWarningDismissed(false);
+    }
+  }, [storageUsagePercent]);
+
+  useEffect(() => {
+    let totalChars = 0;
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key) {
+        totalChars += key.length + (localStorage.getItem(key)?.length || 0);
+      }
+    }
+    const usedBytes = totalChars * 2;
+    const limitBytes = 5 * 1024 * 1024; // 5MB limit
+    const percent = (usedBytes / limitBytes) * 100;
+    setStorageUsagePercent(percent);
+  }, [lists, groups, alerts, notifications]);
+
   // Auto-dismiss toast after 5 seconds
   useEffect(() => {
     if (toastMessage) {
@@ -1391,6 +1414,64 @@ const App: React.FC = () => {
       />
       
       <div style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {storageUsagePercent >= 80 && !isStorageWarningDismissed && (
+          <div style={{
+            background: '#ef4444',
+            color: 'white',
+            padding: '8px 16px',
+            fontSize: '12px',
+            fontWeight: 700,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            zIndex: 1001,
+            boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+            flexShrink: 0
+          }}>
+            <span>
+              ⚠️ LocalStorage is {storageUsagePercent.toFixed(1)}% full! Please export/backup your lists and clean up old data/notifications in settings.
+            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <button 
+                className="btn" 
+                onClick={() => setIsSettingsModalOpen(true)}
+                style={{
+                  background: 'rgba(255,255,255,0.2)',
+                  color: 'white',
+                  border: 'none',
+                  padding: '2px 8px',
+                  fontSize: '11px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold'
+                }}
+              >
+                Open Settings
+              </button>
+              <button
+                className="btn"
+                onClick={() => setIsStorageWarningDismissed(true)}
+                style={{
+                  background: 'transparent',
+                  color: 'white',
+                  border: 'none',
+                  padding: '2px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  lineHeight: 1,
+                  opacity: 0.8
+                }}
+                title="Dismiss warning"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
         {isRefreshing && (
           <div style={{ 
             position: 'absolute', 

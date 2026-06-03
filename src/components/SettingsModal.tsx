@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sun, Moon, BellOff, Bell, Eye, EyeOff } from 'lucide-react';
+import { Sun, Moon, BellOff, Bell, Eye, EyeOff, X } from 'lucide-react';
 
 export type RefreshInterval = 'manual' | '1m' | '5m' | '15m';
 
@@ -58,8 +58,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={e => e.stopPropagation()} style={{ width: '440px', maxHeight: '85vh', overflowY: 'auto' }}>
-        <h3 style={{ margin: 0, marginBottom: '24px' }}>Workbench Settings</h3>
+      <div className="modal" onClick={e => e.stopPropagation()} style={{ width: '540px', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexShrink: 0 }}>
+          <h3 style={{ margin: 0 }}>Workbench Settings</h3>
+          <button className="btn" onClick={onClose} style={{ padding: '4px' }}><X size={20} /></button>
+        </div>
+
+        <div style={{ flex: 1, overflowY: 'auto', paddingRight: '6px' }}>
 
         {/* ── Search Settings ── */}
         <div className="input-group" style={{ marginTop: '24px' }}>
@@ -421,8 +426,56 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
           </div>
         </div>
+        {/* ── Storage Status ── */}
+        {(() => {
+          let totalChars = 0;
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key) {
+              totalChars += key.length + (localStorage.getItem(key)?.length || 0);
+            }
+          }
+          const usedBytes = totalChars * 2;
+          const limitBytes = 5 * 1024 * 1024; // 5MB limit
+          const percentUsed = (usedBytes / limitBytes) * 100;
+          const isFullWarning = percentUsed >= 80;
+          const formatBytesLocal = (bytes: number) => {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+          };
 
-        <div style={{ display: 'flex', gap: '12px', marginTop: '30px' }}>
+          return (
+            <div className="input-group" style={{ marginTop: '24px' }}>
+              <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>Local Storage Space</span>
+                {isFullWarning && <span style={{ color: '#ef4444', fontSize: '11px', fontWeight: 'bold' }}>⚠️ ALMOST FULL</span>}
+              </label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '6px' }}>
+                <span>{formatBytesLocal(usedBytes)} / {formatBytesLocal(limitBytes)}</span>
+                <span>{percentUsed.toFixed(1)}%</span>
+              </div>
+              <div style={{ width: '100%', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', height: '8px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
+                <div style={{
+                  width: `${percentUsed}%`,
+                  background: isFullWarning ? '#ef4444' : 'var(--accent)',
+                  height: '100%',
+                  borderRadius: '4px',
+                  transition: 'width 0.3s'
+                }} />
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '6px' }}>
+                Browser limits localStorage to 5MB. Clear old notifications or lists to free up space.
+              </div>
+            </div>
+          );
+        })()}
+
+        </div>
+
+        <div style={{ display: 'flex', gap: '12px', marginTop: '20px', flexShrink: 0 }}>
           <button className="btn btn-primary" style={{ flex: 1 }} onClick={onClose}>
             Close Settings
           </button>

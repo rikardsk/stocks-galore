@@ -11,7 +11,6 @@ interface RankingModalProps {
 }
 
 export const RankingModal: React.FC<RankingModalProps> = ({ isOpen, onClose, tickers, onSelectTicker, theme }) => {
-  const isDark = theme === 'dark';
   
   const rankings = useMemo(() => {
     const validTickers = tickers.filter(t => t.name !== 'Unknown Company');
@@ -107,8 +106,7 @@ interface RankingColumnProps {
   theme: 'dark' | 'light';
 }
 
-const RankingColumn: React.FC<RankingColumnProps> = ({ title, icon, tickers, metric, onSelectTicker, theme }) => {
-  const isDark = theme === 'dark';
+const RankingColumn: React.FC<RankingColumnProps> = ({ title, icon, tickers, metric, onSelectTicker, theme: _theme }) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
