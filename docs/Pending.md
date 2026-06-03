@@ -3,7 +3,6 @@
 
 ## Later maybe
 - %-notifications for all tickers up 10% or more or down 10% or more. And not tickers that already notified as earnings beat or earnings miss. (Should be a filter (slider 0-100%) instead).
-- Earnings in filter modal doesn't show a badge on the button in the buttonbar when activated.
 - Add tag for "Not profitable", "Low debt", "High debt", "Dividend", " Growth".
 - Sort by price as an option when choosing sorting method on lists (Ctrl + Shift + P).
 - Some way to monitor localStorage usage and how full it is. (What's the limit?).
@@ -117,4 +116,7 @@
 ~~- Can you make the vertical spacing even between the 4 labels in the sidebar (when collapsed they look slighlty missaligned).~~
 ~~- Change shortcut key for "Open Analytics" to Ctrl + a and change the Notifications shortcut key to Ctrl + Shift + n. Update the keyboard shortcuts modal to reflect the changes.~~
 ~~- Create shortcut keys for "Add group" as Ctrl + Alt + G, "Delete list" as Ctrl + D, and "Move list" as Ctrl + M. Update the keyboard shortcuts modal.~~
+~~- Earnings in filter modal doesn't show a badge on the button in the buttonbar when activated.~~
+~~- In the "Global Item Filters" modal, can you add a slider for filtering percentage gain/loss with to buttons above/below. Also add buttons to choose timeframe: today, 1M, 3M, 1Y.~~
+- 
 

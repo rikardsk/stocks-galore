@@ -140,6 +140,14 @@ export interface StockFilters {
   ownedOnly?: boolean;
   watchlistOnly?: boolean;
   earningsOnly?: boolean;
+  perfFilterValue?: number;
+  perfFilterDirection?: 'above' | 'below' | 'none';
+  perfFilterTimeframe?: 'today' | 'yesterday' | '1M' | '3M' | '1Y';
+  fiftyTwoWeekFilter?: number;
+  fiftyTwoWeekDirection?: 'above' | 'below' | 'none';
+  peFilter?: number;
+  peDirection?: 'above' | 'below' | 'none';
+  volumeFilter?: 'none' | '2x' | '3x' | '4x' | '5x';
 }
 
 export const EMPTY_FILTERS: StockFilters = {
@@ -152,6 +160,14 @@ export const EMPTY_FILTERS: StockFilters = {
   ownedOnly: false,
   watchlistOnly: false,
   earningsOnly: false,
+  perfFilterValue: 0,
+  perfFilterDirection: 'none',
+  perfFilterTimeframe: 'today',
+  fiftyTwoWeekFilter: 50,
+  fiftyTwoWeekDirection: 'none',
+  peFilter: 20,
+  peDirection: 'none',
+  volumeFilter: 'none',
 };
 
 /** Parse market cap strings like "2.30T", "0.15T" into billions */
@@ -197,6 +213,10 @@ export const countActiveFilters = (filters: StockFilters): number => {
   if (filters.ownedOnly) count++;
   if (filters.watchlistOnly) count++;
   if (filters.earningsOnly) count++;
+  if (filters.perfFilterDirection && filters.perfFilterDirection !== 'none') count++;
+  if (filters.fiftyTwoWeekDirection && filters.fiftyTwoWeekDirection !== 'none') count++;
+  if (filters.peDirection && filters.peDirection !== 'none') count++;
+  if (filters.volumeFilter && filters.volumeFilter !== 'none') count++;
   return count;
 };
 
@@ -207,6 +227,91 @@ export const tickerMatchesFilters = (ticker: Ticker, filters: StockFilters): boo
     if (!hasEarningsBadge) return false;
   }
 
+  if (filters.perfFilterDirection && filters.perfFilterDirection !== 'none') {
+    const direction = filters.perfFilterDirection;
+    const timeframe = filters.perfFilterTimeframe || 'today';
+    const targetVal = filters.perfFilterValue ?? 0;
+    
+    let actualVal: number | undefined;
+    if (timeframe === 'today') {
+      if (ticker.stats.changePercent) {
+        actualVal = parseFloat(ticker.stats.changePercent.replace('%', ''));
+      }
+    } else if (timeframe === 'yesterday') {
+      if (ticker.stats.sparkline && ticker.stats.sparkline.length >= 3) {
+        const len = ticker.stats.sparkline.length;
+        const yesterdayClose = ticker.stats.sparkline[len - 2];
+        const dayBeforeClose = ticker.stats.sparkline[len - 3];
+        if (yesterdayClose !== undefined && dayBeforeClose !== undefined && dayBeforeClose !== 0) {
+          actualVal = ((yesterdayClose - dayBeforeClose) / dayBeforeClose) * 100;
+        }
+      }
+    } else if (timeframe === '1M') {
+      actualVal = ticker.stats.perf1M;
+    } else if (timeframe === '3M') {
+      actualVal = ticker.stats.perf3M;
+    } else if (timeframe === '1Y') {
+      actualVal = ticker.stats.perf1Y;
+    }
+    
+    if (actualVal === undefined || isNaN(actualVal)) {
+      return false;
+    }
+    
+    if (direction === 'above' && actualVal < targetVal) return false;
+    if (direction === 'below' && actualVal > targetVal) return false;
+  }
+
+  if (filters.fiftyTwoWeekDirection && filters.fiftyTwoWeekDirection !== 'none') {
+    if (ticker.stats.high52 === undefined || ticker.stats.high52 === null || ticker.stats.low52 === undefined || ticker.stats.low52 === null) {
+      return false;
+    }
+    const price = parseFloat(ticker.stats.price);
+    const high = ticker.stats.high52;
+    const low = ticker.stats.low52;
+    const range = high - low;
+    if (range <= 0) return false;
+    
+    const percentInRange = ((price - low) / range) * 100;
+    if (filters.fiftyTwoWeekDirection === 'above') {
+      if (percentInRange < (filters.fiftyTwoWeekFilter ?? 50)) return false;
+    } else {
+      if (percentInRange > (filters.fiftyTwoWeekFilter ?? 50)) return false;
+    }
+  }
+
+  if (filters.peDirection && filters.peDirection !== 'none') {
+    if (ticker.stats.pe === undefined || ticker.stats.pe === null) return false;
+    const pe = ticker.stats.pe;
+    if (filters.peDirection === 'above') {
+      if (pe < (filters.peFilter ?? 20)) return false;
+    } else {
+      if (pe > (filters.peFilter ?? 20)) return false;
+    }
+  }
+
+  if (filters.volumeFilter && filters.volumeFilter !== 'none') {
+    if (!ticker.stats.volume || !ticker.stats.avgVolume) return false;
+    
+    const parseVol = (s: string): number => {
+      const num = parseFloat(s);
+      if (isNaN(num)) return 0;
+      const upper = s.toUpperCase();
+      if (upper.includes('B')) return num * 1000000000;
+      if (upper.includes('M')) return num * 1000000;
+      if (upper.includes('K')) return num * 1000;
+      return num;
+    };
+
+    const currentVol = parseVol(ticker.stats.volume);
+    const avgVol = parseVol(ticker.stats.avgVolume);
+    if (avgVol === 0) return false;
+    
+    const ratio = currentVol / avgVol;
+    const targetRatio = parseInt(filters.volumeFilter);
+    if (ratio < targetRatio) return false;
+  }
+
   const price = parseFloat(ticker.stats.price);
   if (!isNaN(price)) {
     if (filters.priceMin && price < parseFloat(filters.priceMin)) return false;
@@ -214,7 +319,8 @@ export const tickerMatchesFilters = (ticker: Ticker, filters: StockFilters): boo
   }
 
   const cap = parseMarketCap(ticker.stats.marketCap);
-  if (cap !== null) {
+  if (filters.marketCapMin || filters.marketCapMax) {
+    if (cap === null) return false;
     if (filters.marketCapMin && cap < parseFloat(filters.marketCapMin)) return false;
     if (filters.marketCapMax && cap > parseFloat(filters.marketCapMax)) return false;
   }
