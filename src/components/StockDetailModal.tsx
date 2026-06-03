@@ -130,8 +130,16 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
 
   if (ticker && ticker.id !== prevTickerId) {
     setPrevTickerId(ticker.id);
-    setBadges(ticker.badges || []);
-    setPrevBadges(ticker.badges || []);
+    let initialBadges = ticker.badges || [];
+    const isPE_NA = !ticker.stats.pe;
+    if (isPE_NA && !initialBadges.includes('NOT PROFITABLE')) {
+      initialBadges = [...initialBadges, 'NOT PROFITABLE'];
+      if (onUpdateBadges) {
+        onUpdateBadges(ticker, initialBadges);
+      }
+    }
+    setBadges(initialBadges);
+    setPrevBadges(initialBadges);
     setNotes(ticker.notes || '');
   }
 
@@ -696,13 +704,25 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
               >
                 Note
               </button>
+              <button 
+                onClick={() => toggleQuickBadge('NOT PROFITABLE')}
+                style={{ 
+                  background: badges.includes('NOT PROFITABLE') ? '#ef4444' : 'var(--surface-subtle)', 
+                  color: badges.includes('NOT PROFITABLE') ? 'white' : 'var(--text-secondary)',
+                  border: '1px solid ' + (badges.includes('NOT PROFITABLE') ? '#ef4444' : 'var(--border-color)'),
+                  padding: '6px 16px', borderRadius: '100px', fontSize: '12px', fontWeight: 700, cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                Not profitable
+              </button>
             </div>
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
               {badges.map((badge, idx) => (
                 <div key={idx} style={{ 
                   display: 'flex', alignItems: 'center', gap: '6px', 
-                  background: 'var(--accent)', color: 'white', 
+                  background: badge === 'EARNINGS BEAT' ? '#10b981' : (badge === 'EARNINGS MISS' || badge === 'NOT PROFITABLE' ? '#ef4444' : 'var(--accent)'), color: 'white', 
                   padding: '4px 10px', borderRadius: '100px', fontSize: '11px', fontWeight: 600 
                 }}>
                   {badge}

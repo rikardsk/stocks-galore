@@ -441,7 +441,7 @@ export const TableView: React.FC<TableViewProps> = ({
                               fontWeight: 700, 
                               padding: '2px 6px', 
                               borderRadius: '4px',
-                              background: badge === 'EARNINGS BEAT' ? '#10b981' : (badge === 'EARNINGS MISS' ? '#ef4444' : 'var(--accent)'),
+                              background: badge === 'EARNINGS BEAT' ? '#10b981' : (badge === 'EARNINGS MISS' || badge === 'NOT PROFITABLE' ? '#ef4444' : 'var(--accent)'),
                               color: 'white'
                             }}
                           >
