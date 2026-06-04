@@ -43,6 +43,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   showUngrouped = true,
   showArchive = true
 }) => {
+  const [isEditMode, setIsEditMode] = React.useState(false);
   const [isUngroupedEditMode, setIsUngroupedEditMode] = React.useState(false);
   const [isArchiveEditMode, setIsArchiveEditMode] = React.useState(false);
   const [isPinnedEditMode, setIsPinnedEditMode] = React.useState(false);
@@ -385,14 +386,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   style={{ 
                     fontSize: '11px', 
                     padding: '2px 8px', 
-                    color: 'var(--text-secondary)', 
-                    background: 'transparent', 
+                    color: isEditMode ? 'var(--accent)' : 'var(--text-secondary)', 
+                    background: isEditMode ? 'rgba(59, 130, 246, 0.1)' : 'transparent', 
                     borderRadius: '4px',
-                    border: '1px solid transparent'
+                    border: isEditMode ? '1px solid rgba(59, 130, 246, 0.2)' : '1px solid transparent'
                   }}
-                  onClick={onCreateGroup}
+                  onClick={() => setIsEditMode(!isEditMode)}
                 >
-                  Edit
+                  {isEditMode ? 'Done' : 'Edit'}
                 </button>
               </div>
             </div>
@@ -432,7 +433,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     {sortLists(group.listIds
                       .map(id => lists.find(l => l.id === id))
                       .filter((l): l is StockList => !!l), groupsSort)
-                      .map(l => renderListItem(l, false))
+                      .map(l => renderListItem(l, isEditMode))
                     }
                     {group.listIds.length === 0 && (
                       <div style={{ height: '8px' }} />
