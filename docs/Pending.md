@@ -2,7 +2,6 @@
 
 
 ## Later maybe
-- %-notifications for all tickers up 10% or more or down 10% or more. And not tickers that already notified as earnings beat or earnings miss. (Should be a filter (slider 0-100%) instead).
 - Check code quality and fix errors...
 ~~- Add tag for "Not profitable", "Low debt", "High debt", "Dividend", " Growth".~~
 ~~- Sort by price as an option when choosing sorting method on lists (Ctrl + Shift + P).~~
@@ -122,5 +121,7 @@
 ~~- Some way to monitor localStorage usage and how full it is. (What's the limit?).~~
 ~~- In the "Deep Dive" panel add another shortcut button under section for custom badges, next to note that says "Not profitable". The tag should be red like "Earnings Miss". Add the tag when the company's P/E is N/A.~~
 ~~- Is it possible to migrate the localStorage to IndexedDB instead since the storage is getting close to the 5MB limit, and the application is getting more and more complex with more features? Is it possible to add caching to reduce load times or is that already done.~~
+~~- In settings modal, add a toggle button to show/hide tags in the lists in the workbench.~~
+~~- In the create new group modal can you add a list of all existing groups and make it possible to delete and edit them. Also if possible to rearrenge them. Add a new button to add a new group in that modal, so that you can add multiple times in a row. (So that you don't need to close the modal to add a new group).~~
 
 
