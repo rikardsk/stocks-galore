@@ -103,6 +103,19 @@ const App: React.FC = () => {
     });
   };
 
+  const [showTags, setShowTags] = useState<boolean>(() => {
+    const saved = localStorage.getItem('showTags');
+    return saved !== 'false';
+  });
+
+  const handleToggleTags = () => {
+    setShowTags(prev => {
+      const next = !prev;
+      localStorage.setItem('showTags', next.toString());
+      return next;
+    });
+  };
+
   const [buttonBarPosition, setButtonBarPosition] = useState<'bottom' | 'top' | 'right'>(() => {
     const saved = localStorage.getItem('buttonBarPosition');
     return (saved === 'bottom' || saved === 'top' || saved === 'right') ? saved : 'bottom';
@@ -1551,6 +1564,7 @@ const App: React.FC = () => {
                 onRefresh={handleRefreshList}
                 onFocus={setActiveListId}
                 isActive={activeListId === list.id}
+                showTags={showTags}
               />
             ))}
           </div>
@@ -1720,6 +1734,8 @@ const App: React.FC = () => {
         onToggleGroups={handleToggleGroups}
         onToggleUngrouped={handleToggleUngrouped}
         onToggleArchive={handleToggleArchive}
+        showTags={showTags}
+        onToggleTags={handleToggleTags}
       />
 
       <TableView 

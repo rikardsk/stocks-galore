@@ -19,6 +19,7 @@ interface ListPanelProps {
   onRefresh?: (listId: string) => void;
   onFocus?: (listId: string) => void;
   isActive?: boolean;
+  showTags?: boolean;
 }
 
 export const ListPanel: React.FC<ListPanelProps> = ({
@@ -34,7 +35,8 @@ export const ListPanel: React.FC<ListPanelProps> = ({
   onSelectTicker,
   onRefresh,
   onFocus,
-  isActive
+  isActive,
+  showTags = true
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(list.isCollapsed);
   const [showStats, setShowStats] = useState(list.showStats);
@@ -268,7 +270,7 @@ export const ListPanel: React.FC<ListPanelProps> = ({
                     </button>
                   </div>
                     <div onClick={() => onSelectTicker(ticker)} style={{ cursor: 'pointer', flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', position: 'relative' }}>
-                      {ticker.badges && ticker.badges.length > 0 && (
+                      {showTags && ticker.badges && ticker.badges.length > 0 && (
                         <div style={{ position: 'absolute', top: '-10px', left: '0', display: 'flex', gap: '3px', zIndex: 1 }}>
                           {ticker.badges.map((badge, idx) => (
                             <span key={idx} style={{ 

@@ -27,6 +27,8 @@ interface SettingsModalProps {
   onToggleGroups: () => void;
   onToggleUngrouped: () => void;
   onToggleArchive: () => void;
+  showTags: boolean;
+  onToggleTags: () => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -53,6 +55,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onToggleGroups,
   onToggleUngrouped,
   onToggleArchive,
+  showTags,
+  onToggleTags,
 }) => {
   if (!isOpen) return null;
 
@@ -156,59 +160,113 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         {/* ── Interface Preferences ── */}
         <div className="input-group" style={{ marginTop: '24px' }}>
           <label style={{ marginBottom: '12px', display: 'block' }}>Interface Preferences</label>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '10px 14px',
-              borderRadius: '10px',
-              border: `1px solid ${showButtonBar ? 'rgba(99,102,241,0.35)' : 'var(--border-color)'}`,
-              background: showButtonBar ? 'rgba(99,102,241,0.07)' : 'var(--surface-subtle)',
-              transition: 'all 0.2s'
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              {showButtonBar ? <Eye size={15} color="var(--accent)" /> : <EyeOff size={15} color="var(--text-secondary)" />}
-              <span style={{
-                fontSize: '13px',
-                fontWeight: 600,
-                color: showButtonBar ? 'var(--text-primary)' : 'var(--text-secondary)'
-              }}>
-                Show Button Bar
-              </span>
-            </div>
-            {/* Toggle switch */}
-            <button
-              onClick={onToggleButtonBar}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div
               style={{
-                width: '44px',
-                height: '24px',
-                borderRadius: '12px',
-                border: 'none',
-                background: showButtonBar ? 'var(--accent)' : 'rgba(255,255,255,0.12)',
-                cursor: 'pointer',
-                position: 'relative',
-                transition: 'background 0.25s',
-                flexShrink: 0
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '10px 14px',
+                borderRadius: '10px',
+                border: `1px solid ${showButtonBar ? 'rgba(99,102,241,0.35)' : 'var(--border-color)'}`,
+                background: showButtonBar ? 'rgba(99,102,241,0.07)' : 'var(--surface-subtle)',
+                transition: 'all 0.2s'
               }}
-              aria-label="Toggle button bar visibility"
             >
-              <span style={{
-                position: 'absolute',
-                top: '3px',
-                left: showButtonBar ? '22px' : '3px',
-                width: '18px',
-                height: '18px',
-                borderRadius: '50%',
-                background: 'white',
-                transition: 'left 0.25s',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.3)'
-              }} />
-            </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                {showButtonBar ? <Eye size={15} color="var(--accent)" /> : <EyeOff size={15} color="var(--text-secondary)" />}
+                <span style={{
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: showButtonBar ? 'var(--text-primary)' : 'var(--text-secondary)'
+                }}>
+                  Show Button Bar
+                </span>
+              </div>
+              {/* Toggle switch */}
+              <button
+                onClick={onToggleButtonBar}
+                style={{
+                  width: '44px',
+                  height: '24px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: showButtonBar ? 'var(--accent)' : 'rgba(255,255,255,0.12)',
+                  cursor: 'pointer',
+                  position: 'relative',
+                  transition: 'background 0.25s',
+                  flexShrink: 0
+                }}
+                aria-label="Toggle button bar visibility"
+              >
+                <span style={{
+                  position: 'absolute',
+                  top: '3px',
+                  left: showButtonBar ? '22px' : '3px',
+                  width: '18px',
+                  height: '18px',
+                  borderRadius: '50%',
+                  background: 'white',
+                  transition: 'left 0.25s',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.3)'
+                }} />
+              </button>
+            </div>
+
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '10px 14px',
+                borderRadius: '10px',
+                border: `1px solid ${showTags ? 'rgba(99,102,241,0.35)' : 'var(--border-color)'}`,
+                background: showTags ? 'rgba(99,102,241,0.07)' : 'var(--surface-subtle)',
+                transition: 'all 0.2s'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                {showTags ? <Eye size={15} color="var(--accent)" /> : <EyeOff size={15} color="var(--text-secondary)" />}
+                <span style={{
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: showTags ? 'var(--text-primary)' : 'var(--text-secondary)'
+                }}>
+                  Show Tags in Lists
+                </span>
+              </div>
+              {/* Toggle switch */}
+              <button
+                onClick={onToggleTags}
+                style={{
+                  width: '44px',
+                  height: '24px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: showTags ? 'var(--accent)' : 'rgba(255,255,255,0.12)',
+                  cursor: 'pointer',
+                  position: 'relative',
+                  transition: 'background 0.25s',
+                  flexShrink: 0
+                }}
+                aria-label="Toggle tag visibility in lists"
+              >
+                <span style={{
+                  position: 'absolute',
+                  top: '3px',
+                  left: showTags ? '22px' : '3px',
+                  width: '18px',
+                  height: '18px',
+                  borderRadius: '50%',
+                  background: 'white',
+                  transition: 'left 0.25s',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.3)'
+                }} />
+              </button>
+            </div>
           </div>
           <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '8px' }}>
-            When disabled, the bottom shortcut menu is hidden from view.
+            Choose whether to show the bottom shortcut menu and the custom tags/badges within your lists.
           </div>
         </div>
 
