@@ -1360,7 +1360,7 @@ const App: React.FC = () => {
     return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (el as HTMLElement).isContentEditable;
   };
 
-  const handleShortcut = (key: string, shift: boolean, alt: boolean) => {
+  const handleShortcut = (key: string, shift: boolean) => {
     switch (key) {
       case 'v': return setIsTableViewOpen(true);
       case 'd': return shift ? handleRefreshAll() : (activeListId ? handleDeleteListConfirm(activeListId) : undefined);
@@ -1378,7 +1378,7 @@ const App: React.FC = () => {
       case 'f': return setIsFilterModalOpen(true);
       case 'k': return setIsShortcutsModalOpen(true);
       case 'm': return activeListId ? handleOpenAssignModal(activeListId) : undefined;
-      case 'g': return alt ? setIsCreateGroupModalOpen(true) : undefined;
+      case 'g': return setIsCreateGroupModalOpen(true);
       default: return;
     }
   };
@@ -1395,7 +1395,7 @@ const App: React.FC = () => {
       }
       if (isTyping(document.activeElement)) return;
       if (!(e.ctrlKey || e.metaKey)) return;
-      if (e.altKey && e.key.toLowerCase() !== 'g') return;
+      if (e.altKey) return;
       
       if (e.key === ' ') {
         e.preventDefault();
@@ -1410,7 +1410,7 @@ const App: React.FC = () => {
       if (!supported.includes(key)) return;
       
       e.preventDefault();
-      handleShortcut(key, e.shiftKey, e.altKey);
+      handleShortcut(key, e.shiftKey);
     };
 
     window.addEventListener('keydown', handleKeyDown);
