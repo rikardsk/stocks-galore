@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Trash2, ChevronDown, ChevronUp, ChevronRight, FolderPlus, Folder, ArrowUpDown, ArrowUpAZ, ArrowDownAZ, ArrowUp10, ArrowDown10, Eye, EyeOff } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronRight, FolderPlus, Folder, ArrowUpDown, ArrowUpAZ, ArrowDownAZ, ArrowUp10, ArrowDown10, Eye, EyeOff } from 'lucide-react';
 import type { StockList, ListGroup } from '../types';
 import { COUNTRY_FLAGS } from '../types';
 
@@ -32,11 +32,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onCreateList,
   onCreateGroup,
   onDeleteList,
-  onDeleteGroup,
   onToggleGroup,
   onSelectListItem,
-  onMoveGroup,
-  onRenameGroup,
   onRenameList,
   onAssignList,
   onClearList,
@@ -46,7 +43,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   showUngrouped = true,
   showArchive = true
 }) => {
-  const [isEditMode, setIsEditMode] = React.useState(false);
   const [isUngroupedEditMode, setIsUngroupedEditMode] = React.useState(false);
   const [isArchiveEditMode, setIsArchiveEditMode] = React.useState(false);
   const [isPinnedEditMode, setIsPinnedEditMode] = React.useState(false);
@@ -54,8 +50,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [isUngroupedSectionCollapsed, setIsUngroupedSectionCollapsed] = React.useState(false);
   const [isArchiveSectionCollapsed, setIsArchiveSectionCollapsed] = React.useState(true);
   const [isPinnedSectionCollapsed, setIsPinnedSectionCollapsed] = React.useState(false);
-  
-  const [editingGroupId, setEditingGroupId] = React.useState<string | null>(null);
   const [editingListId, setEditingListId] = React.useState<string | null>(null);
   const [editValue, setEditValue] = React.useState('');
   const [ungroupedSort, setUngroupedSort] = React.useState<StockList['sortOrder']>('gain-desc');
@@ -391,19 +385,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   style={{ 
                     fontSize: '11px', 
                     padding: '2px 8px', 
-                    color: isEditMode ? 'var(--accent)' : 'var(--text-secondary)', 
-                    background: isEditMode ? 'rgba(59, 130, 246, 0.1)' : 'transparent', 
+                    color: 'var(--text-secondary)', 
+                    background: 'transparent', 
                     borderRadius: '4px',
-                    border: isEditMode ? '1px solid rgba(59, 130, 246, 0.2)' : '1px solid transparent'
+                    border: '1px solid transparent'
                   }}
-                  onClick={() => setIsEditMode(!isEditMode)}
+                  onClick={onCreateGroup}
                 >
-                  {isEditMode ? 'Done' : 'Edit'}
+                  Edit
                 </button>
               </div>
             </div>
 
-            {!isGroupsSectionCollapsed && groups.map((group, index) => (
+            {!isGroupsSectionCollapsed && groups.map((group) => (
               <div 
                 key={group.id} 
                 className="sidebar-group" 
@@ -424,74 +418,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, overflow: 'hidden' }}>
                     {group.isCollapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
                     <Folder size={16} color="var(--accent)" />
-                    {isEditMode && editingGroupId === group.id ? (
-                      <input 
-                        autoFocus
-                        value={editValue}
-                        onChange={(e) => setEditValue(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            onRenameGroup(group.id, editValue);
-                            setEditingGroupId(null);
-                          } else if (e.key === 'Escape') {
-                            setEditingGroupId(null);
-                          }
-                        }}
-                        onBlur={() => {
-                          onRenameGroup(group.id, editValue);
-                          setEditingGroupId(null);
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        style={{
-                          background: 'var(--surface-input)',
-                          border: '1px solid var(--accent)',
-                          borderRadius: '4px',
-                          color: 'var(--text-primary)',
-                          fontSize: '13px',
-                          padding: '2px 6px',
-                          width: '100%',
-                          outline: 'none'
-                        }}
-                      />
-                    ) : (
-                      <span 
-                        style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
-                        onClick={(e) => {
-                          if (isEditMode) {
-                            e.stopPropagation();
-                            setEditingGroupId(group.id);
-                            setEditValue(group.name);
-                          }
-                        }}
-                      >
-                        {group.name} 
-                        <span style={{ marginLeft: '4px', opacity: 0.5, fontWeight: 400 }}>({group.listIds.length})</span>
-                      </span>
-                    )}
+                    <span 
+                      style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                    >
+                      {group.name} 
+                      <span style={{ marginLeft: '4px', opacity: 0.5, fontWeight: 400 }}>({group.listIds.length})</span>
+                    </span>
                   </div>
-                  {isEditMode && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <button 
-                        className="btn" 
-                        style={{ padding: '2px', opacity: index === 0 ? 0.3 : 0.7 }}
-                        onClick={(e) => { e.stopPropagation(); onMoveGroup?.(group.id, 'up'); }}
-                        disabled={index === 0}
-                      >
-                        <ChevronUp size={14} />
-                      </button>
-                      <button 
-                        className="btn" 
-                        style={{ padding: '2px', opacity: index === groups.length - 1 ? 0.3 : 0.7 }}
-                        onClick={(e) => { e.stopPropagation(); onMoveGroup?.(group.id, 'down'); }}
-                        disabled={index === groups.length - 1}
-                      >
-                        <ChevronDown size={14} />
-                      </button>
-                      <button className="btn" style={{ padding: '4px' }} onClick={(e) => { e.stopPropagation(); onDeleteGroup(group.id); }}>
-                        <Trash2 size={12} color="rgba(255,255,255,0.3)" />
-                      </button>
-                    </div>
-                  )}
                 </div>
                 
                 {!group.isCollapsed && (
@@ -499,7 +432,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     {sortLists(group.listIds
                       .map(id => lists.find(l => l.id === id))
                       .filter((l): l is StockList => !!l), groupsSort)
-                      .map(l => renderListItem(l, isEditMode))
+                      .map(l => renderListItem(l, false))
                     }
                     {group.listIds.length === 0 && (
                       <div style={{ height: '8px' }} />

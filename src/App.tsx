@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import { Trash2, Edit2, Check, X, Plus, ArrowUpDown, ArrowUpAZ, ArrowDownAZ } from 'lucide-react';
 import { Sidebar } from './components/Sidebar';
 import { ListPanel } from './components/ListPanel';
 import { Toolbar } from './components/Toolbar';
@@ -112,6 +113,25 @@ const App: React.FC = () => {
     setShowTags(prev => {
       const next = !prev;
       localStorage.setItem('showTags', next.toString());
+      return next;
+    });
+  };
+
+  const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
+  const [editingGroupName, setEditingGroupName] = useState('');
+
+  const [groupSortOrder, setGroupSortOrder] = useState<'none' | 'asc' | 'desc'>(() => {
+    const saved = localStorage.getItem('groupSortOrder');
+    return (saved === 'asc' || saved === 'desc') ? saved : 'none';
+  });
+
+  const handleToggleGroupSort = () => {
+    setGroupSortOrder(prev => {
+      let next: 'none' | 'asc' | 'desc' = 'none';
+      if (prev === 'none') next = 'asc';
+      else if (prev === 'asc') next = 'desc';
+      else if (prev === 'desc') next = 'none';
+      localStorage.setItem('groupSortOrder', next);
       return next;
     });
   };
@@ -637,12 +657,20 @@ const App: React.FC = () => {
     }
   };
 
-  const handleCreateGroup = () => {
+  const handleCreateGroup = (keepOpen = false) => {
     if (!newGroupName.trim()) return;
     const newGroup = storage.createGroup(newGroupName);
     setGroups([...groups, newGroup]);
     setNewGroupName('');
-    setIsCreateGroupModalOpen(false);
+    if (!keepOpen) {
+      setIsCreateGroupModalOpen(false);
+    }
+  };
+
+  const handleSaveRenameGroup = (id: string) => {
+    if (!editingGroupName.trim()) return;
+    handleRenameGroup(id, editingGroupName);
+    setEditingGroupId(null);
   };
 
   const handleDeleteGroup = (id: string) => {
@@ -1407,11 +1435,17 @@ const App: React.FC = () => {
     );
   }
 
+  const displayGroups = [...groups].sort((a, b) => {
+    if (groupSortOrder === 'asc') return a.name.localeCompare(b.name);
+    if (groupSortOrder === 'desc') return b.name.localeCompare(a.name);
+    return 0;
+  });
+
   return (
     <div className={`app-container ${theme === 'light' ? 'light-theme' : ''}`}>
       <Sidebar 
         lists={lists} 
-        groups={groups}
+        groups={displayGroups}
         isCollapsed={isSidebarCollapsed} 
         onCreateList={() => setIsCreateModalOpen(true)}
         onCreateGroup={() => setIsCreateGroupModalOpen(true)}
@@ -1680,23 +1714,163 @@ const App: React.FC = () => {
 
       {/* Create Group Modal */}
       {isCreateGroupModalOpen && (
-        <div className="modal-overlay" onClick={() => setIsCreateGroupModalOpen(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <h3>Create New Group</h3>
-            <div className="input-group" style={{ marginTop: '20px' }}>
-              <label>Group Name</label>
-              <input 
-                type="text" 
-                value={newGroupName} 
-                onChange={e => setNewGroupName(e.target.value)}
-                placeholder="e.g. Technology"
-                autoFocus
-                onKeyDown={e => e.key === 'Enter' && handleCreateGroup()}
-              />
+        <div className="modal-overlay" onClick={() => {
+          setIsCreateGroupModalOpen(false);
+          setEditingGroupId(null);
+        }}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ width: '460px', maxHeight: '85vh', display: 'flex', flexDirection: 'column' }}>
+            <h3 style={{ margin: 0, marginBottom: '20px', flexShrink: 0 }}>Manage Groups</h3>
+            
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              {/* Add New Group Section */}
+              <div className="input-group" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <label>Add New Group</label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input 
+                    type="text" 
+                    value={newGroupName} 
+                    onChange={e => setNewGroupName(e.target.value)}
+                    placeholder="e.g. Technology"
+                    autoFocus
+                    onKeyDown={e => e.key === 'Enter' && handleCreateGroup(true)}
+                    style={{ flex: 1 }}
+                  />
+                  <button 
+                    className="btn btn-primary" 
+                    onClick={() => handleCreateGroup(true)}
+                    style={{ padding: '8px 16px', gap: '6px', display: 'flex', alignItems: 'center', flexShrink: 0 }}
+                  >
+                    <Plus size={16} /> Add Group
+                  </button>
+                </div>
+              </div>
+
+              {/* Existing Groups List */}
+              <div className="input-group" style={{ display: 'flex', flexDirection: 'column' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                  <label style={{ margin: 0 }}>Existing Groups ({groups.length})</label>
+                  <button 
+                    className="btn" 
+                    onClick={handleToggleGroupSort} 
+                    title={`Sort Groups: ${groupSortOrder === 'none' ? 'Default' : groupSortOrder === 'asc' ? 'A-Z' : 'Z-A'}`}
+                    style={{ padding: '4px 8px', display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-secondary)', background: 'var(--surface-subtle)', border: '1px solid var(--border-color)', borderRadius: '6px' }}
+                  >
+                    {groupSortOrder === 'asc' && <ArrowUpAZ size={14} />}
+                    {groupSortOrder === 'desc' && <ArrowDownAZ size={14} />}
+                    {groupSortOrder === 'none' && <ArrowUpDown size={14} />}
+                    <span style={{ fontSize: '11px', fontWeight: 600 }}>
+                      {groupSortOrder === 'none' ? 'Default' : groupSortOrder === 'asc' ? 'A-Z' : 'Z-A'}
+                    </span>
+                  </button>
+                </div>
+                {groups.length === 0 ? (
+                  <div style={{ fontSize: '13px', color: 'var(--text-secondary)', padding: '16px', textAlign: 'center', background: 'var(--surface-subtle)', borderRadius: '8px', border: '1px dashed var(--border-color)' }}>
+                    No groups created yet. Add one above.
+                  </div>
+                ) : (
+                  <div style={{ 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    gap: '8px',
+                    maxHeight: '260px',
+                    overflowY: 'auto',
+                    paddingRight: '12px'
+                  }}>
+                    {displayGroups.map((group) => {
+                      const isEditing = editingGroupId === group.id;
+                      return (
+                        <div 
+                          key={group.id} 
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: '10px 14px',
+                            borderRadius: '10px',
+                            border: isEditing ? '1px solid rgba(99,102,241,0.35)' : '1px solid var(--border-color)',
+                            background: isEditing ? 'rgba(99,102,241,0.07)' : 'var(--surface-subtle)',
+                            gap: '12px',
+                            transition: 'all 0.2s'
+                          }}
+                        >
+                          {isEditing ? (
+                            <input
+                              type="text"
+                              value={editingGroupName}
+                              onChange={(e) => setEditingGroupName(e.target.value)}
+                              style={{ flex: 1, padding: '6px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--accent)', background: 'var(--surface-primary)', color: 'var(--text-primary)' }}
+                              autoFocus
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleSaveRenameGroup(group.id);
+                                if (e.key === 'Escape') setEditingGroupId(null);
+                              }}
+                            />
+                          ) : (
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {group.name}
+                            </span>
+                          )}
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                            {/* Inline Edit Controls */}
+                            {isEditing ? (
+                              <>
+                                <button 
+                                  className="btn" 
+                                  onClick={() => handleSaveRenameGroup(group.id)}
+                                  style={{ padding: '6px', color: '#10b981', background: 'var(--surface-primary)', border: '1px solid var(--border-color)', borderRadius: '6px' }}
+                                  title="Save Changes"
+                                >
+                                  <Check size={14} />
+                                </button>
+                                <button 
+                                  className="btn" 
+                                  onClick={() => setEditingGroupId(null)}
+                                  style={{ padding: '6px', color: '#ef4444', background: 'var(--surface-primary)', border: '1px solid var(--border-color)', borderRadius: '6px' }}
+                                  title="Cancel Rename"
+                                >
+                                  <X size={14} />
+                                </button>
+                              </>
+                            ) : (
+                              <button 
+                                className="btn" 
+                                onClick={() => {
+                                  setEditingGroupId(group.id);
+                                  setEditingGroupName(group.name);
+                                }}
+                                style={{ padding: '6px', color: 'var(--text-secondary)', background: 'var(--surface-primary)', border: '1px solid var(--border-color)', borderRadius: '6px' }}
+                                title="Rename Group"
+                              >
+                                <Edit2 size={14} />
+                              </button>
+                            )}
+
+                            {/* Delete Control */}
+                            <button 
+                              className="btn" 
+                              onClick={() => handleDeleteGroup(group.id)}
+                              style={{ padding: '6px', color: '#ef4444', background: 'var(--surface-primary)', border: '1px solid var(--border-color)', borderRadius: '6px' }}
+                              title="Delete Group"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
-            <div style={{ display: 'flex', gap: '12px', marginTop: '30px' }}>
-              <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleCreateGroup}>Create Group</button>
-              <button className="btn" style={{ flex: 1, border: '1px solid var(--border-color)' }} onClick={() => setIsCreateGroupModalOpen(false)}>Cancel</button>
+
+            <div style={{ display: 'flex', gap: '12px', marginTop: '24px', flexShrink: 0 }}>
+              <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => {
+                setIsCreateGroupModalOpen(false);
+                setEditingGroupId(null);
+              }}>
+                Done
+              </button>
             </div>
           </div>
         </div>
