@@ -917,7 +917,7 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
             </div>
           </div>
 
-          <div style={{ maxHeight: '250px', overflowY: 'auto', background: 'var(--surface-inset)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+          <div style={{ maxHeight: '250px', overflowY: 'auto', overflowX: 'auto', background: 'var(--surface-inset)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
             {filteredTickerNotifications.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '30px', color: 'var(--text-secondary)', fontSize: '13px' }}>
                 No notifications found.
@@ -984,10 +984,11 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
         <style>{`
           .alert-delete-btn:hover { opacity: 1 !important; color: #ef4444 !important; }
           .stock-detail-modal {
-            max-width: 900px;
+            max-width: 1200px;
             width: 95%;
             max-height: 90vh;
             overflow-y: auto;
+            overflow-x: hidden;
             padding: 0;
             border-radius: 16px;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
