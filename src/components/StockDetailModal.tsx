@@ -116,6 +116,7 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
   const [timeframe, setTimeframe] = useState('1y');
   const [chartType, setChartType] = useState<'line' | 'candle'>('line');
   const [showVolume, setShowVolume] = useState(false);
+  const [showPriceLine, setShowPriceLine] = useState(true);
   const [indicators, setIndicators] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [badges, setBadges] = useState<string[]>([]);
@@ -190,26 +191,120 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
     if (history.length === 0) return [];
     
     const calculateSMA = (data: HistoryItem[], period: number) => {
-      const result = [...data];
-      for (let i = 0; i < result.length; i++) {
+      return data.map((item, i) => {
         if (i < period - 1) {
-          result[i][`sma${period}`] = null;
-          continue;
+          return { ...item, [`sma${period}`]: null };
         }
-        const sum = result.slice(i - period + 1, i + 1).reduce((acc, curr) => acc + curr.price, 0);
-        result[i][`sma${period}`] = parseFloat((sum / period).toFixed(2));
+        const sum = data.slice(i - period + 1, i + 1).reduce((acc, curr) => acc + curr.price, 0);
+        return { ...item, [`sma${period}`]: parseFloat((sum / period).toFixed(2)) };
+      });
+    };
+
+    const getTradingSessionDate = (): string => {
+      try {
+        const nyTimeStr = new Date().toLocaleString("en-US", { timeZone: "America/New_York" });
+        const nyDate = new Date(nyTimeStr);
+        
+        const day = nyDate.getDay();
+        const hour = nyDate.getHours();
+        const minute = nyDate.getMinutes();
+        const isAfterOpen = hour > 9 || (hour === 9 && minute >= 30);
+        
+        let sessionDate = new Date(nyDate);
+        
+        if (day === 6) { // Saturday
+          sessionDate.setDate(nyDate.getDate() - 1); // Friday
+        } else if (day === 0) { // Sunday
+          sessionDate.setDate(nyDate.getDate() - 2); // Friday
+        } else if (day === 1 && !isAfterOpen) { // Monday before open
+          sessionDate.setDate(nyDate.getDate() - 3); // Friday
+        } else if (!isAfterOpen) { // Tuesday-Friday before open
+          sessionDate.setDate(nyDate.getDate() - 1); // Yesterday
+        }
+        
+        const yyyy = sessionDate.getFullYear();
+        const mm = String(sessionDate.getMonth() + 1).padStart(2, '0');
+        const dd = String(sessionDate.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+      } catch (e) {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       }
-      return result;
     };
 
     let enriched = [...history];
+    if (ticker) {
+      const latestPrice = parseFloat(ticker.stats.price);
+      if (!isNaN(latestPrice)) {
+        const lastItem = enriched[enriched.length - 1];
+        if (lastItem) {
+          const targetStr = getTradingSessionDate();
+          const targetDateObj = new Date(targetStr);
+          const isTargetWeekday = targetDateObj.getDay() !== 0 && targetDateObj.getDay() !== 6;
+          
+          if (lastItem.date === targetStr) {
+            enriched[enriched.length - 1] = {
+              ...lastItem,
+              price: latestPrice,
+              close: latestPrice,
+              high: Math.max(lastItem.high, latestPrice),
+              low: Math.min(lastItem.low, latestPrice)
+            };
+          } else {
+            // Fill in any missing weekdays (e.g. if the ticker didn't trade or backend is slightly delayed)
+            const lastDate = new Date(lastItem.date);
+            const todayDate = new Date(targetStr);
+            let current = new Date(lastDate);
+            current.setDate(current.getDate() + 1);
+            
+            while (current < todayDate) {
+              const yyyy = current.getFullYear();
+              const mm = String(current.getMonth() + 1).padStart(2, '0');
+              const dd = String(current.getDate()).padStart(2, '0');
+              const dateStr = `${yyyy}-${mm}-${dd}`;
+              
+              const dayOfWeek = current.getDay();
+              const isCurrentWeekday = dayOfWeek !== 0 && dayOfWeek !== 6;
+              
+              if (isCurrentWeekday) {
+                enriched.push({
+                  date: dateStr,
+                  price: lastItem.price,
+                  open: lastItem.price,
+                  close: lastItem.price,
+                  high: lastItem.price,
+                  low: lastItem.price,
+                  volume: 0
+                });
+              }
+              current.setDate(current.getDate() + 1);
+            }
+
+            // Append target date's price
+            if (isTargetWeekday || lastItem.price !== latestPrice) {
+              const prevPrice = enriched[enriched.length - 1]?.price ?? lastItem.price;
+              enriched.push({
+                date: targetStr,
+                price: latestPrice,
+                open: prevPrice,
+                close: latestPrice,
+                high: Math.max(prevPrice, latestPrice),
+                low: Math.min(prevPrice, latestPrice),
+                volume: 0
+              });
+            }
+          }
+        }
+      }
+    }
+
     enriched = calculateSMA(enriched, 10);
     enriched = calculateSMA(enriched, 20);
     enriched = calculateSMA(enriched, 50);
     enriched = calculateSMA(enriched, 100);
     enriched = calculateSMA(enriched, 200);
     return enriched;
-  }, [history]);
+  }, [history, ticker]);
 
   useEffect(() => {
     const fetchHistory = async () => {
@@ -234,18 +329,18 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
   }, [isOpen, ticker, timeframe]);
 
   const chartColor = useMemo(() => {
-    if (history.length < 2) return '#10b981';
-    return history[history.length - 1].price >= history[0].price ? '#10b981' : '#ef4444';
-  }, [history]);
+    if (historyWithSMAs.length < 2) return '#10b981';
+    return historyWithSMAs[historyWithSMAs.length - 1].price >= historyWithSMAs[0].price ? '#10b981' : '#ef4444';
+  }, [historyWithSMAs]);
 
   const { minPrice, maxPrice } = useMemo(() => {
-    if (history.length === 0) return { minPrice: 0, maxPrice: 100 };
-    const prices = history.map(h => h.price);
+    if (historyWithSMAs.length === 0) return { minPrice: 0, maxPrice: 100 };
+    const prices = historyWithSMAs.map(h => h.price);
     const min = Math.min(...prices);
     const max = Math.max(...prices);
     const padding = (max - min) * 0.15;
     return { minPrice: Math.max(0, min - padding), maxPrice: max + padding };
-  }, [history]);
+  }, [historyWithSMAs]);
 
   const tickerAlerts = useMemo(() => {
     if (!ticker) return [];
@@ -327,6 +422,14 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
               {showVolume ? <Eye size={12} /> : <EyeOff size={12} />}
             </button>
             <div style={{ width: '1px', background: 'var(--border-color)', margin: '4px 8px' }} />
+            <button 
+              className={`type-btn ${showPriceLine ? 'active' : ''}`}
+              onClick={() => setShowPriceLine(!showPriceLine)}
+              title="Toggle Price Line"
+            >
+              Price Line
+            </button>
+            <div style={{ width: '1px', background: 'var(--border-color)', margin: '4px 8px' }} />
             {(['10', '20', '50', '100', '200'] as const).map(period => {
               const colorMap: Record<string, string> = { '10': '#3b82f6', '20': '#6366f1', '50': '#f59e0b', '100': '#ec4899', '200': '#8b5cf6' };
               return (
@@ -396,6 +499,21 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
               {indicators.includes('100') && <Line yAxisId="price" type="monotone" dataKey="sma100" stroke="#ec4899" strokeWidth={1.5} dot={false} />}
               {indicators.includes('200') && <Line yAxisId="price" type="monotone" dataKey="sma200" stroke="#8b5cf6" strokeWidth={1.5} dot={false} />}
 
+              {showPriceLine && ticker && !isNaN(parseFloat(ticker.stats.price)) && (
+                <ReferenceLine 
+                  yAxisId="price"
+                  y={parseFloat(ticker.stats.price)} 
+                  stroke={chartColor} 
+                  strokeDasharray="3 3"
+                  label={{ 
+                    position: 'insideRight', 
+                    value: `Latest: $${ticker.stats.price}`, 
+                    fill: chartColor,
+                    fontSize: 10,
+                    fontWeight: 'bold'
+                  }}
+                />
+              )}
               {tickerAlerts.map(alert => (
                 <ReferenceLine 
                   key={alert.id}

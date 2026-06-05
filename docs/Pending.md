@@ -24,6 +24,7 @@
 ~~- Database integration~~
 
 ## Done
+~~- Include the latest price in the graph in the deep dive modal (toggable and appended to historical series)~~
 ~~- Earnings calendar modal showing Yesterday, Today, + 3 nextcoming days with filters and detail views, triggered by a floating action button~~
 ~~- Stock Deep Dive Modal (Interactive charts & fundamentals)~~
 ~~- Analytics dashboard with market cap histogram~~
