@@ -756,7 +756,16 @@ const App: React.FC = () => {
 
   const handleCreateList = () => {
     if (!newListName.trim()) return;
-    const newList = storage.createList(newListName, newListColor, newCountry);
+    
+    const workbench = document.querySelector('.workbench');
+    const scrollLeft = workbench ? workbench.scrollLeft : 0;
+    const scrollTop = workbench ? workbench.scrollTop : 0;
+    
+    // Position the new list clear of the 280px wide sidebar
+    const x = scrollLeft + 320;
+    const y = scrollTop + 50;
+
+    const newList = storage.createList(newListName, newListColor, newCountry, { x, y });
     const nextLists = [...lists, newList];
     setLists(nextLists);
     storage.saveLists(nextLists);

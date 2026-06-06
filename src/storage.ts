@@ -105,14 +105,14 @@ export const storage = {
     });
   },
 
-  createList: (name: string, color: string, country?: string): StockList => {
+  createList: (name: string, color: string, country?: string, position?: { x: number; y: number }): StockList => {
     const newList: StockList = {
       id: uuidv4(),
       name,
       color,
       country,
       tickers: [],
-      position: { x: 320, y: 50 },
+      position: position || { x: 320, y: 50 },
       isCollapsed: false,
       showStats: false,
       isVisible: true,
