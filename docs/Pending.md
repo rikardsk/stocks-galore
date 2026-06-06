@@ -3,9 +3,9 @@
 
 ## Later maybe
 - Check code quality and fix errors...
-- Save the sorting option of all labels (pinned, groups, ungrouped, archive) in the sidebar.
-- Send e-mail as option to notifications instead of push-notifications. This should be a global setting.
+- Send e-mail as option to notifications instead of push-notifications. This shold be a global setting.
 - In the deep dive panel, add shortcut button for creating alerts when crossing SMAs.
+~~- Save the sorting option of all labels (pinned, groups, ungrouped, archive).~~
 ~~- Make sure that newly created lists doesn't spawn under the sidebar.~~
 ~~- Add tag for "Not profitable", "Low debt", "High debt", "Dividend", " Growth".~~
 ~~- Sort by price as an option when choosing sorting method on lists (Ctrl + Shift + P).~~

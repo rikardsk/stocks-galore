@@ -53,10 +53,34 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [isPinnedSectionCollapsed, setIsPinnedSectionCollapsed] = React.useState(false);
   const [editingListId, setEditingListId] = React.useState<string | null>(null);
   const [editValue, setEditValue] = React.useState('');
-  const [ungroupedSort, setUngroupedSort] = React.useState<StockList['sortOrder']>('gain-desc');
-  const [archiveSort, setArchiveSort] = React.useState<StockList['sortOrder']>('gain-desc');
-  const [pinnedSort, setPinnedSort] = React.useState<StockList['sortOrder']>('none');
-  const [groupsSort, setGroupsSort] = React.useState<StockList['sortOrder']>('none');
+  const [ungroupedSort, setUngroupedSort] = React.useState<StockList['sortOrder']>(
+    () => (localStorage.getItem('sidebar_ungroupedSort') as StockList['sortOrder']) || 'gain-desc'
+  );
+  const [archiveSort, setArchiveSort] = React.useState<StockList['sortOrder']>(
+    () => (localStorage.getItem('sidebar_archiveSort') as StockList['sortOrder']) || 'gain-desc'
+  );
+  const [pinnedSort, setPinnedSort] = React.useState<StockList['sortOrder']>(
+    () => (localStorage.getItem('sidebar_pinnedSort') as StockList['sortOrder']) || 'none'
+  );
+  const [groupsSort, setGroupsSort] = React.useState<StockList['sortOrder']>(
+    () => (localStorage.getItem('sidebar_groupsSort') as StockList['sortOrder']) || 'none'
+  );
+
+  React.useEffect(() => {
+    localStorage.setItem('sidebar_ungroupedSort', ungroupedSort);
+  }, [ungroupedSort]);
+
+  React.useEffect(() => {
+    localStorage.setItem('sidebar_archiveSort', archiveSort);
+  }, [archiveSort]);
+
+  React.useEffect(() => {
+    localStorage.setItem('sidebar_pinnedSort', pinnedSort);
+  }, [pinnedSort]);
+
+  React.useEffect(() => {
+    localStorage.setItem('sidebar_groupsSort', groupsSort);
+  }, [groupsSort]);
   
   const handleToggleSort = (current: StockList['sortOrder'], setter: (val: StockList['sortOrder']) => void) => {
     let next: StockList['sortOrder'] = 'asc';
