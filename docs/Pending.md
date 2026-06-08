@@ -4,7 +4,7 @@
 ## Later maybe
 - Check code quality and fix errors...
 - Send e-mail as option to notifications instead of push-notifications. This shold be a global setting.
-- Can you make the settings modal look the same as filter modal and notifications modal?
+~~- Can you make the settings modal look the same as filter modal and notifications modal?~~
 ~~- All the crossovers SMA10, SMA20, SMA50, SMA100, SMA200 and the SMA 20/50, SMA 50/200 seems to be using yesterday's SMA values instead of today's or yesterday's prices for the calculation. Could you fix that?~~ 
 ~~- Save the sorting option of all labels (pinned, groups, ungrouped, archive).~~
 ~~- Make sure that newly created lists doesn't spawn under the sidebar.~~
