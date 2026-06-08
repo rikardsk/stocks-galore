@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sun, Moon, BellOff, Bell, Eye, EyeOff, X } from 'lucide-react';
+import { Sun, Moon, BellOff, Bell, Eye, EyeOff, X, Settings, Check } from 'lucide-react';
 
 export type RefreshInterval = 'manual' | '1m' | '5m' | '15m';
 
@@ -13,6 +13,8 @@ interface SettingsModalProps {
   onToggleTheme: () => void;
   searchCharLimit: number;
   onSearchCharLimitChange: (limit: number) => void;
+  searchExactMatch: boolean;
+  onToggleSearchExactMatch: () => void;
   smaNotificationsEnabled: { sma10: boolean; sma20: boolean };
   onSmaNotificationToggle: (key: 'sma10' | 'sma20') => void;
   showButtonBar: boolean;
@@ -41,6 +43,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onToggleTheme,
   searchCharLimit,
   onSearchCharLimitChange,
+  searchExactMatch,
+  onToggleSearchExactMatch,
   smaNotificationsEnabled,
   onSmaNotificationToggle,
   showButtonBar,
@@ -63,54 +67,203 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()} style={{ width: '540px', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexShrink: 0 }}>
-          <h3 style={{ margin: 0 }}>Workbench Settings</h3>
-          <button className="btn" onClick={onClose} style={{ padding: '4px' }}><X size={20} /></button>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Settings size={20} color="var(--accent)" />
+            <h3 style={{ margin: 0 }}>Workbench Settings</h3>
+          </div>
+          <button className="btn" onClick={onClose} aria-label="Close modal">
+            <X size={20} />
+          </button>
         </div>
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingRight: '6px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingRight: '8px', marginBottom: '8px', display: 'flex', flexDirection: 'column' }}>
 
         {/* ── Search Settings ── */}
-        <div className="input-group" style={{ marginTop: '24px' }}>
-          <label>Search Activation Length</label>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <input 
-              type="range" 
-              min="1" 
-              max="5" 
-              value={searchCharLimit} 
-              onChange={(e) => onSearchCharLimitChange(parseInt(e.target.value, 10))}
-              style={{ flex: 1 }}
-            />
-            <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--accent)', minWidth: '20px', textAlign: 'center' }}>
-              {searchCharLimit}
-            </span>
+        <div style={{ 
+          background: 'var(--surface-subtle)', 
+          borderRadius: '8px', 
+          padding: '10px', 
+          border: '1px solid var(--border-color)', 
+          marginBottom: '16px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+          marginTop: '8px'
+        }}>
+          <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Search Activation Length</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <button
+              onClick={() => onSearchCharLimitChange(Math.max(1, searchCharLimit - 1))}
+              disabled={searchCharLimit <= 1}
+              style={{
+                padding: '4px 10px',
+                fontSize: '11px',
+                borderRadius: '6px',
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                color: 'var(--text-primary)',
+                cursor: searchCharLimit <= 1 ? 'not-allowed' : 'pointer',
+                minWidth: '28px',
+                fontWeight: 'bold',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                opacity: searchCharLimit <= 1 ? 0.3 : 1
+              }}
+            >
+              -
+            </button>
+            <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <input 
+                type="range" 
+                min="1" 
+                max="5" 
+                value={searchCharLimit} 
+                onChange={(e) => onSearchCharLimitChange(parseInt(e.target.value, 10))}
+                style={{ 
+                  width: '100%',
+                  accentColor: 'var(--accent)',
+                  height: '4px',
+                  borderRadius: '2px',
+                  outline: 'none',
+                  cursor: 'pointer'
+                }}
+              />
+              <div style={{ 
+                position: 'absolute', 
+                left: `${((searchCharLimit - 1) / 4) * 100}%`, 
+                top: '-24px', 
+                transform: 'translateX(-50%)',
+                background: 'var(--accent)',
+                color: 'white',
+                fontSize: '9px',
+                padding: '2px 4px',
+                borderRadius: '4px',
+                fontWeight: 700,
+                whiteSpace: 'nowrap'
+              }}>
+                {searchCharLimit} chars
+              </div>
+            </div>
+            <button
+              onClick={() => onSearchCharLimitChange(Math.min(5, searchCharLimit + 1))}
+              disabled={searchCharLimit >= 5}
+              style={{
+                padding: '4px 10px',
+                fontSize: '11px',
+                borderRadius: '6px',
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                color: 'var(--text-primary)',
+                cursor: searchCharLimit >= 5 ? 'not-allowed' : 'pointer',
+                minWidth: '28px',
+                fontWeight: 'bold',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                opacity: searchCharLimit >= 5 ? 0.3 : 1
+              }}
+            >
+              +
+            </button>
           </div>
-          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '8px' }}>
+          <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
             Number of characters needed to start filtering the dashboard.
+          </div>
+
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '10px 14px',
+              borderRadius: '10px',
+              border: `1px solid ${searchExactMatch ? 'rgba(99,102,241,0.35)' : 'var(--border-color)'}`,
+              background: searchExactMatch ? 'rgba(99,102,241,0.07)' : 'var(--surface-subtle)',
+              transition: 'all 0.2s',
+              marginTop: '4px'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              {searchExactMatch ? <Check size={15} color="var(--accent)" /> : <X size={15} color="var(--text-secondary)" />}
+              <span style={{
+                fontSize: '13px',
+                fontWeight: 600,
+                color: searchExactMatch ? 'var(--text-primary)' : 'var(--text-secondary)'
+              }}>
+                Exact Match (Ticker / Badges)
+              </span>
+            </div>
+            <button
+              onClick={onToggleSearchExactMatch}
+              style={{
+                width: '44px',
+                height: '24px',
+                borderRadius: '12px',
+                border: 'none',
+                background: searchExactMatch ? 'var(--accent)' : 'rgba(255,255,255,0.12)',
+                cursor: 'pointer',
+                position: 'relative',
+                transition: 'background 0.25s',
+                flexShrink: 0
+              }}
+              aria-label="Toggle exact match search"
+            >
+              <span style={{
+                position: 'absolute',
+                top: '3px',
+                left: searchExactMatch ? '22px' : '3px',
+                width: '18px',
+                height: '18px',
+                borderRadius: '50%',
+                background: 'white',
+                transition: 'left 0.25s',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.3)'
+              }} />
+            </button>
           </div>
         </div>
 
         {/* ── Refresh Interval ── */}
-        <div className="input-group" style={{ marginTop: '24px' }}>
-          <label>Data Refresh Interval</label>
+        <div style={{ 
+          background: 'var(--surface-subtle)', 
+          borderRadius: '8px', 
+          padding: '10px', 
+          border: '1px solid var(--border-color)', 
+          marginBottom: '16px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px'
+        }}>
+          <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Data Refresh Interval</span>
           <select
             value={refreshInterval}
             onChange={(e) => onRefreshIntervalChange(e.target.value as RefreshInterval)}
+            style={{ width: '100%', padding: '8px 12px' }}
           >
             <option value="manual">Manual (Default)</option>
             <option value="1m">Every 1 Minute</option>
             <option value="5m">Every 5 Minutes</option>
             <option value="15m">Every 15 Minutes</option>
           </select>
-          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '8px' }}>
+          <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
             When set to manual, data will only refresh when you click the Refresh All button in the toolbar.
           </div>
         </div>
 
         {/* ── Theme ── */}
-        <div className="input-group" style={{ marginTop: '24px' }}>
-          <label style={{ marginBottom: '12px', display: 'block' }}>Theme Preferences</label>
+        <div style={{ 
+          background: 'var(--surface-subtle)', 
+          borderRadius: '8px', 
+          padding: '10px', 
+          border: '1px solid var(--border-color)', 
+          marginBottom: '16px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px'
+        }}>
+          <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Theme Preferences</span>
           <div style={{ display: 'flex', gap: '10px' }}>
             <button
               onClick={() => theme !== 'dark' && onToggleTheme()}
@@ -158,8 +311,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         {/* ── Interface Preferences ── */}
-        <div className="input-group" style={{ marginTop: '24px' }}>
-          <label style={{ marginBottom: '12px', display: 'block' }}>Interface Preferences</label>
+        <div style={{ 
+          background: 'var(--surface-subtle)', 
+          borderRadius: '8px', 
+          padding: '10px', 
+          border: '1px solid var(--border-color)', 
+          marginBottom: '16px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px'
+        }}>
+          <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Interface Preferences</span>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div
               style={{
@@ -183,7 +345,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   Show Button Bar
                 </span>
               </div>
-              {/* Toggle switch */}
               <button
                 onClick={onToggleButtonBar}
                 style={{
@@ -235,7 +396,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   Show Tags in Lists
                 </span>
               </div>
-              {/* Toggle switch */}
               <button
                 onClick={onToggleTags}
                 style={{
@@ -265,14 +425,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </button>
             </div>
           </div>
-          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '8px' }}>
+          <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
             Choose whether to show the bottom shortcut menu and the custom tags/badges within your lists.
           </div>
         </div>
 
         {/* ── Sidebar Sections Visibility ── */}
-        <div className="input-group" style={{ marginTop: '24px' }}>
-          <label style={{ marginBottom: '12px', display: 'block' }}>Sidebar Sections</label>
+        <div style={{ 
+          background: 'var(--surface-subtle)', 
+          borderRadius: '8px', 
+          padding: '10px', 
+          border: '1px solid var(--border-color)', 
+          marginBottom: '16px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px'
+        }}>
+          <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Sidebar Sections</span>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {[
               { key: 'pinned', label: 'Show Pinned Section', value: showPinned, toggle: onTogglePinned },
@@ -303,7 +472,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     {item.label}
                   </span>
                 </div>
-                {/* Toggle switch */}
                 <button
                   onClick={item.toggle}
                   style={{
@@ -334,15 +502,24 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </div>
             ))}
           </div>
-          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '8px' }}>
+          <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
             Choose which sections to display in the sidebar.
           </div>
         </div>
 
         {/* ── Button Bar Position ── */}
         {showButtonBar && (
-          <div className="input-group" style={{ marginTop: '24px' }}>
-            <label style={{ marginBottom: '12px', display: 'block' }}>Button Bar Position</label>
+          <div style={{ 
+            background: 'var(--surface-subtle)', 
+            borderRadius: '8px', 
+            padding: '10px', 
+            border: '1px solid var(--border-color)', 
+            marginBottom: '16px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px'
+          }}>
+            <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Button Bar Position</span>
             <div style={{ display: 'flex', gap: '10px' }}>
               {(['bottom', 'top', 'right'] as const).map(pos => {
                 const isActive = buttonBarPosition === pos;
@@ -373,8 +550,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         )}
 
         {/* ── Notification Alerts ── */}
-        <div className="input-group" style={{ marginTop: '24px' }}>
-          <label style={{ marginBottom: '12px', display: 'block' }}>Crossover Notification Alerts</label>
+        <div style={{ 
+          background: 'var(--surface-subtle)', 
+          borderRadius: '8px', 
+          padding: '10px', 
+          border: '1px solid var(--border-color)', 
+          marginBottom: '16px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px'
+        }}>
+          <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Crossover Notification Alerts</span>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {(['sma10', 'sma20'] as const).map(key => {
               const isOn = smaNotificationsEnabled[key];
@@ -405,7 +591,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       {label}
                     </span>
                   </div>
-                  {/* Toggle switch */}
                   <button
                     onClick={() => onSmaNotificationToggle(key)}
                     style={{
@@ -437,14 +622,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               );
             })}
           </div>
-          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '8px' }}>
+          <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
             When off, no new crossover notifications will be generated for that SMA.
           </div>
         </div>
 
         {/* ── Data Management ── */}
-        <div className="input-group" style={{ marginTop: '24px' }}>
-          <label>Data Management</label>
+        <div style={{ 
+          background: 'var(--surface-subtle)', 
+          borderRadius: '8px', 
+          padding: '10px', 
+          border: '1px solid var(--border-color)', 
+          marginBottom: '16px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px'
+        }}>
+          <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Data Management</span>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <button
               className="btn btn-primary"
@@ -484,6 +678,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
           </div>
         </div>
+
         {/* ── Storage Status ── */}
         {(() => {
           let totalChars = 0;
@@ -506,12 +701,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           };
 
           return (
-            <div className="input-group" style={{ marginTop: '24px' }}>
-              <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ 
+              background: 'var(--surface-subtle)', 
+              borderRadius: '8px', 
+              padding: '10px', 
+              border: '1px solid var(--border-color)', 
+              marginBottom: '16px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px'
+            }}>
+              <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span>Local Storage Space</span>
                 {isFullWarning && <span style={{ color: '#ef4444', fontSize: '11px', fontWeight: 'bold' }}>⚠️ ALMOST FULL</span>}
-              </label>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '6px' }}>
+              </span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-secondary)' }}>
                 <span>{formatBytesLocal(usedBytes)} / {formatBytesLocal(limitBytes)}</span>
                 <span>{percentUsed.toFixed(1)}%</span>
               </div>
@@ -524,7 +728,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   transition: 'width 0.3s'
                 }} />
               </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '6px' }}>
+              <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
                 Browser limits localStorage to 5MB. Clear old notifications or lists to free up space.
               </div>
             </div>
@@ -533,7 +737,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
         </div>
 
-        <div style={{ display: 'flex', gap: '12px', marginTop: '20px', flexShrink: 0 }}>
+        <div style={{ display: 'flex', gap: '12px', marginTop: '16px', flexShrink: 0 }}>
           <button className="btn btn-primary" style={{ flex: 1 }} onClick={onClose}>
             Close Settings
           </button>
@@ -542,3 +746,4 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     </div>
   );
 };
+

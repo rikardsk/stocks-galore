@@ -74,6 +74,10 @@ const App: React.FC = () => {
     return saved ? parseInt(saved, 10) : 3;
   });
 
+  const [searchExactMatch, setSearchExactMatch] = useState<boolean>(() => {
+    return localStorage.getItem('searchExactMatch') === 'true';
+  });
+
   const [smaNotificationsEnabled, setSmaNotificationsEnabled] = useState<{ sma10: boolean; sma20: boolean }>(() => {
     const saved = localStorage.getItem('smaNotificationsEnabled');
     return saved ? JSON.parse(saved) : { sma10: true, sma20: true };
@@ -90,6 +94,14 @@ const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('searchCharLimit', searchCharLimit.toString());
   }, [searchCharLimit]);
+
+  useEffect(() => {
+    localStorage.setItem('searchExactMatch', searchExactMatch.toString());
+  }, [searchExactMatch]);
+
+  const handleToggleSearchExactMatch = () => {
+    setSearchExactMatch(prev => !prev);
+  };
 
   const [showButtonBar, setShowButtonBar] = useState<boolean>(() => {
     const saved = localStorage.getItem('showButtonBar');
@@ -1616,10 +1628,14 @@ const App: React.FC = () => {
               const query = searchQuery.trim().toLowerCase();
               if (query.length < searchCharLimit) return list.isVisible;
               
-              return list.tickers.some(t => 
-                t.symbol.toLowerCase().includes(query) || 
-                (t.badges && t.badges.some(b => b.toLowerCase().includes(query)))
-              );
+              return list.tickers.some(t => {
+                if (searchExactMatch) {
+                  return t.symbol.toLowerCase() === query || 
+                    (t.badges && t.badges.some(b => b.toLowerCase() === query));
+                }
+                return t.symbol.toLowerCase().includes(query) || 
+                  (t.badges && t.badges.some(b => b.toLowerCase().includes(query)));
+              });
             }).map(list => (
               <ListPanel 
                 key={list.id} 
@@ -1932,6 +1948,8 @@ const App: React.FC = () => {
         onToggleTheme={toggleTheme}
         searchCharLimit={searchCharLimit}
         onSearchCharLimitChange={setSearchCharLimit}
+        searchExactMatch={searchExactMatch}
+        onToggleSearchExactMatch={handleToggleSearchExactMatch}
         smaNotificationsEnabled={smaNotificationsEnabled}
         onSmaNotificationToggle={handleSmaNotificationToggle}
         showButtonBar={showButtonBar}
