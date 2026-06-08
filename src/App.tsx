@@ -571,24 +571,24 @@ const App: React.FC = () => {
 
     uniqueTickersForCrossover.forEach(ticker => {
       const price = parseFloat(ticker.stats.price);
-      const change = parseFloat(ticker.stats.change);
-      const prevPrice = price - change;
+
 
       [10, 20, 50, 100, 200].forEach(period => {
         // Skip SMA10 / SMA20 if the user has disabled those notifications
         if (period === 10 && !smaNotificationsEnabled.sma10) return;
         if (period === 20 && !smaNotificationsEnabled.sma20) return;
 
-        const smaKey = `sma${period}` as keyof typeof ticker.stats;
-        const smaVal = ticker.stats[smaKey] as number | undefined;
+        const keyAbove = `crossover_sma${period}_above` as keyof typeof ticker.stats;
+        const keyBelow = `crossover_sma${period}_below` as keyof typeof ticker.stats;
 
-        if (smaVal) {
-          const crossedAbove = prevPrice < smaVal && price > smaVal;
-          const crossedBelow = prevPrice > smaVal && price < smaVal;
+        const crossedAbove = !!ticker.stats[keyAbove];
+        const crossedBelow = !!ticker.stats[keyBelow];
 
-          if (crossedAbove || crossedBelow) {
-            const direction = crossedAbove ? 'ABOVE' : 'BELOW';
-            const targetAlertId = `cross-${ticker.symbol}-${period}-${direction.toLowerCase()}-${today}`;
+        if (crossedAbove || crossedBelow) {
+          const smaKey = `sma${period}` as keyof typeof ticker.stats;
+          const smaVal = ticker.stats[smaKey] as number | undefined;
+          const direction = crossedAbove ? 'ABOVE' : 'BELOW';
+          const targetAlertId = `cross-${ticker.symbol}-${period}-${direction.toLowerCase()}-${today}`;
             const existingNotifs = storage.getNotifications();
             
             const isAlreadyNotified = existingNotifs.some(n => 
@@ -608,7 +608,6 @@ const App: React.FC = () => {
               });
             }
           }
-        }
       });
 
       // SMA20/50 and SMA50/200 crossovers
@@ -975,7 +974,17 @@ const App: React.FC = () => {
               earningsDate: data.earningsDate,
               ipoDate: data.ipoDate,
               crossover_sma20_sma50: data.crossover_sma20_sma50,
-              crossover_sma50_sma200: data.crossover_sma50_sma200
+              crossover_sma50_sma200: data.crossover_sma50_sma200,
+              crossover_sma10_above: data.crossover_sma10_above,
+              crossover_sma10_below: data.crossover_sma10_below,
+              crossover_sma20_above: data.crossover_sma20_above,
+              crossover_sma20_below: data.crossover_sma20_below,
+              crossover_sma50_above: data.crossover_sma50_above,
+              crossover_sma50_below: data.crossover_sma50_below,
+              crossover_sma100_above: data.crossover_sma100_above,
+              crossover_sma100_below: data.crossover_sma100_below,
+              crossover_sma200_above: data.crossover_sma200_above,
+              crossover_sma200_below: data.crossover_sma200_below
             }
           };
           
@@ -1084,6 +1093,16 @@ const App: React.FC = () => {
                 ipoDate: freshData.ipoDate,
                 crossover_sma20_sma50: freshData.crossover_sma20_sma50,
                 crossover_sma50_sma200: freshData.crossover_sma50_sma200,
+                crossover_sma10_above: freshData.crossover_sma10_above,
+                crossover_sma10_below: freshData.crossover_sma10_below,
+                crossover_sma20_above: freshData.crossover_sma20_above,
+                crossover_sma20_below: freshData.crossover_sma20_below,
+                crossover_sma50_above: freshData.crossover_sma50_above,
+                crossover_sma50_below: freshData.crossover_sma50_below,
+                crossover_sma100_above: freshData.crossover_sma100_above,
+                crossover_sma100_below: freshData.crossover_sma100_below,
+                crossover_sma200_above: freshData.crossover_sma200_above,
+                crossover_sma200_below: freshData.crossover_sma200_below,
                 error: undefined
               }
             };
@@ -1158,6 +1177,16 @@ const App: React.FC = () => {
                 ipoDate: freshData.ipoDate,
                 crossover_sma20_sma50: freshData.crossover_sma20_sma50,
                 crossover_sma50_sma200: freshData.crossover_sma50_sma200,
+                crossover_sma10_above: freshData.crossover_sma10_above,
+                crossover_sma10_below: freshData.crossover_sma10_below,
+                crossover_sma20_above: freshData.crossover_sma20_above,
+                crossover_sma20_below: freshData.crossover_sma20_below,
+                crossover_sma50_above: freshData.crossover_sma50_above,
+                crossover_sma50_below: freshData.crossover_sma50_below,
+                crossover_sma100_above: freshData.crossover_sma100_above,
+                crossover_sma100_below: freshData.crossover_sma100_below,
+                crossover_sma200_above: freshData.crossover_sma200_above,
+                crossover_sma200_below: freshData.crossover_sma200_below,
                 error: undefined
               }
             };

@@ -31,6 +31,16 @@ export type Ticker = {
     ipoDate?: string;
     crossover_sma20_sma50?: boolean;
     crossover_sma50_sma200?: boolean;
+    crossover_sma10_above?: boolean;
+    crossover_sma10_below?: boolean;
+    crossover_sma20_above?: boolean;
+    crossover_sma20_below?: boolean;
+    crossover_sma50_above?: boolean;
+    crossover_sma50_below?: boolean;
+    crossover_sma100_above?: boolean;
+    crossover_sma100_below?: boolean;
+    crossover_sma200_above?: boolean;
+    crossover_sma200_below?: boolean;
   };
   isOwned?: boolean;
   badges?: string[];

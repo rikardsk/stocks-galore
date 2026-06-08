@@ -65,10 +65,38 @@ def calculate_stats(symbol: str, info: Dict, hist: pd.DataFrame) -> Dict[str, An
     sma200 = safe_float(sma200_series.iloc[-1]) if len(sma200_series) >= 1 else None
 
     # Check for SMA crossovers
+    crossover_sma10_above = False
+    crossover_sma10_below = False
+    crossover_sma20_above = False
+    crossover_sma20_below = False
+    crossover_sma50_above = False
+    crossover_sma50_below = False
+    crossover_sma100_above = False
+    crossover_sma100_below = False
+    crossover_sma200_above = False
+    crossover_sma200_below = False
     crossover_sma20_sma50 = False
     crossover_sma50_sma200 = False
 
     if len(hist) > 1:
+        # Helper for price crossovers
+        def get_price_crossover(series):
+            if len(series) < 2:
+                return False, False
+            s_prev = safe_float(series.iloc[-2])
+            s_curr = safe_float(series.iloc[-1])
+            if s_prev is None or s_curr is None or prev_close is None or current_price is None:
+                return False, False
+            above = (prev_close < s_prev) and (current_price > s_curr)
+            below = (prev_close > s_prev) and (current_price < s_curr)
+            return above, below
+
+        crossover_sma10_above, crossover_sma10_below = get_price_crossover(sma10_series)
+        crossover_sma20_above, crossover_sma20_below = get_price_crossover(sma20_series)
+        crossover_sma50_above, crossover_sma50_below = get_price_crossover(sma50_series)
+        crossover_sma100_above, crossover_sma100_below = get_price_crossover(sma100_series)
+        crossover_sma200_above, crossover_sma200_below = get_price_crossover(sma200_series)
+
         sma20_yesterday = safe_float(sma20_series.iloc[-2])
         sma50_yesterday = safe_float(sma50_series.iloc[-2])
         sma200_yesterday = safe_float(sma200_series.iloc[-2])
@@ -116,6 +144,16 @@ def calculate_stats(symbol: str, info: Dict, hist: pd.DataFrame) -> Dict[str, An
         "sma50": sma50,
         "sma100": sma100,
         "sma200": sma200,
+        "crossover_sma10_above": crossover_sma10_above,
+        "crossover_sma10_below": crossover_sma10_below,
+        "crossover_sma20_above": crossover_sma20_above,
+        "crossover_sma20_below": crossover_sma20_below,
+        "crossover_sma50_above": crossover_sma50_above,
+        "crossover_sma50_below": crossover_sma50_below,
+        "crossover_sma100_above": crossover_sma100_above,
+        "crossover_sma100_below": crossover_sma100_below,
+        "crossover_sma200_above": crossover_sma200_above,
+        "crossover_sma200_below": crossover_sma200_below,
         "crossover_sma20_sma50": crossover_sma20_sma50,
         "crossover_sma50_sma200": crossover_sma50_sma200,
         "perf1M": get_perf(21), # ~21 trading days
