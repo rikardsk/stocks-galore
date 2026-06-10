@@ -5,7 +5,7 @@ import { Sidebar } from './components/Sidebar';
 import { ListPanel } from './components/ListPanel';
 import { Toolbar } from './components/Toolbar';
 import { storage } from './storage';
-import { EMPTY_FILTERS, countActiveFilters } from './types';
+import { EMPTY_FILTERS, countActiveFilters, formatPrice } from './types';
 import type { StockList, ListGroup, StockFilters, StockAlert, TickerNotification, Ticker } from './types';
 import { COUNTRY_FLAGS } from './types';
 import { FilterModal } from './components/FilterModal';
@@ -555,7 +555,7 @@ const App: React.FC = () => {
 
       if (isMet && !alert.isTriggered) {
         triggeredCount++;
-        const message = `${alert.symbol} ${alert.metric === 'price' ? 'Price' : 'Change'} is ${alert.operator} ${alert.metric === 'price' ? '$' : ''}${alert.value}${alert.metric === 'changePercent' ? '%' : ''} (Current: ${alert.metric === 'price' ? '$' : ''}${currentValue}${alert.metric === 'changePercent' ? '%' : ''})`;
+        const message = `${alert.symbol} ${alert.metric === 'price' ? 'Price' : 'Change'} is ${alert.operator} ${alert.metric === 'price' ? formatPrice(alert.value, ticker.stats.currency) : `${alert.value}%`} (Current: ${alert.metric === 'price' ? formatPrice(currentValue, ticker.stats.currency) : `${currentValue}%`})`;
         
         storage.addNotification({
           alertId: alert.id,
@@ -617,7 +617,7 @@ const App: React.FC = () => {
               storage.addNotification({
                 alertId: targetAlertId,
                 symbol: ticker.symbol,
-                message: `${ticker.symbol} crossed ${direction} SMA${period} (Price: $${price}, SMA: ${smaVal})`,
+                message: `${ticker.symbol} crossed ${direction} SMA${period} (Price: ${formatPrice(price, ticker.stats.currency)}, SMA: ${smaVal ? formatPrice(smaVal, ticker.stats.currency) : 'N/A'})`,
                 type: `sma${period}` as any
               });
             }
@@ -998,7 +998,8 @@ const App: React.FC = () => {
               crossover_sma100_above: data.crossover_sma100_above,
               crossover_sma100_below: data.crossover_sma100_below,
               crossover_sma200_above: data.crossover_sma200_above,
-              crossover_sma200_below: data.crossover_sma200_below
+              crossover_sma200_below: data.crossover_sma200_below,
+              currency: data.currency
             }
           };
           
@@ -1117,6 +1118,7 @@ const App: React.FC = () => {
                 crossover_sma100_below: freshData.crossover_sma100_below,
                 crossover_sma200_above: freshData.crossover_sma200_above,
                 crossover_sma200_below: freshData.crossover_sma200_below,
+                currency: freshData.currency,
                 error: undefined
               }
             };
@@ -1201,6 +1203,7 @@ const App: React.FC = () => {
                 crossover_sma100_below: freshData.crossover_sma100_below,
                 crossover_sma200_above: freshData.crossover_sma200_above,
                 crossover_sma200_below: freshData.crossover_sma200_below,
+                currency: freshData.currency,
                 error: undefined
               }
             };
@@ -2140,6 +2143,7 @@ const App: React.FC = () => {
         isOpen={isAlertsModalOpen} 
         onClose={() => setIsAlertsModalOpen(false)} 
         alerts={alerts}
+        tickers={allUniqueTickers}
         onAddAlert={handleAddAlert}
         onDeleteAlert={handleDeleteAlert}
       />

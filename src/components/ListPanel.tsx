@@ -3,7 +3,7 @@ import Draggable from 'react-draggable';
 import { X, ChevronDown, ChevronUp, Eye, EyeOff, Plus, RefreshCw, Trash2, ArrowUpDown, ArrowUpAZ, ArrowDownAZ, ArrowUp10, ArrowDown10, Lock, AlertCircle, Briefcase, Star, Info, Copy, Check } from 'lucide-react';
 import { Sparkline } from './Sparkline';
 import type { StockList, StockFilters } from '../types';
-import { COUNTRY_FLAGS, tickerMatchesFilters, formatMarketCap } from '../types';
+import { COUNTRY_FLAGS, tickerMatchesFilters, formatMarketCap, formatPrice } from '../types';
 
 interface ListPanelProps {
   list: StockList;
@@ -311,7 +311,7 @@ export const ListPanel: React.FC<ListPanelProps> = ({
 
                   {ticker.name !== 'Unknown Company' && (
                     <div className="ticker-price-group" style={{ flexShrink: 0, marginLeft: '8px' }}>
-                      <div style={{ fontWeight: 600 }}>${ticker.stats.price}</div>
+                      <div style={{ fontWeight: 600 }}>{formatPrice(ticker.stats.price, ticker.stats.currency)}</div>
                       <div className={parseFloat(ticker.stats.change) >= 0 ? 'positive' : 'negative'} style={{ fontSize: '11px' }}>
                         {parseFloat(ticker.stats.change) >= 0 ? '+' : ''}{ticker.stats.change} ({ticker.stats.changePercent})
                       </div>

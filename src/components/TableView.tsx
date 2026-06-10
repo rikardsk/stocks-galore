@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { X, ArrowUpDown, ArrowUp, ArrowDown, Briefcase, Star, Printer } from 'lucide-react';
 import type { Ticker, StockFilters, StockList, ListGroup } from '../types';
-import { tickerMatchesFilters, formatMarketCap } from '../types';
+import { tickerMatchesFilters, formatMarketCap, formatPrice } from '../types';
 
 interface TableViewProps {
   isOpen: boolean;
@@ -385,7 +385,7 @@ export const TableView: React.FC<TableViewProps> = ({
                       <div className="only-print" style={{ fontWeight: 'bold' }}>{ticker.symbol}</div>
                     </td>
                     <td style={tdStyle} className="print-col">{ticker.name}</td>
-                    <td style={tdStyle} className="print-col">${ticker.stats?.price || '0.00'}</td>
+                    <td style={tdStyle} className="print-col">{formatPrice(ticker.stats?.price, ticker.stats?.currency)}</td>
                     <td style={{ ...tdStyle, color: changePct >= 0 ? '#10b981' : '#ef4444' }} className="print-col">
                       {ticker.stats?.changePercent || '0.00%'}
                     </td>
@@ -418,9 +418,9 @@ export const TableView: React.FC<TableViewProps> = ({
                               }} />
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--text-secondary)' }}>
-                              <span style={{ color: '#ef4444' }}>${low.toFixed(0)}</span>
+                              <span style={{ color: '#ef4444' }}>{formatPrice(low, ticker.stats?.currency, 0)}</span>
                               <span style={{ color: dotColor, fontWeight: 600 }}>{pct.toFixed(0)}%</span>
-                              <span style={{ color: '#10b981' }}>${high.toFixed(0)}</span>
+                              <span style={{ color: '#10b981' }}>{formatPrice(high, ticker.stats?.currency, 0)}</span>
                             </div>
                           </div>
                         );

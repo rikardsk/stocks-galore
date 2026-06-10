@@ -8,6 +8,7 @@ export type Ticker = {
     changePercent: string;
     volume: string;
     marketCap: string;
+    currency?: string;
     // New backend fields
     sector?: string;
     sma10?: number;
@@ -211,6 +212,55 @@ export const formatMarketCap = (capInBillions: number | string | null | undefine
   }
   return num.toFixed(2) + 'B';
 };
+
+export const formatPrice = (price: number | string | undefined | null, currency?: string, decimals: number = 2): string => {
+  if (price === undefined || price === null) return 'N/A';
+  const num = typeof price === 'string' ? parseFloat(price) : price;
+  if (isNaN(num)) return 'N/A';
+  
+  const curr = currency?.toUpperCase() || 'USD';
+  switch (curr) {
+    case 'USD':
+      return `$${num.toFixed(decimals)}`;
+    case 'EUR':
+      return `€${num.toFixed(decimals)}`;
+    case 'GBP':
+      return `£${num.toFixed(decimals)}`;
+    case 'GBP':
+    case 'GBp':
+      // GBp is British pence, so we divide by 100 to show in pounds, or show pence?
+      // Standard is to format GBp divided by 100 in pounds, or keep as pence?
+      // Let's divide by 100 for GBp if it is GBp, or just append p. Let's do £ for GBP and keep pence as p.
+      return curr === 'GBp' ? `${num.toFixed(decimals)}p` : `£${num.toFixed(decimals)}`;
+    case 'SEK':
+    case 'NOK':
+    case 'DKK':
+      return `${num.toFixed(decimals)} kr`;
+    default:
+      return `${num.toFixed(decimals)} ${curr}`;
+  }
+};
+
+export const getCurrencySymbol = (currency?: string): { symbol: string, position: 'prefix' | 'suffix' } => {
+  const curr = currency?.toUpperCase() || 'USD';
+  switch (curr) {
+    case 'USD':
+      return { symbol: '$', position: 'prefix' };
+    case 'EUR':
+      return { symbol: '€', position: 'prefix' };
+    case 'GBP':
+      return { symbol: '£', position: 'prefix' };
+    case 'GBp':
+      return { symbol: 'p', position: 'suffix' };
+    case 'SEK':
+    case 'NOK':
+    case 'DKK':
+      return { symbol: 'kr', position: 'suffix' };
+    default:
+      return { symbol: curr, position: 'suffix' };
+  }
+};
+
 
 export const countActiveFilters = (filters: StockFilters): number => {
   let count = 0;

@@ -5,6 +5,7 @@ import {
   ResponsiveContainer, Area, Bar, ComposedChart, ReferenceLine
 } from 'recharts';
 import type { Ticker, StockAlert, TickerNotification } from '../types';
+import { formatPrice, getCurrencySymbol } from '../types';
 
 interface StockDetailModalProps {
   ticker: Ticker | null;
@@ -377,7 +378,7 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
             <p className="detail-name">{ticker.name} • {ticker.stats.sector}</p>
           </div>
           <div className="header-right">
-            <div className="detail-price" style={{ color: 'var(--text-primary)' }}>${ticker.stats.price}</div>
+            <div className="detail-price" style={{ color: 'var(--text-primary)' }}>{formatPrice(ticker.stats.price, ticker.stats.currency)}</div>
             <div className={`detail-change ${parseFloat(ticker.stats.change) >= 0 ? 'positive' : 'negative'}`}>
               {parseFloat(ticker.stats.change) >= 0 ? '+' : ''}{ticker.stats.change} ({ticker.stats.changePercent})
             </div>
@@ -507,7 +508,7 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
                   strokeDasharray="3 3"
                   label={{ 
                     position: 'insideRight', 
-                    value: `Latest: $${ticker.stats.price}`, 
+                    value: `Latest: ${formatPrice(ticker.stats.price, ticker.stats.currency)}`, 
                     fill: chartColor,
                     fontSize: 10,
                     fontWeight: 'bold'
@@ -523,7 +524,7 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
                   strokeDasharray="3 3"
                   label={{ 
                     position: 'insideRight', 
-                    value: `$${alert.value}`, 
+                    value: formatPrice(alert.value, ticker.stats.currency), 
                     fill: alert.isTriggered ? 'var(--text-secondary)' : 'var(--accent)',
                     fontSize: 10,
                     fontWeight: 'bold'
@@ -563,7 +564,7 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
           <div style={{ gridColumn: 'span 2', background: 'var(--surface-subtle)' }} className="stat-box">
             <span className="stat-label">52 Week Range</span>
             <div className="range-bar-container">
-              <span className="range-val">${ticker.stats.low52 || '0.00'}</span>
+              <span className="range-val">{formatPrice(ticker.stats.low52, ticker.stats.currency)}</span>
               <div className="range-track" style={{ background: 'var(--surface-hover)' }}>
                 {ticker.stats.low52 && ticker.stats.high52 && (
                   <div 
@@ -574,7 +575,7 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
                   />
                 )}
               </div>
-              <span className="range-val">${ticker.stats.high52 || '0.00'}</span>
+              <span className="range-val">{formatPrice(ticker.stats.high52, ticker.stats.currency)}</span>
             </div>
           </div>
         </div>
@@ -587,17 +588,20 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
               Price Alerts
             </h3>
             <div style={{ padding: '4px 10px', background: 'var(--surface-hover)', borderRadius: '6px', fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>
-              Current: ${ticker.stats.price}
+              Current: {formatPrice(ticker.stats.price, ticker.stats.currency)}
             </div>
           </div>
           
           <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', alignItems: 'stretch' }}>
              <div style={{ position: 'relative', flex: 1, height: '52px' }}>
                <div style={{ 
-                 position: 'absolute', left: '18px', top: '50%', transform: 'translateY(-50%)', 
-                 color: 'var(--text-secondary)', fontSize: '20px', fontWeight: 600, zIndex: 1,
+                 position: 'absolute', 
+                 left: getCurrencySymbol(ticker.stats.currency).position === 'prefix' ? '18px' : 'auto', 
+                 right: getCurrencySymbol(ticker.stats.currency).position === 'prefix' ? 'auto' : '18px', 
+                 top: '50%', transform: 'translateY(-50%)', 
+                 color: 'var(--text-secondary)', fontSize: '18px', fontWeight: 600, zIndex: 1,
                  pointerEvents: 'none'
-               }}>$</div>
+               }}>{getCurrencySymbol(ticker.stats.currency).symbol}</div>
                <input 
                  type="number"
                  step="any"
@@ -620,7 +624,8 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
                  style={{ 
                    width: '100%', height: '100%', background: 'var(--surface-modal)', 
                    border: '1px solid var(--border-color)', color: 'var(--text-primary)', 
-                   padding: '0 20px 0 40px', borderRadius: '14px', outline: 'none', 
+                   padding: getCurrencySymbol(ticker.stats.currency).position === 'prefix' ? '0 20px 0 40px' : '0 50px 0 20px', 
+                   borderRadius: '14px', outline: 'none', 
                    fontSize: '18px', fontWeight: 700, display: 'block'
                  }}
                />
@@ -698,12 +703,12 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
                    <div style={{ 
                      width: '28px', height: '28px', borderRadius: '8px', 
                      background: alert.operator === 'above' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                     display: 'flex', alignItems: 'center', justifyContent: 'center'
+                    display: 'flex', alignItems: 'center', justifyContent: 'center'
                    }}>
                      {alert.operator === 'above' ? <TrendingUp size={16} color="#10b981" /> : <TrendingDown size={16} color="#ef4444" />}
                    </div>
                    <div>
-                     <div style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.2 }}>${alert.value}</div>
+                     <div style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.2 }}>{formatPrice(alert.value, ticker.stats.currency)}</div>
                      <div style={{ fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.5px' }}>{alert.operator}</div>
                    </div>
                 </div>

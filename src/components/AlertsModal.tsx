@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { X, Plus, Trash2, AlertTriangle } from 'lucide-react';
-import type { StockAlert } from '../types';
+import type { StockAlert, Ticker } from '../types';
+import { formatPrice } from '../types';
 
 interface AlertsModalProps {
   isOpen: boolean;
   onClose: () => void;
   alerts: StockAlert[];
+  tickers: Ticker[];
   onAddAlert: (alert: Omit<StockAlert, 'id' | 'isTriggered'>) => void;
   onDeleteAlert: (id: string) => void;
 }
@@ -14,6 +16,7 @@ export const AlertsModal: React.FC<AlertsModalProps> = ({
   isOpen,
   onClose,
   alerts,
+  tickers,
   onAddAlert,
   onDeleteAlert
 }) => {
@@ -57,7 +60,7 @@ export const AlertsModal: React.FC<AlertsModalProps> = ({
               style={{ flex: 1 }}
             />
             <select value={metric} onChange={e => setMetric(e.target.value as any)} style={{ flex: 1 }}>
-              <option value="price">Price ($)</option>
+              <option value="price">Price</option>
               <option value="changePercent">Change %</option>
             </select>
           </div>
@@ -90,33 +93,38 @@ export const AlertsModal: React.FC<AlertsModalProps> = ({
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {alerts.map(alert => (
-                <div 
-                  key={alert.id} 
-                  style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center', 
-                    padding: '10px 12px', 
-                    background: 'var(--surface-subtle)', 
-                    borderRadius: '8px',
-                    border: '1px solid var(--border-color)'
-                  }}
-                >
-                  <div style={{ fontSize: '14px' }}>
-                    <span style={{ fontWeight: 700 }}>{alert.symbol}</span>
-                    <span style={{ margin: '0 8px', color: 'var(--text-secondary)' }}>
-                      {alert.metric === 'price' ? 'Price' : 'Change'} {alert.operator}
-                    </span>
-                    <span style={{ fontWeight: 600 }}>
-                      {alert.metric === 'price' ? '$' : ''}{alert.value}{alert.metric === 'changePercent' ? '%' : ''}
-                    </span>
+              {alerts.map(alert => {
+                const ticker = tickers.find(t => t.symbol.toUpperCase() === alert.symbol.toUpperCase());
+                return (
+                  <div 
+                    key={alert.id} 
+                    style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center', 
+                      padding: '10px 12px', 
+                      background: 'var(--surface-subtle)', 
+                      borderRadius: '8px',
+                      border: '1px solid var(--border-color)'
+                    }}
+                  >
+                    <div style={{ fontSize: '14px' }}>
+                      <span style={{ fontWeight: 700 }}>{alert.symbol}</span>
+                      <span style={{ margin: '0 8px', color: 'var(--text-secondary)' }}>
+                        {alert.metric === 'price' ? 'Price' : 'Change'} {alert.operator}
+                      </span>
+                      <span style={{ fontWeight: 600 }}>
+                        {alert.metric === 'price' 
+                          ? formatPrice(alert.value, ticker?.stats.currency) 
+                          : `${alert.value}%`}
+                      </span>
+                    </div>
+                    <button className="btn" onClick={() => onDeleteAlert(alert.id)}>
+                      <Trash2 size={14} opacity={0.5} />
+                    </button>
                   </div>
-                  <button className="btn" onClick={() => onDeleteAlert(alert.id)}>
-                    <Trash2 size={14} opacity={0.5} />
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

@@ -165,7 +165,8 @@ def calculate_stats(symbol: str, info: Dict, hist: pd.DataFrame) -> Dict[str, An
         "high52": safe_float(info.get('fiftyTwoWeekHigh')),
         "low52": safe_float(info.get('fiftyTwoWeekLow')),
         "avgVolume": f"{info.get('averageVolume', 0) / 1e6:.1f}M" if info.get('averageVolume') else "N/A",
-        "ipoDate": "N/A"  # filled in by caller
+        "ipoDate": "N/A",  # filled in by caller
+        "currency": info.get('currency') or info.get('financialCurrency') or "USD"
     }
 
 def get_ipo_date(symbol: str, info: Dict) -> str:
