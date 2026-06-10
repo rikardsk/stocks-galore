@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Layout, Settings, Search, RefreshCw, Filter, Bell, X, Trash2, BarChart2, Trophy, Calendar, Keyboard } from 'lucide-react';
+import { Plus, Layout, Settings, Search, RefreshCw, Filter, Bell, X, Trash2, BarChart2, Trophy, Calendar, Keyboard, Globe } from 'lucide-react';
 
 interface ToolbarProps {
   onCreateList: () => void;
@@ -21,6 +21,7 @@ interface ToolbarProps {
   isSearchExpanded: boolean;
   onSearchToggle: () => void;
   onOpenShortcuts?: () => void;
+  onOpenSuffixes?: () => void;
   position?: 'bottom' | 'top' | 'right';
 }
 
@@ -28,7 +29,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onCreateList, onToggleSidebar, onRefreshAll, onClearWorkbench, isRefreshing, 
   searchQuery, onSearchQueryChange, onOpenFilter, onOpenSettings, onOpenTable, 
   onOpenNotifications, onOpenAnalytics, onOpenRanking, onOpenEarnings, unreadCount = 0, activeFilterCount = 0,
-  isSearchExpanded, onSearchToggle, onOpenShortcuts, position = 'bottom'
+  isSearchExpanded, onSearchToggle, onOpenShortcuts, onOpenSuffixes, position = 'bottom'
 }) => {
   return (
     <div className={`toolbar position-${position}`}>
@@ -49,6 +50,9 @@ export const Toolbar: React.FC<ToolbarProps> = ({
       </button>
       <button className="btn" title="Keyboard Shortcuts (Ctrl+K)" onClick={onOpenShortcuts}>
         <Keyboard size={20} />
+      </button>
+      <button className="btn" title="Exchange Suffixes (Ctrl+Z)" onClick={onOpenSuffixes}>
+        <Globe size={20} />
       </button>
       <button 
         className="btn" 

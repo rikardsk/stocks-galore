@@ -20,6 +20,7 @@ import { SearchChoiceModal } from './components/SearchChoiceModal';
 import { AssignGroupModal } from './components/AssignGroupModal';
 import { EarningsModal } from './components/EarningsModal';
 import { ShortcutsModal } from './components/ShortcutsModal';
+import { SuffixesModal } from './components/SuffixesModal';
 import './index.css';
 
 const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
@@ -67,6 +68,7 @@ const App: React.FC = () => {
   const [shouldReopenAnalytics, setShouldReopenAnalytics] = useState(false);
   const [isEarningsOpen, setIsEarningsOpen] = useState(false);
   const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
+  const [isSuffixesModalOpen, setIsSuffixesModalOpen] = useState(false);
   const [shouldReopenEarnings, setShouldReopenEarnings] = useState(false);
   const [theme, setTheme] = useState<'dark' | 'light'>(() => (localStorage.getItem('theme') as 'dark' | 'light') || 'dark');
   const [searchCharLimit, setSearchCharLimit] = useState<number>(() => {
@@ -1402,6 +1404,7 @@ const App: React.FC = () => {
     setIsAlertsModalOpen(false);
     setIsAssignGroupModalOpen(false);
     setIsShortcutsModalOpen(false);
+    setIsSuffixesModalOpen(false);
   };
 
   const isTyping = (el: Element | null): boolean => {
@@ -1427,6 +1430,7 @@ const App: React.FC = () => {
       });
       case 'f': return setIsFilterModalOpen(true);
       case 'k': return setIsShortcutsModalOpen(true);
+      case 'z': return setIsSuffixesModalOpen(true);
       case 'm': return activeListId ? handleOpenAssignModal(activeListId) : undefined;
       case 'g': return setIsCreateGroupModalOpen(true);
       default: return;
@@ -1456,7 +1460,7 @@ const App: React.FC = () => {
       const key = e.key.toLowerCase();
       if (key === 'r' && e.shiftKey) return;
       
-      const supported = ['v', 'd', 'delete', 'r', 'a', 'n', 's', 'l', 'e', 'x', 'f', 'k', 'm', 'g'];
+      const supported = ['v', 'd', 'delete', 'r', 'a', 'n', 's', 'l', 'e', 'x', 'f', 'k', 'z', 'm', 'g'];
       if (!supported.includes(key)) return;
       
       e.preventDefault();
@@ -1684,6 +1688,7 @@ const App: React.FC = () => {
               setIsSearchExpanded(!isSearchExpanded);
             }}
             onOpenShortcuts={() => setIsShortcutsModalOpen(true)}
+            onOpenSuffixes={() => setIsSuffixesModalOpen(true)}
             position={buttonBarPosition}
           />
         )}
@@ -2142,6 +2147,11 @@ const App: React.FC = () => {
       <ShortcutsModal 
         isOpen={isShortcutsModalOpen} 
         onClose={() => setIsShortcutsModalOpen(false)} 
+      />
+
+      <SuffixesModal 
+        isOpen={isSuffixesModalOpen} 
+        onClose={() => setIsSuffixesModalOpen(false)} 
       />
 
       <AssignGroupModal 

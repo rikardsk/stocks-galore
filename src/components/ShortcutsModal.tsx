@@ -18,6 +18,7 @@ const SHORTCUTS_DATA: ShortcutItem[] = [
   { keys: ['Ctrl', 'V'], description: 'Open Market Table' },
   { keys: ['Ctrl', 'A'], description: 'Open Analytics' },
   { keys: ['Ctrl', 'K'], description: 'Open Keyboard Shortcuts Map' },
+  { keys: ['Ctrl', 'Z'], description: 'Open Exchange Suffixes' },
   { keys: ['Ctrl', 'L'], description: 'Create New List' },
   { keys: ['Ctrl', 'R'], description: 'Open Ranking' },
   { keys: ['Ctrl', 'E'], description: 'Open Earnings Calendar' },
