@@ -50,6 +50,7 @@ const App: React.FC = () => {
   const [refreshInterval, setRefreshInterval] = useState<RefreshInterval>('manual');
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isTableViewOpen, setIsTableViewOpen] = useState(false);
+  const [tableViewSymbolsFilter, setTableViewSymbolsFilter] = useState<string[] | null>(null);
   
   const [alerts, setAlerts] = useState<StockAlert[]>([]);
   const [notifications, setNotifications] = useState<TickerNotification[]>([]);
@@ -1978,7 +1979,10 @@ const App: React.FC = () => {
 
       <TableView 
         isOpen={isTableViewOpen} 
-        onClose={() => setIsTableViewOpen(false)} 
+        onClose={() => {
+          setIsTableViewOpen(false);
+          setTableViewSymbolsFilter(null);
+        }} 
         tickers={allUniqueTickers}
         filters={globalFilters}
         lists={lists}
@@ -1997,6 +2001,8 @@ const App: React.FC = () => {
         }}
         onSelectTicker={setSelectedDetailTicker}
         theme={theme}
+        customSymbolsFilter={tableViewSymbolsFilter}
+        onClearCustomSymbolsFilter={() => setTableViewSymbolsFilter(null)}
       />
 
       <AnalyticsModal 
@@ -2134,6 +2140,11 @@ const App: React.FC = () => {
         onSelectTicker={(ticker) => {
           setSelectedDetailTicker(ticker);
           setShouldReopenNotifications(true);
+        }}
+        onOpenTableWithSymbols={(symbols) => {
+          setIsNotificationsModalOpen(false);
+          setTableViewSymbolsFilter(symbols);
+          setIsTableViewOpen(true);
         }}
         allTickers={allUniqueTickers}
         smaNotificationsEnabled={smaNotificationsEnabled}

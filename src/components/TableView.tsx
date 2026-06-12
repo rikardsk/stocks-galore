@@ -16,6 +16,8 @@ interface TableViewProps {
   onToggleOwned: (ticker: Ticker) => void;
   onSelectTicker: (ticker: Ticker) => void;
   theme: 'dark' | 'light';
+  customSymbolsFilter?: string[] | null;
+  onClearCustomSymbolsFilter?: () => void;
 }
 
 type SortConfig = {
@@ -35,7 +37,9 @@ export const TableView: React.FC<TableViewProps> = ({
   onToggleWatchlist, 
   onToggleOwned,
   onSelectTicker,
-  theme: _theme = 'dark'
+  theme: _theme = 'dark',
+  customSymbolsFilter = null,
+  onClearCustomSymbolsFilter
 }) => {
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'symbol', direction: 'asc' });
   const [selectedGroupId, setSelectedGroupId] = useState<string>('all');
@@ -54,6 +58,11 @@ export const TableView: React.FC<TableViewProps> = ({
 
   const filteredTickers = useMemo(() => {
     let result = tickers;
+
+    if (customSymbolsFilter) {
+      const symbolsSet = new Set(customSymbolsFilter);
+      result = result.filter(t => symbolsSet.has(t.symbol));
+    }
 
     // Filter by group/list first
     if (selectedGroupId !== 'all') {
@@ -91,7 +100,7 @@ export const TableView: React.FC<TableViewProps> = ({
         return false;
       }
     });
-  }, [tickers, filters, selectedGroupId, selectedListId, selectedBadge, lists, groups]);
+  }, [tickers, filters, selectedGroupId, selectedListId, selectedBadge, lists, groups, customSymbolsFilter]);
 
   const sortedTickers = useMemo(() => {
     if (sortConfig.direction === 'none') return filteredTickers;
@@ -184,9 +193,47 @@ export const TableView: React.FC<TableViewProps> = ({
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '20px' }}>
-          <h2 style={{ margin: 0, whiteSpace: 'nowrap' }} className="print-title">
-            Market Overview Table ({filteredTickers.length})
-          </h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <h2 style={{ margin: 0, whiteSpace: 'nowrap' }} className="print-title">
+              Market Overview Table ({filteredTickers.length})
+            </h2>
+            {customSymbolsFilter && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }} className="no-print">
+                <span style={{ 
+                  fontSize: '11px', 
+                  background: 'rgba(99,102,241,0.15)', 
+                  color: 'var(--accent)', 
+                  padding: '2px 8px', 
+                  borderRadius: '12px',
+                  fontWeight: 600,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  border: '1px solid rgba(99,102,241,0.3)'
+                }}>
+                  Filtered by Notifications ({customSymbolsFilter.length} stocks)
+                  <button 
+                    onClick={onClearCustomSymbolsFilter} 
+                    style={{ 
+                      background: 'none', 
+                      border: 'none', 
+                      color: 'var(--accent)', 
+                      cursor: 'pointer', 
+                      padding: 0,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      fontWeight: 'bold',
+                      fontSize: '12px',
+                      lineHeight: 1
+                    }}
+                    title="Clear Filter"
+                  >
+                    ×
+                  </button>
+                </span>
+              </div>
+            )}
+          </div>
           
           <div style={{ display: 'flex', gap: '12px', flex: 1, justifyContent: 'center' }} className="no-print">
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

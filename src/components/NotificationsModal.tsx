@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Bell, BellOff, Calendar, Search, TrendingUp, TrendingDown, AlertCircle, ChevronDown, ChevronUp, Filter } from 'lucide-react';
+import { X, Bell, BellOff, Calendar, Search, TrendingUp, TrendingDown, AlertCircle, ChevronDown, ChevronUp, Filter, Table } from 'lucide-react';
 import type { TickerNotification, Ticker } from '../types';
 
 interface NotificationsModalProps {
@@ -10,6 +10,7 @@ interface NotificationsModalProps {
   onMarkRead: () => void;
   onOpenAlerts: () => void;
   onSelectTicker: (ticker: Ticker) => void;
+  onOpenTableWithSymbols: (symbols: string[]) => void;
   allTickers: Ticker[];
   smaNotificationsEnabled: { sma10: boolean; sma20: boolean };
 }
@@ -22,6 +23,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   onMarkRead,
   onOpenAlerts,
   onSelectTicker,
+  onOpenTableWithSymbols,
   allTickers,
   smaNotificationsEnabled
 }) => {
@@ -1047,6 +1049,18 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
             onClick={onOpenAlerts}
           >
             Manage Alerts
+          </button>
+          <button 
+            className="btn" 
+            style={{ flex: 1, fontSize: '12px', padding: '8px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+            onClick={() => {
+              const symbols = Array.from(new Set(filteredNotifications.map(n => n.symbol)));
+              onOpenTableWithSymbols(symbols);
+            }}
+            disabled={filteredNotifications.length === 0}
+            title="Open these stocks in the market overview table"
+          >
+            <Table size={14} /> Open in Table
           </button>
           <button 
             className="btn" 
