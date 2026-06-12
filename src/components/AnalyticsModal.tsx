@@ -451,7 +451,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                 style={{ background: 'var(--surface-subtle)', border: '1px solid var(--border-color)', padding: '6px 12px' }}
               >
                 <option value="all">All Lists</option>
-                {lists.map(l => (
+                {[...lists].filter(l => !l.isArchived).sort((a, b) => a.name.localeCompare(b.name)).map(l => (
                   <option key={l.id} value={l.id}>{l.name}</option>
                 ))}
               </select>

@@ -493,20 +493,20 @@ const App: React.FC = () => {
 
   const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
 
-  // Compute available sectors across all lists for the filter modal
+  // Compute available sectors across non-archived lists for the filter modal
   const availableSectors = React.useMemo(() => {
     const sectors = new Set<string>();
-    lists.forEach(l => l.tickers.forEach(t => {
+    lists.filter(l => !l.isArchived).forEach(l => l.tickers.forEach(t => {
       if (t.stats.sector && t.stats.sector !== 'N/A') sectors.add(t.stats.sector);
     }));
     return Array.from(sectors).sort();
   }, [lists]);
 
-  // Unique tickers across all lists for the Table View
+  // Unique tickers across non-archived lists for the Table View
   const allUniqueTickers = React.useMemo(() => {
     const seen = new Set<string>();
     const unique: Ticker[] = [];
-    lists.forEach(l => l.tickers.forEach(t => {
+    lists.filter(l => !l.isArchived).forEach(l => l.tickers.forEach(t => {
       if (!seen.has(t.symbol)) {
         seen.add(t.symbol);
         unique.push(t);
