@@ -37,6 +37,8 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   const [peFilter, setPeFilter] = React.useState<number>(20);
   const [peDirection, setPeDirection] = React.useState<'none' | 'above' | 'below'>('none');
   const [volumeFilter, setVolumeFilter] = React.useState<'none' | '2x' | '3x' | '4x' | '5x'>('none');
+  const [yieldFilter, setYieldFilter] = React.useState<number>(2);
+  const [yieldDirection, setYieldDirection] = React.useState<'none' | 'above' | 'below'>('none');
   const [showFilters, setShowFilters] = React.useState(true);
 
   const timeFilteredNotifications = React.useMemo(() => {
@@ -217,6 +219,21 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       });
     }
 
+    // Yield Filter
+    if (yieldDirection !== 'none') {
+      filtered = filtered.filter(n => {
+        const ticker = allTickers.find(t => t.symbol === n.symbol);
+        if (!ticker || ticker.stats.dividendYield === undefined || ticker.stats.dividendYield === null) return false;
+        
+        const yieldVal = ticker.stats.dividendYield;
+        if (yieldDirection === 'above') {
+          return yieldVal >= yieldFilter;
+        } else {
+          return yieldVal <= yieldFilter;
+        }
+      });
+    }
+
     // Volume Filter
     if (volumeFilter !== 'none') {
       const targetRatio = parseInt(volumeFilter);
@@ -243,7 +260,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
     }
 
     return filtered;
-  }, [timeFilteredNotifications, typeFilter, directionFilter, searchQuery, fiftyTwoWeekFilter, fiftyTwoWeekDirection, peFilter, peDirection, volumeFilter, allTickers]);
+  }, [timeFilteredNotifications, typeFilter, directionFilter, searchQuery, fiftyTwoWeekFilter, fiftyTwoWeekDirection, peFilter, peDirection, volumeFilter, yieldFilter, yieldDirection, allTickers]);
 
   const topTickers = React.useMemo(() => {
     const counts: Record<string, number> = {};
@@ -269,6 +286,8 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
     setPeDirection('none');
     setPeFilter(20);
     setVolumeFilter('none');
+    setYieldDirection('none');
+    setYieldFilter(2);
   };
 
   const activeFilterCount = React.useMemo(() => {
@@ -279,8 +298,9 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
     if (fiftyTwoWeekDirection !== 'none') count++;
     if (peDirection !== 'none') count++;
     if (volumeFilter !== 'none') count++;
+    if (yieldDirection !== 'none') count++;
     return count;
-  }, [sliderDays, sliderMode, typeFilter, directionFilter, fiftyTwoWeekDirection, peDirection, volumeFilter]);
+  }, [sliderDays, sliderMode, typeFilter, directionFilter, fiftyTwoWeekDirection, peDirection, volumeFilter, yieldDirection]);
 
   React.useEffect(() => {
     if (isOpen && notifications.some(n => !n.isRead)) {
@@ -297,7 +317,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Bell size={20} color="var(--accent)" />
             <h3 style={{ margin: 0 }}>Notifications ({filteredNotifications.length})</h3>
-            {(sliderDays !== 30 || sliderMode !== 'after' || typeFilter !== 'all' || directionFilter !== 'all' || searchQuery || fiftyTwoWeekDirection !== 'none' || peDirection !== 'none' || volumeFilter !== 'none') && (
+            {(sliderDays !== 30 || sliderMode !== 'after' || typeFilter !== 'all' || directionFilter !== 'all' || searchQuery || fiftyTwoWeekDirection !== 'none' || peDirection !== 'none' || volumeFilter !== 'none' || yieldDirection !== 'none') && (
               <button 
                 className="btn" 
                 onClick={handleResetFilters}
@@ -972,6 +992,156 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                     alignItems: 'center',
                     justifyContent: 'center',
                     opacity: peDirection === 'none' ? 0.3 : 1
+                  }}
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            {/* Above Yield % Filter UI */}
+            <div style={{ 
+              background: 'var(--surface-subtle)', 
+              borderRadius: '8px', 
+              padding: '10px', 
+              border: '1px solid var(--border-color)', 
+              marginBottom: '16px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Yield % Filter</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    <button
+                      onClick={() => { setYieldFilter(2); if (yieldDirection === 'none') setYieldDirection('above'); }}
+                      style={{
+                        padding: '2px 6px',
+                        fontSize: '9px',
+                        borderRadius: '4px',
+                        background: yieldFilter === 2 && yieldDirection !== 'none' ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
+                        color: yieldFilter === 2 && yieldDirection !== 'none' ? 'white' : 'var(--text-secondary)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        cursor: 'pointer',
+                        fontWeight: 600
+                      }}
+                    >
+                      Yield 2%
+                    </button>
+                    <button
+                      onClick={() => { setYieldFilter(4); if (yieldDirection === 'none') setYieldDirection('above'); }}
+                      style={{
+                        padding: '2px 6px',
+                        fontSize: '9px',
+                        borderRadius: '4px',
+                        background: yieldFilter === 4 && yieldDirection !== 'none' ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
+                        color: yieldFilter === 4 && yieldDirection !== 'none' ? 'white' : 'var(--text-secondary)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        cursor: 'pointer',
+                        fontWeight: 600
+                      }}
+                    >
+                      Yield 4%
+                    </button>
+                  </div>
+                  {(['above', 'below'] as const).map(dir => (
+                    <button
+                      key={dir}
+                      onClick={() => setYieldDirection(yieldDirection === dir ? 'none' : dir)}
+                      style={{
+                        padding: '2px 8px',
+                        fontSize: '9px',
+                        borderRadius: '4px',
+                        background: yieldDirection === dir ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
+                        color: yieldDirection === dir ? 'white' : 'var(--text-secondary)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        cursor: 'pointer',
+                        textTransform: 'uppercase',
+                        fontWeight: 600
+                      }}
+                    >
+                      {dir}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <button
+                  onClick={() => setYieldFilter(prev => Math.max(0, parseFloat((prev - 0.5).toFixed(1))))}
+                  disabled={yieldDirection === 'none' || yieldFilter <= 0}
+                  style={{
+                    padding: '4px 10px',
+                    fontSize: '11px',
+                    borderRadius: '6px',
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    color: 'var(--text-primary)',
+                    cursor: yieldDirection === 'none' || yieldFilter <= 0 ? 'not-allowed' : 'pointer',
+                    minWidth: '28px',
+                    fontWeight: 'bold',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    opacity: yieldDirection === 'none' ? 0.3 : 1
+                  }}
+                >
+                  -
+                </button>
+                <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="20" 
+                    step="0.1"
+                    value={yieldFilter}
+                    onChange={(e) => setYieldFilter(parseFloat(e.target.value))}
+                    style={{ 
+                      width: '100%',
+                      accentColor: 'var(--accent)',
+                      height: '4px',
+                      borderRadius: '2px',
+                      outline: 'none',
+                      opacity: yieldDirection === 'none' ? 0.3 : 1,
+                      cursor: yieldDirection === 'none' ? 'not-allowed' : 'pointer'
+                    }}
+                    disabled={yieldDirection === 'none'}
+                  />
+                  {yieldDirection !== 'none' && (
+                    <div style={{ 
+                      position: 'absolute', 
+                      left: `${(yieldFilter / 20) * 100}%`, 
+                      top: '-20px', 
+                      transform: 'translateX(-50%)',
+                      background: 'var(--accent)',
+                      color: 'white',
+                      fontSize: '9px',
+                      padding: '2px 4px',
+                      borderRadius: '4px',
+                      fontWeight: 700,
+                      whiteSpace: 'nowrap'
+                    }}>
+                      Yield: {yieldFilter.toFixed(1)}%
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={() => setYieldFilter(prev => Math.min(20, parseFloat((prev + 0.5).toFixed(1))))}
+                  disabled={yieldDirection === 'none' || yieldFilter >= 20}
+                  style={{
+                    padding: '4px 10px',
+                    fontSize: '11px',
+                    borderRadius: '6px',
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    color: 'var(--text-primary)',
+                    cursor: yieldDirection === 'none' || yieldFilter >= 20 ? 'not-allowed' : 'pointer',
+                    minWidth: '28px',
+                    fontWeight: 'bold',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    opacity: yieldDirection === 'none' ? 0.3 : 1
                   }}
                 >
                   +

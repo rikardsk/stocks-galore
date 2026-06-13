@@ -46,7 +46,9 @@ export const FilterModal: React.FC<FilterModalProps> = ({
       fiftyTwoWeekDirection: 'none',
       peFilter: 20,
       peDirection: 'none',
-      volumeFilter: 'none'
+      volumeFilter: 'none',
+      yieldFilter: 2,
+      yieldDirection: 'none'
     });
   };
 
@@ -657,6 +659,170 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                 alignItems: 'center',
                 justifyContent: 'center',
                 opacity: localFilters.peDirection === 'none' ? 0.3 : 1
+              }}
+            >
+              +
+            </button>
+          </div>
+        </div>
+
+        {/* Above Yield % Filter */}
+        <div style={{ 
+          background: 'var(--surface-subtle)', 
+          borderRadius: '8px', 
+          padding: '10px', 
+          border: '1px solid var(--border-color)', 
+          marginBottom: '16px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)' }}>YIELD % FILTER</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ display: 'flex', gap: '4px' }}>
+                <button
+                  onClick={() => setLocalFilters({ ...localFilters, yieldFilter: 2, yieldDirection: localFilters.yieldDirection === 'none' ? 'above' : localFilters.yieldDirection })}
+                  style={{
+                    padding: '2px 6px',
+                    fontSize: '9px',
+                    borderRadius: '4px',
+                    background: localFilters.yieldFilter === 2 && localFilters.yieldDirection !== 'none' ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
+                    color: localFilters.yieldFilter === 2 && localFilters.yieldDirection !== 'none' ? 'white' : 'var(--text-secondary)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    cursor: 'pointer',
+                    fontWeight: 600
+                  }}
+                >
+                  Yield 2%
+                </button>
+                <button
+                  onClick={() => setLocalFilters({ ...localFilters, yieldFilter: 4, yieldDirection: localFilters.yieldDirection === 'none' ? 'above' : localFilters.yieldDirection })}
+                  style={{
+                    padding: '2px 6px',
+                    fontSize: '9px',
+                    borderRadius: '4px',
+                    background: localFilters.yieldFilter === 4 && localFilters.yieldDirection !== 'none' ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
+                    color: localFilters.yieldFilter === 4 && localFilters.yieldDirection !== 'none' ? 'white' : 'var(--text-secondary)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    cursor: 'pointer',
+                    fontWeight: 600
+                  }}
+                >
+                  Yield 4%
+                </button>
+              </div>
+              <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderRadius: '6px', padding: '2px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                {(['above', 'below'] as const).map(dir => {
+                  const isActive = localFilters.yieldDirection === dir;
+                  return (
+                    <button
+                      key={dir}
+                      onClick={() => setLocalFilters({
+                        ...localFilters,
+                        yieldDirection: localFilters.yieldDirection === dir ? 'none' : dir
+                      })}
+                      style={{
+                        padding: '2px 8px',
+                        fontSize: '9px',
+                        borderRadius: '4px',
+                        background: isActive ? 'var(--accent)' : 'transparent',
+                        color: isActive ? 'white' : 'var(--text-secondary)',
+                        border: 'none',
+                        cursor: 'pointer',
+                        textTransform: 'uppercase',
+                        fontWeight: 600
+                      }}
+                    >
+                      {dir}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <button
+              onClick={() => setLocalFilters({
+                ...localFilters,
+                yieldFilter: Math.max(0, parseFloat(((localFilters.yieldFilter ?? 2) - 0.5).toFixed(1)))
+              })}
+              disabled={localFilters.yieldDirection === 'none' || (localFilters.yieldFilter ?? 2) <= 0}
+              style={{
+                padding: '4px 10px',
+                fontSize: '11px',
+                borderRadius: '6px',
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                color: 'var(--text-primary)',
+                cursor: localFilters.yieldDirection === 'none' || (localFilters.yieldFilter ?? 2) <= 0 ? 'not-allowed' : 'pointer',
+                minWidth: '28px',
+                fontWeight: 'bold',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                opacity: localFilters.yieldDirection === 'none' ? 0.3 : 1
+              }}
+            >
+              -
+            </button>
+            <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <input 
+                type="range" 
+                min="0" 
+                max="20" 
+                step="0.1"
+                value={localFilters.yieldFilter ?? 2}
+                onChange={(e) => setLocalFilters({ ...localFilters, yieldFilter: parseFloat(e.target.value) })}
+                style={{ 
+                  width: '100%',
+                  accentColor: 'var(--accent)',
+                  height: '4px',
+                  borderRadius: '2px',
+                  outline: 'none',
+                  opacity: localFilters.yieldDirection === 'none' ? 0.3 : 1,
+                  cursor: localFilters.yieldDirection === 'none' ? 'not-allowed' : 'pointer'
+                }}
+                disabled={localFilters.yieldDirection === 'none'}
+              />
+              {localFilters.yieldDirection !== 'none' && (
+                <div style={{ 
+                  position: 'absolute', 
+                  left: `${((localFilters.yieldFilter ?? 2) / 20) * 100}%`, 
+                  top: '-24px', 
+                  transform: 'translateX(-50%)',
+                  background: 'var(--accent)',
+                  color: 'white',
+                  fontSize: '9px',
+                  padding: '2px 4px',
+                  borderRadius: '4px',
+                  fontWeight: 700,
+                  whiteSpace: 'nowrap'
+                }}>
+                  Yield: {(localFilters.yieldFilter ?? 2).toFixed(1)}%
+                </div>
+              )}
+            </div>
+            <button
+              onClick={() => setLocalFilters({
+                ...localFilters,
+                yieldFilter: Math.min(20, parseFloat(((localFilters.yieldFilter ?? 2) + 0.5).toFixed(1)))
+              })}
+              disabled={localFilters.yieldDirection === 'none' || (localFilters.yieldFilter ?? 2) >= 20}
+              style={{
+                padding: '4px 10px',
+                fontSize: '11px',
+                borderRadius: '6px',
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                color: 'var(--text-primary)',
+                cursor: localFilters.yieldDirection === 'none' || (localFilters.yieldFilter ?? 2) >= 20 ? 'not-allowed' : 'pointer',
+                minWidth: '28px',
+                fontWeight: 'bold',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                opacity: localFilters.yieldDirection === 'none' ? 0.3 : 1
               }}
             >
               +

@@ -159,6 +159,8 @@ export interface StockFilters {
   peFilter?: number;
   peDirection?: 'above' | 'below' | 'none';
   volumeFilter?: 'none' | '2x' | '3x' | '4x' | '5x';
+  yieldFilter?: number;
+  yieldDirection?: 'above' | 'below' | 'none';
 }
 
 export const EMPTY_FILTERS: StockFilters = {
@@ -179,6 +181,8 @@ export const EMPTY_FILTERS: StockFilters = {
   peFilter: 20,
   peDirection: 'none',
   volumeFilter: 'none',
+  yieldFilter: 2,
+  yieldDirection: 'none',
 };
 
 /** Parse market cap strings like "2.30T", "0.15T" into billions */
@@ -277,6 +281,7 @@ export const countActiveFilters = (filters: StockFilters): number => {
   if (filters.fiftyTwoWeekDirection && filters.fiftyTwoWeekDirection !== 'none') count++;
   if (filters.peDirection && filters.peDirection !== 'none') count++;
   if (filters.volumeFilter && filters.volumeFilter !== 'none') count++;
+  if (filters.yieldDirection && filters.yieldDirection !== 'none') count++;
   return count;
 };
 
@@ -347,6 +352,16 @@ export const tickerMatchesFilters = (ticker: Ticker, filters: StockFilters): boo
       if (pe < (filters.peFilter ?? 20)) return false;
     } else {
       if (pe > (filters.peFilter ?? 20)) return false;
+    }
+  }
+
+  if (filters.yieldDirection && filters.yieldDirection !== 'none') {
+    if (ticker.stats.dividendYield === undefined || ticker.stats.dividendYield === null) return false;
+    const dy = ticker.stats.dividendYield;
+    if (filters.yieldDirection === 'above') {
+      if (dy < (filters.yieldFilter ?? 2)) return false;
+    } else {
+      if (dy > (filters.yieldFilter ?? 2)) return false;
     }
   }
 
