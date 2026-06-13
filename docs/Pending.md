@@ -4,6 +4,8 @@
 ## Later maybe
 - Check code quality and fix errors...
 - Send e-mail as option to notifications instead of push-notifications. This shold be a global setting.
+- In the earnings calendar can you add a left and right arrow to scroll one day at a time?
+~~- Can you add dividends ex-date and paydate to the deep dive modal~~
 ~~- In the calendar modal for the rows of x-date and pay-date could you also include the dividend yield in %?~~
 ~~- Is it possible to include dividend x-date and pay-date in earnings calendar with toggle button for each, and also include them in the market overview panel~~
 ~~- In the filters model could you add a filter on "Above yield %"~~

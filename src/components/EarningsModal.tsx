@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { X, Calendar, Briefcase, Star, ChevronRight } from 'lucide-react';
+import { X, Calendar, Briefcase, Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Ticker } from '../types';
 
 interface EarningsModalProps {
@@ -50,18 +50,20 @@ export const EarningsModal: React.FC<EarningsModalProps> = ({
   const [showEarnings, setShowEarnings] = useState<boolean>(true);
   const [showExDiv, setShowExDiv] = useState<boolean>(true);
   const [showPayDiv, setShowPayDiv] = useState<boolean>(true);
+  const [baseOffset, setBaseOffset] = useState<number>(0);
 
   const days = useMemo(() => {
     const list = [];
     const baseTime = Date.now();
     for (let offset = -1; offset <= 3; offset++) {
-      const date = new Date(baseTime + offset * 86400000);
+      const date = new Date(baseTime + (offset + baseOffset) * 86400000);
       const dateStr = getLocalDateString(date);
-      const labels = getDayLabels(date, offset);
-      list.push({ offset, dateStr, ...labels });
+      const totalOffset = offset + baseOffset;
+      const labels = getDayLabels(date, totalOffset);
+      list.push({ offset: totalOffset, dateStr, ...labels });
     }
     return list;
-  }, []);
+  }, [baseOffset]);
 
   const uniqueTickers = useMemo(() => {
     const seen = new Set<string>();
@@ -82,6 +84,7 @@ export const EarningsModal: React.FC<EarningsModalProps> = ({
         style={{ 
           maxWidth: '1300px', 
           width: '95%', 
+          height: '80vh',
           background: 'var(--surface-modal)',
           display: 'flex',
           flexDirection: 'column',
@@ -92,9 +95,71 @@ export const EarningsModal: React.FC<EarningsModalProps> = ({
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <Calendar size={24} color="var(--accent)" />
             <div>
-              <h2 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '20px' }}>Earnings & Dividend Calendar</h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <h2 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '20px' }}>Earnings & Dividend Calendar</h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <button 
+                    onClick={() => setBaseOffset(prev => prev - 1)}
+                    style={{
+                      background: 'var(--surface-inset)',
+                      border: '1px solid var(--border-color)',
+                      color: 'var(--text-primary)',
+                      borderRadius: '50%',
+                      width: '28px',
+                      height: '28px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                    }}
+                    className="nav-btn"
+                    title="Previous Day"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                  <button 
+                    onClick={() => setBaseOffset(0)}
+                    disabled={baseOffset === 0}
+                    style={{
+                      background: baseOffset === 0 ? 'var(--surface-inset)' : 'rgba(99, 102, 241, 0.1)',
+                      border: baseOffset === 0 ? '1px solid var(--border-color)' : '1px solid rgba(99, 102, 241, 0.2)',
+                      color: baseOffset === 0 ? 'var(--text-secondary)' : 'var(--accent)',
+                      borderRadius: '6px',
+                      padding: '2px 8px',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      cursor: baseOffset === 0 ? 'default' : 'pointer',
+                      opacity: baseOffset === 0 ? 0.6 : 1,
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    Today
+                  </button>
+                  <button 
+                    onClick={() => setBaseOffset(prev => prev + 1)}
+                    style={{
+                      background: 'var(--surface-inset)',
+                      border: '1px solid var(--border-color)',
+                      color: 'var(--text-primary)',
+                      borderRadius: '50%',
+                      width: '28px',
+                      height: '28px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                    }}
+                    className="nav-btn"
+                    title="Next Day"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+              </div>
               <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: 'var(--text-secondary)' }}>
-                Earnings and dividend schedule from Yesterday to the next 3 days
+                Earnings and dividend schedule relative to Today
               </p>
             </div>
           </div>
