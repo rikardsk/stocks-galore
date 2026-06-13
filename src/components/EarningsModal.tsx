@@ -47,6 +47,9 @@ export const EarningsModal: React.FC<EarningsModalProps> = ({
   onSelectTicker
 }) => {
   const [filterMode, setFilterMode] = useState<FilterMode>('all');
+  const [showEarnings, setShowEarnings] = useState<boolean>(true);
+  const [showExDiv, setShowExDiv] = useState<boolean>(true);
+  const [showPayDiv, setShowPayDiv] = useState<boolean>(true);
 
   const days = useMemo(() => {
     const list = [];
@@ -89,24 +92,44 @@ export const EarningsModal: React.FC<EarningsModalProps> = ({
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <Calendar size={24} color="var(--accent)" />
             <div>
-              <h2 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '20px' }}>Earnings Calendar</h2>
+              <h2 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '20px' }}>Earnings & Dividend Calendar</h2>
               <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: 'var(--text-secondary)' }}>
-                Earnings schedule from Yesterday to the next 3 days
+                Earnings and dividend schedule from Yesterday to the next 3 days
               </p>
             </div>
           </div>
           <button className="btn" onClick={onClose} aria-label="Close modal"><X /></button>
         </div>
 
-        {/* Filter buttons */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexShrink: 0 }}>
-          <FilterButton active={filterMode === 'all'} onClick={() => setFilterMode('all')}>All Stocks</FilterButton>
-          <FilterButton active={filterMode === 'owned'} onClick={() => setFilterMode('owned')}>
-            <Briefcase size={12} style={{ marginRight: '6px' }} /> Owned Stocks
-          </FilterButton>
-          <FilterButton active={filterMode === 'watchlist'} onClick={() => setFilterMode('watchlist')}>
-            <Star size={12} style={{ marginRight: '6px' }} /> Watchlist Stocks
-          </FilterButton>
+        {/* Filter and Toggle buttons */}
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          marginBottom: '20px', 
+          flexShrink: 0,
+          flexWrap: 'wrap',
+          gap: '12px'
+        }}>
+          {/* Calendar Event Types */}
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 700, marginRight: '4px' }}>SHOW EVENTS:</span>
+            <ToggleButton active={showEarnings} onClick={() => setShowEarnings(!showEarnings)}>Earnings</ToggleButton>
+            <ToggleButton active={showExDiv} onClick={() => setShowExDiv(!showExDiv)}>Ex-Dividend Date</ToggleButton>
+            <ToggleButton active={showPayDiv} onClick={() => setShowPayDiv(!showPayDiv)}>Pay Date</ToggleButton>
+          </div>
+          
+          {/* Target Filter */}
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 700, marginRight: '4px' }}>FILTER STOCKS:</span>
+            <FilterButton active={filterMode === 'all'} onClick={() => setFilterMode('all')}>All Stocks</FilterButton>
+            <FilterButton active={filterMode === 'owned'} onClick={() => setFilterMode('owned')}>
+              <Briefcase size={12} style={{ marginRight: '6px' }} /> Owned Stocks
+            </FilterButton>
+            <FilterButton active={filterMode === 'watchlist'} onClick={() => setFilterMode('watchlist')}>
+              <Star size={12} style={{ marginRight: '6px' }} /> Watchlist Stocks
+            </FilterButton>
+          </div>
         </div>
 
         {/* 5-column layout */}
@@ -128,6 +151,9 @@ export const EarningsModal: React.FC<EarningsModalProps> = ({
               filterMode={filterMode}
               watchlistSymbols={watchlistSymbols}
               onSelectTicker={onSelectTicker}
+              showEarnings={showEarnings}
+              showExDiv={showExDiv}
+              showPayDiv={showPayDiv}
             />
           ))}
         </div>
@@ -157,25 +183,68 @@ const FilterButton: React.FC<{ active: boolean; onClick: () => void; children: R
   </button>
 );
 
+const ToggleButton: React.FC<{ active: boolean; onClick: () => void; children: React.ReactNode }> = ({ active, onClick, children }) => (
+  <button 
+    onClick={onClick}
+    style={{
+      padding: '6px 12px',
+      borderRadius: '20px',
+      border: active ? '1px solid var(--accent)' : '1px solid var(--border-color)',
+      background: active ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
+      color: active ? 'var(--accent)' : 'var(--text-secondary)',
+      fontSize: '12px',
+      fontWeight: 600,
+      display: 'flex',
+      alignItems: 'center',
+      cursor: 'pointer',
+      transition: 'all 0.2s ease'
+    }}
+  >
+    <div style={{
+      width: '6px',
+      height: '6px',
+      borderRadius: '50%',
+      background: active ? 'var(--accent)' : 'transparent',
+      border: active ? 'none' : '1.5px solid var(--text-secondary)',
+      marginRight: '8px'
+    }} />
+    {children}
+  </button>
+);
+
 interface EarningsColumnProps {
   day: { title: string; subtitle: string; dateStr: string; offset: number };
   tickers: Ticker[];
   filterMode: FilterMode;
   watchlistSymbols: Set<string>;
   onSelectTicker: (ticker: Ticker) => void;
+  showEarnings: boolean;
+  showExDiv: boolean;
+  showPayDiv: boolean;
 }
 
-const EarningsColumn: React.FC<EarningsColumnProps> = ({ day, tickers, filterMode, watchlistSymbols, onSelectTicker }) => {
+const EarningsColumn: React.FC<EarningsColumnProps> = ({ 
+  day, 
+  tickers, 
+  filterMode, 
+  watchlistSymbols, 
+  onSelectTicker,
+  showEarnings,
+  showExDiv,
+  showPayDiv
+}) => {
   const filtered = useMemo(() => {
     return tickers.filter(t => {
-      if (!t.stats.earningsDate) return false;
-      const earningsDate = t.stats.earningsDate.trim();
-      if (earningsDate !== day.dateStr) return false;
       if (filterMode === 'owned' && !t.isOwned) return false;
       if (filterMode === 'watchlist' && !watchlistSymbols.has(t.symbol)) return false;
-      return true;
+
+      const hasEarnings = showEarnings && t.stats.earningsDate && t.stats.earningsDate.trim() === day.dateStr;
+      const hasExDiv = showExDiv && t.stats.exDividendDate && t.stats.exDividendDate.trim() === day.dateStr;
+      const hasPayDiv = showPayDiv && t.stats.dividendDate && t.stats.dividendDate.trim() === day.dateStr;
+
+      return hasEarnings || hasExDiv || hasPayDiv;
     });
-  }, [tickers, day.dateStr, filterMode, watchlistSymbols]);
+  }, [tickers, day.dateStr, filterMode, watchlistSymbols, showEarnings, showExDiv, showPayDiv]);
 
   const isToday = day.offset === 0;
 
@@ -225,11 +294,11 @@ const EarningsColumn: React.FC<EarningsColumnProps> = ({ day, tickers, filterMod
       <div style={{ padding: '8px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {filtered.length === 0 ? (
           <div style={{ padding: '24px 8px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '11px', fontStyle: 'italic' }}>
-            No earnings
+            No events
           </div>
         ) : (
           filtered.map(ticker => (
-            <TickerRow key={ticker.id} ticker={ticker} onSelectTicker={onSelectTicker} />
+            <TickerRow key={ticker.id} ticker={ticker} dayDateStr={day.dateStr} onSelectTicker={onSelectTicker} />
           ))
         )}
       </div>
@@ -237,9 +306,20 @@ const EarningsColumn: React.FC<EarningsColumnProps> = ({ day, tickers, filterMod
   );
 };
 
-const TickerRow: React.FC<{ ticker: Ticker; onSelectTicker: (ticker: Ticker) => void }> = ({ ticker, onSelectTicker }) => {
+const TickerRow: React.FC<{ ticker: Ticker; dayDateStr: string; onSelectTicker: (ticker: Ticker) => void }> = ({ 
+  ticker, 
+  dayDateStr, 
+  onSelectTicker 
+}) => {
   const gain = parseFloat(ticker.stats.changePercent.replace('%', '')) || 0;
   const isPos = gain >= 0;
+
+  const isEarnings = ticker.stats.earningsDate && ticker.stats.earningsDate.trim() === dayDateStr;
+  const isExDiv = ticker.stats.exDividendDate && ticker.stats.exDividendDate.trim() === dayDateStr;
+  const isPayDiv = ticker.stats.dividendDate && ticker.stats.dividendDate.trim() === dayDateStr;
+
+  const dividendYield = ticker.stats.dividendYield;
+  const yieldStr = typeof dividendYield === 'number' && dividendYield > 0 ? dividendYield.toFixed(2) + '%' : null;
 
   return (
     <div
@@ -275,6 +355,38 @@ const TickerRow: React.FC<{ ticker: Ticker; onSelectTicker: (ticker: Ticker) => 
         >
           {ticker.name}
         </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px', flexWrap: 'wrap' }}>
+          {isEarnings && (
+            <span style={{ 
+              fontSize: '8px', 
+              color: 'var(--accent)', 
+              background: 'rgba(99, 102, 241, 0.1)', 
+              padding: '1px 4px', 
+              borderRadius: '4px', 
+              fontWeight: 700 
+            }}>EARNINGS</span>
+          )}
+          {isExDiv && (
+            <span style={{ 
+              fontSize: '8px', 
+              color: '#3b82f6', 
+              background: 'rgba(59, 130, 246, 0.1)', 
+              padding: '1px 4px', 
+              borderRadius: '4px', 
+              fontWeight: 700 
+            }}>EX-DIV {yieldStr && `(${yieldStr})`}</span>
+          )}
+          {isPayDiv && (
+            <span style={{ 
+              fontSize: '8px', 
+              color: '#10b981', 
+              background: 'rgba(16, 185, 129, 0.1)', 
+              padding: '1px 4px', 
+              borderRadius: '4px', 
+              fontWeight: 700 
+            }}>PAY-DATE {yieldStr && `(${yieldStr})`}</span>
+          )}
+        </div>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
         <span 

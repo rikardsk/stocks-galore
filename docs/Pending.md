@@ -4,6 +4,11 @@
 ## Later maybe
 - Check code quality and fix errors...
 - Send e-mail as option to notifications instead of push-notifications. This shold be a global setting.
+~~- In the calendar modal for the rows of x-date and pay-date could you also include the dividend yield in %?~~
+~~- Is it possible to include dividend x-date and pay-date in earnings calendar with toggle button for each, and also include them in the market overview panel~~
+~~- In the filters model could you add a filter on "Above yield %"~~
+~~- In the notifications modal can you make a button to open the filtered stocks in the table market overview.~~
+~~- In the market table overview can you exclude all the stocks from the archive lists~~
 ~~- Is it possible to get non-us stocks in local currency? (USD for us stocks, SEK for swedish stocks etc. ).~~
 ~~- Can you do a new modal with a sortable table of all the suffixes used for different exchanges in the world? The list in markdown format is provided in the folder "docs" under the name "Suffixes of world exchanges.md". Add a button in the buttonbar after the "Keyboard Shortcuts"-button that opens this modal. Also add the keyboard shortcut Ctrl + Z to open this modal.~~
 ~~- Can you make the settings modal look the same as filter modal and notifications modal?~~

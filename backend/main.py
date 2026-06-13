@@ -166,6 +166,8 @@ def calculate_stats(symbol: str, info: Dict, hist: pd.DataFrame) -> Dict[str, An
         "low52": safe_float(info.get('fiftyTwoWeekLow')),
         "avgVolume": f"{info.get('averageVolume', 0) / 1e6:.1f}M" if info.get('averageVolume') else "N/A",
         "ipoDate": "N/A",  # filled in by caller
+        "exDividendDate": "N/A",
+        "dividendDate": "N/A",
         "currency": info.get('currency') or info.get('financialCurrency') or "USD"
     }
 
@@ -240,6 +242,66 @@ def get_earnings_date(ticker: yf.Ticker, info: Dict) -> str:
         
     return "N/A"
 
+def get_ex_dividend_date(ticker: yf.Ticker, info: Dict) -> str:
+    """Attempt to get next/most recent ex-dividend date."""
+    # 1. Try info.exDividendDate
+    try:
+        ts = info.get('exDividendDate')
+        if ts and ts > 0:
+            return datetime.datetime.fromtimestamp(ts, datetime.UTC).strftime('%Y-%m-%d')
+    except Exception:
+        pass
+
+    # 2. Try ticker.calendar
+    try:
+        cal = ticker.calendar
+        if cal is not None:
+            if isinstance(cal, dict) and 'Ex-Dividend Date' in cal:
+                d = cal['Ex-Dividend Date']
+                if hasattr(d, 'strftime'):
+                    return d.strftime('%Y-%m-%d')
+                return str(d)
+            elif isinstance(cal, pd.DataFrame) and not cal.empty:
+                if 'Ex-Dividend Date' in cal.index:
+                    val = cal.loc['Ex-Dividend Date'].iloc[0]
+                    if hasattr(val, 'strftime'):
+                        return val.strftime('%Y-%m-%d')
+                    return str(val)
+    except Exception as e:
+        print(f"Ex-dividend date error for {ticker.ticker}: {e}")
+        
+    return "N/A"
+
+def get_pay_date(ticker: yf.Ticker, info: Dict) -> str:
+    """Attempt to get next/most recent dividend payment date."""
+    # 1. Try info.dividendDate
+    try:
+        ts = info.get('dividendDate')
+        if ts and ts > 0:
+            return datetime.datetime.fromtimestamp(ts, datetime.UTC).strftime('%Y-%m-%d')
+    except Exception:
+        pass
+
+    # 2. Try ticker.calendar
+    try:
+        cal = ticker.calendar
+        if cal is not None:
+            if isinstance(cal, dict) and 'Dividend Date' in cal:
+                d = cal['Dividend Date']
+                if hasattr(d, 'strftime'):
+                    return d.strftime('%Y-%m-%d')
+                return str(d)
+            elif isinstance(cal, pd.DataFrame) and not cal.empty:
+                if 'Dividend Date' in cal.index:
+                    val = cal.loc['Dividend Date'].iloc[0]
+                    if hasattr(val, 'strftime'):
+                        return val.strftime('%Y-%m-%d')
+                    return str(val)
+    except Exception as e:
+        print(f"Dividend date error for {ticker.ticker}: {e}")
+        
+    return "N/A"
+
 @app.get("/stock/{symbol}")
 async def get_stock(symbol: str):
     try:
@@ -253,6 +315,8 @@ async def get_stock(symbol: str):
         stats = calculate_stats(symbol, info, hist)
         if stats:
             stats['earningsDate'] = get_earnings_date(ticker, info)
+            stats['exDividendDate'] = get_ex_dividend_date(ticker, info)
+            stats['dividendDate'] = get_pay_date(ticker, info)
             stats['ipoDate'] = get_ipo_date(symbol, info)
         return stats
     except HTTPException:
@@ -353,6 +417,8 @@ async def get_batch(symbols: str = Query(..., description="Comma-separated symbo
             stats = calculate_stats(symbol, info, hist)
             if stats:
                 stats['earningsDate'] = get_earnings_date(ticker, info)
+                stats['exDividendDate'] = get_ex_dividend_date(ticker, info)
+                stats['dividendDate'] = get_pay_date(ticker, info)
                 stats['ipoDate'] = get_ipo_date(symbol, info)
             results.append(stats)
         except Exception as e:

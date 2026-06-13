@@ -142,6 +142,12 @@ export const TableView: React.FC<TableViewProps> = ({
       } else if (sortConfig.key === 'earningsDate') {
         aVal = a.stats.earningsDate || '9999-99-99'; // Put N/A at the end
         bVal = b.stats.earningsDate || '9999-99-99';
+      } else if (sortConfig.key === 'exDividendDate') {
+        aVal = a.stats.exDividendDate || '9999-99-99';
+        bVal = b.stats.exDividendDate || '9999-99-99';
+      } else if (sortConfig.key === 'dividendDate') {
+        aVal = a.stats.dividendDate || '9999-99-99';
+        bVal = b.stats.dividendDate || '9999-99-99';
       } else if (sortConfig.key === 'dividendYield') {
         aVal = a.stats.dividendYield || 0;
         bVal = b.stats.dividendYield || 0;
@@ -370,6 +376,8 @@ export const TableView: React.FC<TableViewProps> = ({
                 <th onClick={() => requestSort('perf3M')} style={thStyle} className="no-print">3M % {getSortIcon('perf3M')}</th>
                 <th onClick={() => requestSort('perf1Y')} style={thStyle} className="no-print">1Y % {getSortIcon('perf1Y')}</th>
                 <th onClick={() => requestSort('dividendYield')} style={thStyle} className="no-print">Yield % {getSortIcon('dividendYield')}</th>
+                <th onClick={() => requestSort('exDividendDate')} style={thStyle} className="no-print">Ex-Dividend {getSortIcon('exDividendDate')}</th>
+                <th onClick={() => requestSort('dividendDate')} style={thStyle} className="no-print">Pay Date {getSortIcon('dividendDate')}</th>
                 <th onClick={() => requestSort('earningsDate')} style={thStyle} className="no-print">Earnings {getSortIcon('earningsDate')}</th>
                 <th onClick={() => requestSort('ipoDate')} style={thStyle} className="no-print">IPO {getSortIcon('ipoDate')}</th>
               </tr>
@@ -510,6 +518,8 @@ export const TableView: React.FC<TableViewProps> = ({
                     <td style={{ ...tdStyle, color: (ticker.stats?.perf3M || 0) >= 0 ? '#10b981' : '#ef4444' }} className="no-print">{ticker.stats?.perf3M || 0}%</td>
                     <td style={{ ...tdStyle, color: (ticker.stats?.perf1Y || 0) >= 0 ? '#10b981' : '#ef4444' }} className="no-print">{ticker.stats?.perf1Y || 0}%</td>
                     <td style={{ ...tdStyle, color: '#f59e0b' }} className="no-print">{yieldStr}</td>
+                    <td style={{ ...tdStyle, color: '#3b82f6' }} className="no-print">{ticker.stats.exDividendDate || 'N/A'}</td>
+                    <td style={{ ...tdStyle, color: '#10b981' }} className="no-print">{ticker.stats.dividendDate || 'N/A'}</td>
                     <td style={{ ...tdStyle, color: 'var(--accent)' }} className="no-print">{ticker.stats.earningsDate || 'N/A'}</td>
                     <td style={{ ...tdStyle, color: 'var(--text-secondary)' }} className="no-print">{ticker.stats.ipoDate || 'N/A'}</td>
                   </tr>

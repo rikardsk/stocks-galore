@@ -29,6 +29,8 @@ export type Ticker = {
     low52?: number;
     avgVolume?: string;
     earningsDate?: string;
+    exDividendDate?: string;
+    dividendDate?: string;
     ipoDate?: string;
     crossover_sma20_sma50?: boolean;
     crossover_sma50_sma200?: boolean;
