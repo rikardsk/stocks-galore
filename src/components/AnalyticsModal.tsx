@@ -45,6 +45,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
   const [isBadgeExpanded, setIsBadgeExpanded] = useState(true);
   const [isEarningsExpanded, setIsEarningsExpanded] = useState(true);
   const [isIpoExpanded, setIsIpoExpanded] = useState(true);
+  const [isDividendExpanded, setIsDividendExpanded] = useState(true);
   const [isStorageExpanded, setIsStorageExpanded] = useState(true);
   const [apiQuota, setApiQuota] = useState<number | null>(null);
   const [apiUsage, setApiUsage] = useState<number | null>(null);
@@ -357,6 +358,29 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
     });
 
     return buckets.filter(b => b.count > 0);
+  }, [filteredTickers]);
+
+  const dividendYieldData = useMemo(() => {
+    const buckets = [
+      { label: '1%', min: 0, max: 1, count: 0, symbols: [] as string[] },
+      { label: '2%', min: 1, max: 2, count: 0, symbols: [] as string[] },
+      { label: '3%', min: 2, max: 3, count: 0, symbols: [] as string[] },
+      { label: '4%', min: 3, max: 4, count: 0, symbols: [] as string[] },
+      { label: '5%', min: 4, max: 5, count: 0, symbols: [] as string[] },
+      { label: '6+%', min: 5, max: Infinity, count: 0, symbols: [] as string[] },
+    ];
+
+    filteredTickers.forEach(t => {
+      const dy = t.stats.dividendYield;
+      if (dy === undefined || dy === null || dy <= 0) return;
+      const bucket = buckets.find(b => dy > b.min && dy <= b.max);
+      if (bucket) {
+        bucket.count++;
+        bucket.symbols.push(t.symbol);
+      }
+    });
+
+    return buckets;
   }, [filteredTickers]);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -827,6 +851,56 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
                           <Cell
                             key={entry.label}
                             fill={['#10b981', '#06b6d4', '#6366f1', '#8b5cf6', '#f59e0b'][index % 5]}
+                          />
+                        ))}
+                        <LabelList dataKey="count" position="top" fill="var(--text-secondary)" fontSize={12} fontWeight={600} />
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )
+            )}
+          </div>
+
+          {/* Dividend Yield Distribution Chart */}
+          <div style={{ gridColumn: '1 / -1', marginTop: '20px' }}>
+            <h3
+              onClick={() => setIsDividendExpanded(!isDividendExpanded)}
+              style={{ marginBottom: '24px', fontSize: '16px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}
+            >
+              {isDividendExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+              Dividend Yield Distribution
+              <div title="Distribution of dividend yields for the current selection (excluding non-paying stocks)." style={{ cursor: 'help', opacity: 0.5 }} onClick={e => e.stopPropagation()}>
+                <Info size={14} />
+              </div>
+            </h3>
+            {isDividendExpanded && (
+              dividendYieldData.reduce((sum, b) => sum + b.count, 0) === 0 ? (
+                <div style={{ background: 'var(--surface-inset)', padding: '40px', borderRadius: '12px', border: '1px solid var(--border-color)', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '14px' }}>
+                  No dividend-paying stocks found in the current selection.
+                </div>
+              ) : (
+                <div style={{ background: 'var(--surface-inset)', padding: '30px 20px 20px 20px', borderRadius: '12px', border: '1px solid var(--border-color)', height: '320px' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={dividendYieldData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-divider)" vertical={false} />
+                      <XAxis
+                        dataKey="label"
+                        stroke="var(--text-secondary)"
+                        tick={{ fontSize: 12 }}
+                      />
+                      <YAxis
+                        stroke="var(--text-secondary)"
+                        tick={{ fontSize: 12 }}
+                        allowDecimals={false}
+                        width={32}
+                      />
+                      <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'transparent' }} />
+                      <Bar dataKey="count" radius={[6, 6, 0, 0]} barSize={64}>
+                        {dividendYieldData.map((entry, index) => (
+                          <Cell
+                            key={entry.label}
+                            fill={['#6366f1', '#06b6d4', '#10b981', '#f59e0b', '#f97316', '#ef4444'][index % 6]}
                           />
                         ))}
                         <LabelList dataKey="count" position="top" fill="var(--text-secondary)" fontSize={12} fontWeight={600} />
