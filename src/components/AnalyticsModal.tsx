@@ -28,6 +28,18 @@ const BUCKETS = [
   { label: '1T+', min: 1000, max: Infinity },
 ];
 
+const DIAGRAM_ITEMS = [
+  { key: 'marketCap', label: 'Market Cap' },
+  { key: 'sector', label: 'Sector' },
+  { key: 'scatter', label: 'Scatter' },
+  { key: 'sma', label: 'SMA Crossovers' },
+  { key: 'badges', label: 'Badges' },
+  { key: 'earnings', label: 'Earnings' },
+  { key: 'ipo', label: 'IPO Age' },
+  { key: 'dividend', label: 'Dividend' },
+  { key: 'storage', label: 'Storage' },
+];
+
 export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
   isOpen,
   onClose,
@@ -47,8 +59,53 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
   const [isIpoExpanded, setIsIpoExpanded] = useState(true);
   const [isDividendExpanded, setIsDividendExpanded] = useState(true);
   const [isStorageExpanded, setIsStorageExpanded] = useState(true);
+  const [visibleDiagrams, setVisibleDiagrams] = useState<Record<string, boolean>>(() => {
+    try {
+      const saved = localStorage.getItem('stocks_galore_visible_diagrams');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Merge with defaults to ensure any new diagrams are always present
+        return {
+          marketCap: true,
+          sector: true,
+          scatter: true,
+          sma: true,
+          badges: true,
+          earnings: true,
+          ipo: true,
+          dividend: true,
+          storage: true,
+          ...parsed
+        };
+      }
+    } catch (_) {}
+    return {
+      marketCap: true,
+      sector: true,
+      scatter: true,
+      sma: true,
+      badges: true,
+      earnings: true,
+      ipo: true,
+      dividend: true,
+      storage: true,
+    };
+  });
   const [apiQuota, setApiQuota] = useState<number | null>(null);
   const [apiUsage, setApiUsage] = useState<number | null>(null);
+
+  const toggleDiagram = (key: string) => {
+    setVisibleDiagrams(prev => {
+      const next = {
+        ...prev,
+        [key]: !prev[key]
+      };
+      try {
+        localStorage.setItem('stocks_galore_visible_diagrams', JSON.stringify(next));
+      } catch (_) {}
+      return next;
+    });
+  };
 
   React.useEffect(() => {
     if (isOpen && navigator.storage && navigator.storage.estimate) {
@@ -481,6 +538,22 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
               </select>
             </div>
           </div>
+
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '16px', borderTop: '1px solid var(--surface-divider)', paddingTop: '16px' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-secondary)', alignSelf: 'center', marginRight: '4px', fontWeight: 600, letterSpacing: '0.5px' }}>SHOW DIAGRAMS:</span>
+            {DIAGRAM_ITEMS.filter(item => item.key !== 'badges' || badgeData.length > 0).map(item => {
+              const active = visibleDiagrams[item.key];
+              return (
+                <button
+                  key={item.key}
+                  onClick={() => toggleDiagram(item.key)}
+                  className={`diagram-toggle-btn ${active ? 'active' : ''}`}
+                >
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '40px' }}>
@@ -508,220 +581,231 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '40px' }}>
-          {/* Histogram Section */}
-          <div>
-            <h3 style={{ marginBottom: '24px', fontSize: '16px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }}>
-              Market Cap Distribution
-              <div title="Number of companies per market cap range" style={{ cursor: 'help', opacity: 0.5 }}>
-                <Info size={14} />
-              </div>
-            </h3>
-            <div style={{ background: 'var(--surface-inset)', padding: '30px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', height: '200px', marginBottom: '40px', position: 'relative' }}>
-                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', pointerEvents: 'none' }}>
-                  {[0, 0.2, 0.4, 0.6, 0.8, 1].map(p => (
-                    <div key={p} style={{ borderTop: '1px solid var(--surface-divider)', width: '100%', position: 'relative' }}>
-                      <span style={{ position: 'absolute', left: '-30px', top: '-7px', fontSize: '10px', color: 'var(--text-secondary)' }}>
-                        {Math.round(chartMax * (1 - p))}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                {marketCapData.buckets.map((bucket, i) => {
-                  const height = (bucket.count / chartMax) * 200;
-                  return (
-                    <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', height: '100%', zIndex: 1, position: 'relative' }}>
-                      <div className="histogram-bar" style={{ 
-                        width: '100%', height: `${height}px`, background: 'var(--accent)', borderRadius: '4px 4px 0 0', transition: 'height 0.6s cubic-bezier(0.4, 0, 0.2, 1)', position: 'relative', opacity: bucket.count > 0 ? 0.8 : 0.1
-                      }} title={`${bucket.label}: ${bucket.count} companies\n${bucket.symbols.join(', ')}`}>
-                        {bucket.count > 0 && <div className="bar-value">{bucket.count}</div>}
-                      </div>
-                      <div style={{ position: 'absolute', bottom: '-32px', fontSize: '10px', color: 'var(--text-secondary)', transform: 'rotate(-45deg)', whiteSpace: 'nowrap' }}>{bucket.label}</div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          {/* Sector Donut Section */}
-          <div>
-            <h3 style={{ marginBottom: '24px', fontSize: '16px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }}>
-              Sector Allocation
-              <div title="Portfolio distribution by market sector" style={{ cursor: 'help', opacity: 0.5 }}>
-                <PieChart size={16} />
-              </div>
-            </h3>
-            <div style={{ background: 'var(--surface-inset)', padding: '30px', borderRadius: '12px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '30px', minHeight: '312px' }}>
-              <div style={{ position: 'relative', width: '180px', height: '180px', flexShrink: 0 }}>
-                <svg viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)', width: '100%', height: '100%' }}>
-                  {sectorData.length === 0 ? (
-                    <circle cx="50" cy="50" r="40" fill="none" stroke="var(--surface-divider)" strokeWidth="12" />
-                  ) : (
-                    sectorData.map((s, i) => {
-                      const totalPercentBefore = sectorData.slice(0, i).reduce((sum, item) => sum + item.percent, 0);
-                      return (
-                        <circle
-                          key={s.name}
-                          cx="50"
-                          cy="50"
-                          r="40"
-                          fill="none"
-                          stroke={s.color}
-                          strokeWidth="12"
-                          strokeDasharray={`${s.percent * 2.513} 251.3`}
-                          strokeDashoffset={-totalPercentBefore * 2.513}
-                          style={{ transition: 'stroke-dashoffset 1s ease-in-out', cursor: 'pointer' }}
-                        >
-                          <title>{`${s.name}: ${s.count} companies (${s.percent.toFixed(1)}%)\n${s.symbols.join(', ')}`}</title>
-                        </circle>
-                      );
-                    })
-                  )}
-                </svg>
-                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
-                  <div style={{ fontSize: '24px', fontWeight: 700 }}>{marketCapData.count}</div>
-                  <div style={{ fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Tickers</div>
-                </div>
-              </div>
-              
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '200px', overflowY: 'auto', paddingRight: '10px' }}>
-                {sectorData.map(s => (
-                  <div key={s.name} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px' }}>
-                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: s.color }} />
-                    <div style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.name}</div>
-                    <div style={{ fontWeight: 600, minWidth: '40px', textAlign: 'right' }}>{s.percent.toFixed(0)}%</div>
+        {(visibleDiagrams.marketCap || visibleDiagrams.sector) && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '40px' }}>
+            {/* Histogram Section */}
+            {visibleDiagrams.marketCap && (
+              <div>
+                <h3 style={{ marginBottom: '24px', fontSize: '16px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  Market Cap Distribution
+                  <div title="Number of companies per market cap range" style={{ cursor: 'help', opacity: 0.5 }}>
+                    <Info size={14} />
                   </div>
-                ))}
+                </h3>
+                <div style={{ background: 'var(--surface-inset)', padding: '30px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', height: '200px', marginBottom: '40px', position: 'relative' }}>
+                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', pointerEvents: 'none' }}>
+                      {[0, 0.2, 0.4, 0.6, 0.8, 1].map(p => (
+                        <div key={p} style={{ borderTop: '1px solid var(--surface-divider)', width: '100%', position: 'relative' }}>
+                          <span style={{ position: 'absolute', left: '-30px', top: '-7px', fontSize: '10px', color: 'var(--text-secondary)' }}>
+                            {Math.round(chartMax * (1 - p))}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    {marketCapData.buckets.map((bucket, i) => {
+                      const height = (bucket.count / chartMax) * 200;
+                      return (
+                        <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', height: '100%', zIndex: 1, position: 'relative' }}>
+                          <div className="histogram-bar" style={{ 
+                            width: '100%', height: `${height}px`, background: 'var(--accent)', borderRadius: '4px 4px 0 0', transition: 'height 0.6s cubic-bezier(0.4, 0, 0.2, 1)', position: 'relative', opacity: bucket.count > 0 ? 0.8 : 0.1
+                          }} title={`${bucket.label}: ${bucket.count} companies\n${bucket.symbols.join(', ')}`}>
+                            {bucket.count > 0 && <div className="bar-value">{bucket.count}</div>}
+                          </div>
+                          <div style={{ position: 'absolute', bottom: '-32px', fontSize: '10px', color: 'var(--text-secondary)', transform: 'rotate(-45deg)', whiteSpace: 'nowrap' }}>{bucket.label}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* Sector Donut Section */}
+            {visibleDiagrams.sector && (
+              <div>
+                <h3 style={{ marginBottom: '24px', fontSize: '16px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  Sector Allocation
+                  <div title="Portfolio distribution by market sector" style={{ cursor: 'help', opacity: 0.5 }}>
+                    <PieChart size={16} />
+                  </div>
+                </h3>
+                <div style={{ background: 'var(--surface-inset)', padding: '30px', borderRadius: '12px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '30px', minHeight: '312px' }}>
+                  <div style={{ position: 'relative', width: '180px', height: '180px', flexShrink: 0 }}>
+                    <svg viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)', width: '100%', height: '100%' }}>
+                      {sectorData.length === 0 ? (
+                        <circle cx="50" cy="50" r="40" fill="none" stroke="var(--surface-divider)" strokeWidth="12" />
+                      ) : (
+                        sectorData.map((s, i) => {
+                          const totalPercentBefore = sectorData.slice(0, i).reduce((sum, item) => sum + item.percent, 0);
+                          return (
+                            <circle
+                              key={s.name}
+                              cx="50"
+                              cy="50"
+                              r="40"
+                              fill="none"
+                              stroke={s.color}
+                              strokeWidth="12"
+                              strokeDasharray={`${s.percent * 2.513} 251.3`}
+                              strokeDashoffset={-totalPercentBefore * 2.513}
+                              style={{ transition: 'stroke-dashoffset 1s ease-in-out', cursor: 'pointer' }}
+                            >
+                              <title>{`${s.name}: ${s.count} companies (${s.percent.toFixed(1)}%)\n${s.symbols.join(', ')}`}</title>
+                            </circle>
+                          );
+                        })
+                      )}
+                    </svg>
+                    <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
+                      <div style={{ fontSize: '24px', fontWeight: 700 }}>{marketCapData.count}</div>
+                      <div style={{ fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Tickers</div>
+                    </div>
+                  </div>
+                  
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '200px', overflowY: 'auto', paddingRight: '10px' }}>
+                    {sectorData.map(s => (
+                      <div key={s.name} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px' }}>
+                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: s.color }} />
+                        <div style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.name}</div>
+                        <div style={{ fontWeight: 600, minWidth: '40px', textAlign: 'right' }}>{s.percent.toFixed(0)}%</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
+        )}
 
           {/* Scatter Plot Section */}
-          <div style={{ gridColumn: '1 / -1', marginTop: '20px' }}>
-            <h3 
-              onClick={() => setIsScatterExpanded(!isScatterExpanded)}
-              style={{ marginBottom: '24px', fontSize: '16px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}
-            >
-              {isScatterExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
-              Market Cap vs 1-Year Performance
-              <div title="Scatter plot showing the relationship between company size and 1-year returns." style={{ cursor: 'help', opacity: 0.5 }} onClick={e => e.stopPropagation()}>
-                <Info size={14} />
-              </div>
-            </h3>
-            {isScatterExpanded && (
-              <div style={{ background: 'var(--surface-inset)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)', height: '500px' }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-divider)" />
-                    <XAxis 
-                      type="number" 
-                      dataKey="x" 
-                      name="Market Cap" 
-                      tickFormatter={(val) => formatMarketCap(val)} 
-                      stroke="var(--text-secondary)"
-                      tick={{ fontSize: 11 }}
-                      domain={['auto', 'auto']}
-                    />
-                    <YAxis 
-                      type="number" 
-                      dataKey="y" 
-                      name="1Y Gain" 
-                      tickFormatter={(val) => `${val > 0 ? '+' : ''}${val.toFixed(1)}%`}
-                      stroke="var(--text-secondary)"
-                      tick={{ fontSize: 11 }}
-                      domain={['auto', 'auto']}
-                    />
-                    <RechartsTooltip 
-                      cursor={{ strokeDasharray: '3 3' }}
-                      content={({ active, payload }) => {
-                        if (active && payload && payload.length) {
-                          const data = payload[0].payload;
-                          return (
-                            <div style={{ background: 'var(--surface-modal)', padding: '12px', border: '1px solid var(--border-color)', borderRadius: '8px', boxShadow: 'var(--shadow-lg)' }}>
-                              <div style={{ fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>{data.symbol} - {data.name}</div>
-                              <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '2px' }}>Sector: {data.ticker.stats.sector || 'Unknown'}</div>
-                              <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '2px' }}>Market Cap: {formatMarketCap(data.x)}</div>
-                              <div style={{ fontSize: '12px', color: data.y >= 0 ? '#10b981' : '#ef4444' }}>1Y Perf: {data.y > 0 ? '+' : ''}{data.y.toFixed(2)}%</div>
-                              <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginTop: '8px', fontStyle: 'italic' }}>Click to view details</div>
-                            </div>
-                          );
-                        }
-                        return null;
-                      }}
-                    />
-                    <Legend wrapperStyle={{ fontSize: '12px' }} />
-                    {scatterData.map(s => (
-                      <React.Fragment key={s.sector}>
-                        <Scatter 
-                          name={s.sector} 
-                          data={s.points} 
-                          fill={s.color} 
-                          onClick={(data: any) => {
-                            const ticker = data?.ticker || data?.payload?.ticker;
-                            if (onSelectTicker && ticker) onSelectTicker(ticker);
-                          }}
-                          style={{ cursor: 'pointer' }}
-                        />
-                        {s.trendline && (
-                          <ReferenceLine 
-                            segment={s.trendline as any} 
-                            stroke={s.color} 
-                            strokeOpacity={0.5} 
-                            strokeDasharray="3 3"
+          {visibleDiagrams.scatter && (
+            <div style={{ gridColumn: '1 / -1', marginTop: '20px' }}>
+              <h3 
+                onClick={() => setIsScatterExpanded(!isScatterExpanded)}
+                style={{ marginBottom: '24px', fontSize: '16px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}
+              >
+                {isScatterExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+                Market Cap vs 1-Year Performance
+                <div title="Scatter plot showing the relationship between company size and 1-year returns." style={{ cursor: 'help', opacity: 0.5 }} onClick={e => e.stopPropagation()}>
+                  <Info size={14} />
+                </div>
+              </h3>
+              {isScatterExpanded && (
+                <div style={{ background: 'var(--surface-inset)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)', height: '500px' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-divider)" />
+                      <XAxis 
+                        type="number" 
+                        dataKey="x" 
+                        name="Market Cap" 
+                        tickFormatter={(val) => formatMarketCap(val)} 
+                        stroke="var(--text-secondary)"
+                        tick={{ fontSize: 11 }}
+                        domain={['auto', 'auto']}
+                      />
+                      <YAxis 
+                        type="number" 
+                        dataKey="y" 
+                        name="1Y Gain" 
+                        tickFormatter={(val) => `${val > 0 ? '+' : ''}${val.toFixed(1)}%`}
+                        stroke="var(--text-secondary)"
+                        tick={{ fontSize: 11 }}
+                        domain={['auto', 'auto']}
+                      />
+                      <RechartsTooltip 
+                        cursor={{ strokeDasharray: '3 3' }}
+                        content={({ active, payload }) => {
+                          if (active && payload && payload.length) {
+                            const data = payload[0].payload;
+                            return (
+                              <div style={{ background: 'var(--surface-modal)', padding: '12px', border: '1px solid var(--border-color)', borderRadius: '8px', boxShadow: 'var(--shadow-lg)' }}>
+                                <div style={{ fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>{data.symbol} - {data.name}</div>
+                                <div style={{ fontSize: '12px', color: 'var(--text-secondary)', textTransform: 'none', marginBottom: '2px' }}>Sector: {data.ticker.stats.sector || 'Unknown'}</div>
+                                <div style={{ fontSize: '12px', color: 'var(--text-secondary)', textTransform: 'none', marginBottom: '2px' }}>Market Cap: {formatMarketCap(data.x)}</div>
+                                <div style={{ fontSize: '12px', color: data.y >= 0 ? '#10b981' : '#ef4444' }}>1Y Perf: {data.y > 0 ? '+' : ''}{data.y.toFixed(2)}%</div>
+                                <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginTop: '8px', fontStyle: 'italic' }}>Click to view details</div>
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
+                      />
+                      <Legend wrapperStyle={{ fontSize: '12px' }} />
+                      {scatterData.map(s => (
+                        <React.Fragment key={s.sector}>
+                          <Scatter 
+                            name={s.sector} 
+                            data={s.points} 
+                            fill={s.color} 
+                            onClick={(data: any) => {
+                              const ticker = data?.ticker || data?.payload?.ticker;
+                              if (onSelectTicker && ticker) onSelectTicker(ticker);
+                            }}
+                            style={{ cursor: 'pointer' }}
                           />
-                        )}
-                      </React.Fragment>
-                    ))}
-                  </ScatterChart>
-                </ResponsiveContainer>
-              </div>
-            )}
-          </div>
+                          {s.trendline && (
+                            <ReferenceLine 
+                              segment={s.trendline as any} 
+                              stroke={s.color} 
+                              strokeOpacity={0.5} 
+                              strokeDasharray="3 3"
+                            />
+                          )}
+                        </React.Fragment>
+                      ))}
+                    </ScatterChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* SMA Notifications Chart */}
-          <div style={{ gridColumn: '1 / -1', marginTop: '20px' }}>
-            <h3 
-              onClick={() => setIsSmaExpanded(!isSmaExpanded)}
-              style={{ marginBottom: '24px', fontSize: '16px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}
-            >
-              {isSmaExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
-              SMA Crossover Notifications
-              <div title="Distribution of SMA crossover alerts for the current selection, stacked by direction." style={{ cursor: 'help', opacity: 0.5 }} onClick={e => e.stopPropagation()}>
-                <Info size={14} />
-              </div>
-            </h3>
-            {isSmaExpanded && (
-              <div style={{ background: 'var(--surface-inset)', padding: '30px 20px 20px 20px', borderRadius: '12px', border: '1px solid var(--border-color)', height: '400px' }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={notificationData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-divider)" vertical={false} />
-                    <XAxis 
-                      dataKey="name" 
-                      stroke="var(--text-secondary)"
-                      tick={{ fontSize: 12 }}
-                    />
-                    <YAxis 
-                      stroke="var(--text-secondary)"
-                      tick={{ fontSize: 12 }}
-                      allowDecimals={false}
-                    />
-                    <RechartsTooltip content={<CustomTooltip />} cursor={false} />
-                    <Legend verticalAlign="top" height={36}/>
-                    <Bar dataKey="Above" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]} barSize={40}>
-                      <LabelList dataKey="Above" position="center" fill="white" fontSize={10} formatter={(v: any) => v > 0 ? v : ''} />
-                    </Bar>
-                    <Bar dataKey="Below" stackId="a" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={40}>
-                      <LabelList dataKey="Below" position="center" fill="white" fontSize={10} formatter={(v: any) => v > 0 ? v : ''} />
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            )}
-          </div>
+          {visibleDiagrams.sma && (
+            <div style={{ gridColumn: '1 / -1', marginTop: '20px' }}>
+              <h3 
+                onClick={() => setIsSmaExpanded(!isSmaExpanded)}
+                style={{ marginBottom: '24px', fontSize: '16px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}
+              >
+                {isSmaExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+                SMA Crossover Notifications
+                <div title="Distribution of SMA crossover alerts for the current selection, stacked by direction." style={{ cursor: 'help', opacity: 0.5 }} onClick={e => e.stopPropagation()}>
+                  <Info size={14} />
+                </div>
+              </h3>
+              {isSmaExpanded && (
+                <div style={{ background: 'var(--surface-inset)', padding: '30px 20px 20px 20px', borderRadius: '12px', border: '1px solid var(--border-color)', height: '400px' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={notificationData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-divider)" vertical={false} />
+                      <XAxis 
+                        dataKey="name" 
+                        stroke="var(--text-secondary)"
+                        tick={{ fontSize: 12 }}
+                      />
+                      <YAxis 
+                        stroke="var(--text-secondary)"
+                        tick={{ fontSize: 12 }}
+                        allowDecimals={false}
+                      />
+                      <RechartsTooltip content={<CustomTooltip />} cursor={false} />
+                      <Legend verticalAlign="top" height={36}/>
+                      <Bar dataKey="Above" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]} barSize={40}>
+                        <LabelList dataKey="Above" position="center" fill="white" fontSize={10} formatter={(v: any) => v > 0 ? v : ''} />
+                      </Bar>
+                      <Bar dataKey="Below" stackId="a" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={40}>
+                        <LabelList dataKey="Below" position="center" fill="white" fontSize={10} formatter={(v: any) => v > 0 ? v : ''} />
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </div>
+          )}
           {/* Badge Distribution Chart */}
-          {badgeData.length > 0 && (
+          {badgeData.length > 0 && visibleDiagrams.badges && (
             <div style={{ gridColumn: '1 / -1', marginTop: '20px' }}>
               <h3 
                 onClick={() => setIsBadgeExpanded(!isBadgeExpanded)}
@@ -763,169 +847,176 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
           )}
 
           {/* Upcoming Earnings Chart */}
-          <div style={{ gridColumn: '1 / -1', marginTop: '20px' }}>
-            <h3
-              onClick={() => setIsEarningsExpanded(!isEarningsExpanded)}
-              style={{ marginBottom: '24px', fontSize: '16px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}
-            >
-              {isEarningsExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
-              Upcoming Earnings
-              <div title="Number of tickers reporting earnings on each of the next 5 upcoming dates." style={{ cursor: 'help', opacity: 0.5 }} onClick={e => e.stopPropagation()}>
-                <Info size={14} />
-              </div>
-            </h3>
-            {isEarningsExpanded && (
-              earningsData.length === 0 ? (
-                <div style={{ background: 'var(--surface-inset)', padding: '40px', borderRadius: '12px', border: '1px solid var(--border-color)', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '14px' }}>
-                  No upcoming earnings dates found in the current selection.
+          {visibleDiagrams.earnings && (
+            <div style={{ gridColumn: '1 / -1', marginTop: '20px' }}>
+              <h3
+                onClick={() => setIsEarningsExpanded(!isEarningsExpanded)}
+                style={{ marginBottom: '24px', fontSize: '16px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}
+              >
+                {isEarningsExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+                Upcoming Earnings
+                <div title="Number of tickers reporting earnings on each of the next 5 upcoming dates." style={{ cursor: 'help', opacity: 0.5 }} onClick={e => e.stopPropagation()}>
+                  <Info size={14} />
                 </div>
-              ) : (
-                <div style={{ background: 'var(--surface-inset)', padding: '30px 20px 20px 20px', borderRadius: '12px', border: '1px solid var(--border-color)', height: '320px' }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={earningsData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-divider)" vertical={false} />
-                      <XAxis
-                        dataKey="date"
-                        stroke="var(--text-secondary)"
-                        tick={{ fontSize: 12 }}
-                      />
-                      <YAxis
-                        stroke="var(--text-secondary)"
-                        tick={{ fontSize: 12 }}
-                        allowDecimals={false}
-                        width={32}
-                      />
-                      <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'transparent' }} />
-                      <Bar dataKey="count" radius={[6, 6, 0, 0]} barSize={52}>
-                        {earningsData.map((entry, index) => (
-                          <Cell
-                            key={entry.date}
-                            fill={`hsl(${240 + index * 22}, 82%, ${58 + index * 4}%)`}
-                          />
-                        ))}
-                        <LabelList dataKey="count" position="top" fill="var(--text-secondary)" fontSize={12} fontWeight={600} />
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              )
-            )}
-          </div>
+              </h3>
+              {isEarningsExpanded && (
+                earningsData.length === 0 ? (
+                  <div style={{ background: 'var(--surface-inset)', padding: '40px', borderRadius: '12px', border: '1px solid var(--border-color)', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '14px' }}>
+                    No upcoming earnings dates found in the current selection.
+                  </div>
+                ) : (
+                  <div style={{ background: 'var(--surface-inset)', padding: '30px 20px 20px 20px', borderRadius: '12px', border: '1px solid var(--border-color)', height: '320px' }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={earningsData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-divider)" vertical={false} />
+                        <XAxis
+                          dataKey="date"
+                          stroke="var(--text-secondary)"
+                          tick={{ fontSize: 12 }}
+                        />
+                        <YAxis
+                          stroke="var(--text-secondary)"
+                          tick={{ fontSize: 12 }}
+                          allowDecimals={false}
+                          width={32}
+                        />
+                        <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'transparent' }} />
+                        <Bar dataKey="count" radius={[6, 6, 0, 0]} barSize={52}>
+                          {earningsData.map((entry, index) => (
+                            <Cell
+                              key={entry.date}
+                              fill={`hsl(${240 + index * 22}, 82%, ${58 + index * 4}%)`}
+                            />
+                          ))}
+                          <LabelList dataKey="count" position="top" fill="var(--text-secondary)" fontSize={12} fontWeight={600} />
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                )
+              )}
+            </div>
+          )}
 
           {/* IPO Age Distribution Chart */}
-          <div style={{ gridColumn: '1 / -1', marginTop: '20px' }}>
-            <h3
-              onClick={() => setIsIpoExpanded(!isIpoExpanded)}
-              style={{ marginBottom: '24px', fontSize: '16px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}
-            >
-              {isIpoExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
-              IPO Age Distribution
-              <div title="Number of tickers grouped by how long ago they IPO'd." style={{ cursor: 'help', opacity: 0.5 }} onClick={e => e.stopPropagation()}>
-                <Info size={14} />
-              </div>
-            </h3>
-            {isIpoExpanded && (
-              ipoAgeData.length === 0 ? (
-                <div style={{ background: 'var(--surface-inset)', padding: '40px', borderRadius: '12px', border: '1px solid var(--border-color)', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '14px' }}>
-                  No IPO date data found in the current selection.
+          {visibleDiagrams.ipo && (
+            <div style={{ gridColumn: '1 / -1', marginTop: '20px' }}>
+              <h3
+                onClick={() => setIsIpoExpanded(!isIpoExpanded)}
+                style={{ marginBottom: '24px', fontSize: '16px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}
+              >
+                {isIpoExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+                IPO Age Distribution
+                <div title="Number of tickers grouped by how long ago they IPO'd." style={{ cursor: 'help', opacity: 0.5 }} onClick={e => e.stopPropagation()}>
+                  <Info size={14} />
                 </div>
-              ) : (
-                <div style={{ background: 'var(--surface-inset)', padding: '30px 20px 20px 20px', borderRadius: '12px', border: '1px solid var(--border-color)', height: '320px' }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={ipoAgeData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-divider)" vertical={false} />
-                      <XAxis
-                        dataKey="label"
-                        stroke="var(--text-secondary)"
-                        tick={{ fontSize: 12 }}
-                      />
-                      <YAxis
-                        stroke="var(--text-secondary)"
-                        tick={{ fontSize: 12 }}
-                        allowDecimals={false}
-                        width={32}
-                      />
-                      <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'transparent' }} />
-                      <Bar dataKey="count" radius={[6, 6, 0, 0]} barSize={64}>
-                        {ipoAgeData.map((entry, index) => (
-                          <Cell
-                            key={entry.label}
-                            fill={['#10b981', '#06b6d4', '#6366f1', '#8b5cf6', '#f59e0b'][index % 5]}
-                          />
-                        ))}
-                        <LabelList dataKey="count" position="top" fill="var(--text-secondary)" fontSize={12} fontWeight={600} />
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              )
-            )}
-          </div>
+              </h3>
+              {isIpoExpanded && (
+                ipoAgeData.length === 0 ? (
+                  <div style={{ background: 'var(--surface-inset)', padding: '40px', borderRadius: '12px', border: '1px solid var(--border-color)', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '14px' }}>
+                    No IPO date data found in the current selection.
+                  </div>
+                ) : (
+                  <div style={{ background: 'var(--surface-inset)', padding: '30px 20px 20px 20px', borderRadius: '12px', border: '1px solid var(--border-color)', height: '320px' }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={ipoAgeData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-divider)" vertical={false} />
+                        <XAxis
+                          dataKey="label"
+                          stroke="var(--text-secondary)"
+                          tick={{ fontSize: 12 }}
+                        />
+                        <YAxis
+                          stroke="var(--text-secondary)"
+                          tick={{ fontSize: 12 }}
+                          allowDecimals={false}
+                          width={32}
+                        />
+                        <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'transparent' }} />
+                        <Bar dataKey="count" radius={[6, 6, 0, 0]} barSize={64}>
+                          {ipoAgeData.map((entry, index) => (
+                            <Cell
+                              key={entry.label}
+                              fill={['#10b981', '#06b6d4', '#6366f1', '#8b5cf6', '#f59e0b'][index % 5]}
+                            />
+                          ))}
+                          <LabelList dataKey="count" position="top" fill="var(--text-secondary)" fontSize={12} fontWeight={600} />
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                )
+              )}
+            </div>
+          )}
 
           {/* Dividend Yield Distribution Chart */}
-          <div style={{ gridColumn: '1 / -1', marginTop: '20px' }}>
-            <h3
-              onClick={() => setIsDividendExpanded(!isDividendExpanded)}
-              style={{ marginBottom: '24px', fontSize: '16px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}
-            >
-              {isDividendExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
-              Dividend Yield Distribution
-              <div title="Distribution of dividend yields for the current selection (excluding non-paying stocks)." style={{ cursor: 'help', opacity: 0.5 }} onClick={e => e.stopPropagation()}>
-                <Info size={14} />
-              </div>
-            </h3>
-            {isDividendExpanded && (
-              dividendYieldData.reduce((sum, b) => sum + b.count, 0) === 0 ? (
-                <div style={{ background: 'var(--surface-inset)', padding: '40px', borderRadius: '12px', border: '1px solid var(--border-color)', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '14px' }}>
-                  No dividend-paying stocks found in the current selection.
+          {visibleDiagrams.dividend && (
+            <div style={{ gridColumn: '1 / -1', marginTop: '20px' }}>
+              <h3
+                onClick={() => setIsDividendExpanded(!isDividendExpanded)}
+                style={{ marginBottom: '24px', fontSize: '16px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}
+              >
+                {isDividendExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+                Dividend Yield Distribution
+                <div title="Distribution of dividend yields for the current selection (excluding non-paying stocks)." style={{ cursor: 'help', opacity: 0.5 }} onClick={e => e.stopPropagation()}>
+                  <Info size={14} />
                 </div>
-              ) : (
-                <div style={{ background: 'var(--surface-inset)', padding: '30px 20px 20px 20px', borderRadius: '12px', border: '1px solid var(--border-color)', height: '320px' }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={dividendYieldData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-divider)" vertical={false} />
-                      <XAxis
-                        dataKey="label"
-                        stroke="var(--text-secondary)"
-                        tick={{ fontSize: 12 }}
-                      />
-                      <YAxis
-                        stroke="var(--text-secondary)"
-                        tick={{ fontSize: 12 }}
-                        allowDecimals={false}
-                        width={32}
-                      />
-                      <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'transparent' }} />
-                      <Bar dataKey="count" radius={[6, 6, 0, 0]} barSize={64}>
-                        {dividendYieldData.map((entry, index) => (
-                          <Cell
-                            key={entry.label}
-                            fill={['#6366f1', '#06b6d4', '#10b981', '#f59e0b', '#f97316', '#ef4444'][index % 6]}
-                          />
-                        ))}
-                        <LabelList dataKey="count" position="top" fill="var(--text-secondary)" fontSize={12} fontWeight={600} />
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              )
-            )}
-          </div>
+              </h3>
+              {isDividendExpanded && (
+                dividendYieldData.reduce((sum, b) => sum + b.count, 0) === 0 ? (
+                  <div style={{ background: 'var(--surface-inset)', padding: '40px', borderRadius: '12px', border: '1px solid var(--border-color)', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '14px' }}>
+                    No dividend-paying stocks found in the current selection.
+                  </div>
+                ) : (
+                  <div style={{ background: 'var(--surface-inset)', padding: '30px 20px 20px 20px', borderRadius: '12px', border: '1px solid var(--border-color)', height: '320px' }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={dividendYieldData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-divider)" vertical={false} />
+                        <XAxis
+                          dataKey="label"
+                          stroke="var(--text-secondary)"
+                          tick={{ fontSize: 12 }}
+                        />
+                        <YAxis
+                          stroke="var(--text-secondary)"
+                          tick={{ fontSize: 12 }}
+                          allowDecimals={false}
+                          width={32}
+                        />
+                        <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'transparent' }} />
+                        <Bar dataKey="count" radius={[6, 6, 0, 0]} barSize={64}>
+                          {dividendYieldData.map((entry, index) => (
+                            <Cell
+                              key={entry.label}
+                              fill={['#6366f1', '#06b6d4', '#10b981', '#f59e0b', '#f97316', '#ef4444'][index % 6]}
+                            />
+                          ))}
+                          <LabelList dataKey="count" position="top" fill="var(--text-secondary)" fontSize={12} fontWeight={600} />
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                )
+              )}
+            </div>
+          )}
 
           {/* Storage Analytics Section */}
-          <div style={{ gridColumn: '1 / -1', marginTop: '20px' }}>
-            <h3 
-              onClick={() => setIsStorageExpanded(!isStorageExpanded)}
-              style={{ marginBottom: '24px', fontSize: '16px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}
-            >
-              {isStorageExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
-              Local Storage Usage & Quota
-              <div title="Detailed breakdown of localStorage categories and total browser storage quota via Storage Estimate API." style={{ cursor: 'help', opacity: 0.5 }} onClick={e => e.stopPropagation()}>
-                <Info size={14} />
-              </div>
-            </h3>
-            
-            {isStorageExpanded && (
+          {visibleDiagrams.storage && (
+            <div style={{ gridColumn: '1 / -1', marginTop: '20px' }}>
+              <h3 
+                onClick={() => setIsStorageExpanded(!isStorageExpanded)}
+                style={{ marginBottom: '24px', fontSize: '16px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}
+              >
+                {isStorageExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+                Local Storage Usage & Quota
+                <div title="Detailed breakdown of localStorage categories and total browser storage quota via Storage Estimate API." style={{ cursor: 'help', opacity: 0.5 }} onClick={e => e.stopPropagation()}>
+                  <Info size={14} />
+                </div>
+              </h3>
+              
+              {isStorageExpanded && (
               <div style={{ background: 'var(--surface-inset)', padding: '30px', borderRadius: '12px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '40px' }}>
                   {/* Donut Chart */}
@@ -1034,7 +1125,7 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
               </div>
             )}
           </div>
-        </div>
+          )}
 
         <style>{`
           .stat-card {
@@ -1050,6 +1141,31 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
           .stat-value { font-size: 20px; font-weight: 600; color: var(--text-primary); }
           .histogram-bar:hover { opacity: 1 !important; filter: brightness(1.2); cursor: pointer; }
           .bar-value { position: absolute; top: -24px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: 600; color: var(--accent); }
+          .diagram-toggle-btn {
+            padding: 4px 10px;
+            font-size: 11px;
+            border-radius: 16px;
+            background: var(--surface-subtle);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+            opacity: 0.6;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 500;
+          }
+          .diagram-toggle-btn.active {
+            background: var(--accent);
+            color: white;
+            opacity: 1;
+            border-color: var(--accent);
+          }
+          .diagram-toggle-btn:hover {
+            opacity: 1;
+            filter: brightness(1.1);
+          }
           ::-webkit-scrollbar { width: 6px; }
           ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 10px; }
         `}</style>
