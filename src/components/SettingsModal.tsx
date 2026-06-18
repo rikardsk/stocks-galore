@@ -31,6 +31,8 @@ interface SettingsModalProps {
   onToggleArchive: () => void;
   showTags: boolean;
   onToggleTags: () => void;
+  allNotificationsEnabled: boolean;
+  onToggleAllNotifications: () => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -61,6 +63,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onToggleArchive,
   showTags,
   onToggleTags,
+  allNotificationsEnabled,
+  onToggleAllNotifications,
 }) => {
   if (!isOpen) return null;
 
@@ -560,8 +564,70 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           flexDirection: 'column',
           gap: '8px'
         }}>
-          <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Crossover Notification Alerts</span>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Notification Settings</span>
+          
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '10px 14px',
+              borderRadius: '10px',
+              border: `1px solid ${allNotificationsEnabled ? 'rgba(99,102,241,0.35)' : 'var(--border-color)'}`,
+              background: allNotificationsEnabled ? 'rgba(99,102,241,0.07)' : 'var(--surface-subtle)',
+              transition: 'all 0.2s',
+              marginBottom: '4px'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              {allNotificationsEnabled
+                ? <Bell size={15} color="var(--accent)" />
+                : <BellOff size={15} color="var(--text-secondary)" />}
+              <span style={{
+                fontSize: '13px',
+                fontWeight: 600,
+                color: allNotificationsEnabled ? 'var(--text-primary)' : 'var(--text-secondary)'
+              }}>
+                All Notifications Enabled
+              </span>
+            </div>
+            <button
+              onClick={onToggleAllNotifications}
+              style={{
+                width: '44px',
+                height: '24px',
+                borderRadius: '12px',
+                border: 'none',
+                background: allNotificationsEnabled ? 'var(--accent)' : 'rgba(255,255,255,0.12)',
+                cursor: 'pointer',
+                position: 'relative',
+                transition: 'background 0.25s',
+                flexShrink: 0
+              }}
+              aria-label="Toggle all notifications"
+            >
+              <span style={{
+                position: 'absolute',
+                top: '3px',
+                left: allNotificationsEnabled ? '22px' : '3px',
+                width: '18px',
+                height: '18px',
+                borderRadius: '50%',
+                background: 'white',
+                transition: 'left 0.25s',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.3)'
+              }} />
+            </button>
+          </div>
+
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: '10px',
+            opacity: allNotificationsEnabled ? 1 : 0.5,
+            pointerEvents: allNotificationsEnabled ? 'auto' : 'none',
+            transition: 'opacity 0.2s'
+          }}>
             {(['sma10', 'sma20'] as const).map(key => {
               const isOn = smaNotificationsEnabled[key];
               const label = key === 'sma10' ? 'SMA 10 Crossover' : 'SMA 20 Crossover';
@@ -623,7 +689,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             })}
           </div>
           <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-            When off, no new crossover notifications will be generated for that SMA.
+            When off, no new crossover notifications or individual alerts will be generated.
           </div>
         </div>
 

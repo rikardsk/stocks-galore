@@ -94,6 +94,19 @@ const App: React.FC = () => {
     });
   };
 
+  const [allNotificationsEnabled, setAllNotificationsEnabled] = useState<boolean>(() => {
+    const saved = localStorage.getItem('allNotificationsEnabled');
+    return saved !== 'false';
+  });
+
+  const handleToggleAllNotifications = () => {
+    setAllNotificationsEnabled(prev => {
+      const next = !prev;
+      localStorage.setItem('allNotificationsEnabled', next.toString());
+      return next;
+    });
+  };
+
   useEffect(() => {
     localStorage.setItem('searchCharLimit', searchCharLimit.toString());
   }, [searchCharLimit]);
@@ -296,7 +309,7 @@ const App: React.FC = () => {
         (n.symbol === ticker.symbol && n.type === 'earnings' && n.message.includes('Earnings Beat') && n.timestamp.startsWith(today))
       );
       
-      if (!isAlreadyNotified) {
+      if (!isAlreadyNotified && allNotificationsEnabled) {
         storage.addNotification({
           alertId: targetAlertId,
           symbol: ticker.symbol,
@@ -316,7 +329,7 @@ const App: React.FC = () => {
         (n.symbol === ticker.symbol && n.type === 'earnings' && n.message.includes('Earnings Miss') && n.timestamp.startsWith(today))
       );
       
-      if (!isAlreadyNotified) {
+      if (!isAlreadyNotified && allNotificationsEnabled) {
         storage.addNotification({
           alertId: targetAlertId,
           symbol: ticker.symbol,
@@ -532,6 +545,7 @@ const App: React.FC = () => {
   }, [refreshInterval, lists]);
 
   const checkAlerts = (updatedTickers: Ticker[]) => {
+    if (!allNotificationsEnabled) return;
     const today = new Date().toISOString().split('T')[0];
     const activeAlerts = storage.getAlerts();
     let triggeredCount = 0;
@@ -1700,6 +1714,7 @@ const App: React.FC = () => {
             onOpenShortcuts={() => setIsShortcutsModalOpen(true)}
             onOpenSuffixes={() => setIsSuffixesModalOpen(true)}
             position={buttonBarPosition}
+            allNotificationsEnabled={allNotificationsEnabled}
           />
         )}
       </div>
@@ -1981,6 +1996,8 @@ const App: React.FC = () => {
         onToggleArchive={handleToggleArchive}
         showTags={showTags}
         onToggleTags={handleToggleTags}
+        allNotificationsEnabled={allNotificationsEnabled}
+        onToggleAllNotifications={handleToggleAllNotifications}
       />
 
       <TableView 

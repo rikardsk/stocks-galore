@@ -4,7 +4,7 @@
 ## Later maybe
 - Check code quality and fix errors...
 - Send e-mail as option to notifications instead of push-notifications. This shold be a global setting.
-- In the analytics modal can you toggle buttons for each diagram to show/hide them
+~~- In the analytics modal can you toggle buttons for each diagram to show/hide them~~
 ~~- In the analytics modal can you add a barchart showing dividend yield distribution, 1%, 2%, 3%, 4%, 5%, 6+%~~
 ~~- In the earnings calendar can you add a left and right arrow to scroll one day at a time?~~
 ~~- Can you add dividends ex-date and paydate to the deep dive modal~~

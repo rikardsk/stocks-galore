@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Layout, Settings, Search, RefreshCw, Filter, Bell, X, Trash2, BarChart2, Trophy, Calendar, Keyboard, Globe } from 'lucide-react';
+import { Plus, Layout, Settings, Search, RefreshCw, Filter, Bell, BellOff, X, Trash2, BarChart2, Trophy, Calendar, Keyboard, Globe } from 'lucide-react';
 
 interface ToolbarProps {
   onCreateList: () => void;
@@ -23,13 +23,15 @@ interface ToolbarProps {
   onOpenShortcuts?: () => void;
   onOpenSuffixes?: () => void;
   position?: 'bottom' | 'top' | 'right';
+  allNotificationsEnabled: boolean;
 }
 
 export const Toolbar: React.FC<ToolbarProps> = ({ 
   onCreateList, onToggleSidebar, onRefreshAll, onClearWorkbench, isRefreshing, 
   searchQuery, onSearchQueryChange, onOpenFilter, onOpenSettings, onOpenTable, 
   onOpenNotifications, onOpenAnalytics, onOpenRanking, onOpenEarnings, unreadCount = 0, activeFilterCount = 0,
-  isSearchExpanded, onSearchToggle, onOpenShortcuts, onOpenSuffixes, position = 'bottom'
+  isSearchExpanded, onSearchToggle, onOpenShortcuts, onOpenSuffixes, position = 'bottom',
+  allNotificationsEnabled
 }) => {
   return (
     <div className={`toolbar position-${position}`}>
@@ -96,9 +98,19 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           </span>
         )}
       </button>
-      <button className="btn" title="Notifications (Ctrl+Shift+N)" onClick={onOpenNotifications} style={{ position: 'relative' }}>
-        <Bell size={20} />
-        {unreadCount > 0 && (
+      <button 
+        className="btn" 
+        title={allNotificationsEnabled ? "Notifications (Ctrl+Shift+N)" : "Notifications (Turned Off)"} 
+        onClick={onOpenNotifications} 
+        style={{ 
+          position: 'relative',
+          opacity: allNotificationsEnabled ? 1 : 0.65,
+          border: allNotificationsEnabled ? 'none' : '1px dashed rgba(239, 68, 68, 0.4)',
+          background: allNotificationsEnabled ? 'none' : 'rgba(239, 68, 68, 0.05)'
+        }}
+      >
+        {allNotificationsEnabled ? <Bell size={20} /> : <BellOff size={20} style={{ color: 'var(--text-secondary)' }} />}
+        {unreadCount > 0 && allNotificationsEnabled && (
           <span style={{
             position: 'absolute', top: '0px', right: '0px', 
             background: '#ef4444', color: 'white', 
