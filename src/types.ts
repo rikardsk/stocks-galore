@@ -29,6 +29,7 @@ export type Ticker = {
     low52?: number;
     avgVolume?: string;
     earningsDate?: string;
+    earningsTime?: string;
     exDividendDate?: string;
     dividendDate?: string;
     ipoDate?: string;

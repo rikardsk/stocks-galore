@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { X, ArrowUpDown, ArrowUp, ArrowDown, Briefcase, Star, Printer } from 'lucide-react';
+import { X, ArrowUpDown, ArrowUp, ArrowDown, Briefcase, Star, Printer, Sun, Moon } from 'lucide-react';
 import type { Ticker, StockFilters, StockList, ListGroup } from '../types';
 import { tickerMatchesFilters, formatMarketCap, formatPrice } from '../types';
 
@@ -520,7 +520,21 @@ export const TableView: React.FC<TableViewProps> = ({
                     <td style={{ ...tdStyle, color: '#f59e0b' }} className="no-print">{yieldStr}</td>
                     <td style={{ ...tdStyle, color: '#3b82f6' }} className="no-print">{ticker.stats.exDividendDate || 'N/A'}</td>
                     <td style={{ ...tdStyle, color: '#10b981' }} className="no-print">{ticker.stats.dividendDate || 'N/A'}</td>
-                    <td style={{ ...tdStyle, color: 'var(--accent)' }} className="no-print">{ticker.stats.earningsDate || 'N/A'}</td>
+                    <td style={{ ...tdStyle, color: 'var(--accent)' }} className="no-print">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        {ticker.stats.earningsDate || 'N/A'}
+                        {ticker.stats.earningsDate && ticker.stats.earningsTime === 'BMO' && (
+                          <span title="Before Market Open" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                            <Sun size={14} color="#f59e0b" style={{ flexShrink: 0 }} />
+                          </span>
+                        )}
+                        {ticker.stats.earningsDate && ticker.stats.earningsTime === 'AMC' && (
+                          <span title="After Market Close" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                            <Moon size={14} color="#a5b4fc" style={{ flexShrink: 0 }} />
+                          </span>
+                        )}
+                      </div>
+                    </td>
                     <td style={{ ...tdStyle, color: 'var(--text-secondary)' }} className="no-print">{ticker.stats.ipoDate || 'N/A'}</td>
                   </tr>
                 );

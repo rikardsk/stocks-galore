@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { X, TrendingUp, TrendingDown, Briefcase, Star, Eye, EyeOff, Bell } from 'lucide-react';
+import { X, TrendingUp, TrendingDown, Briefcase, Star, Eye, EyeOff, Bell, Sun, Moon } from 'lucide-react';
 import { 
   Line, XAxis, YAxis, CartesianGrid, Tooltip, 
   ResponsiveContainer, Area, Bar, ComposedChart, ReferenceLine
@@ -563,7 +563,19 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
           </div>
           <div style={{ background: 'var(--surface-subtle)' }} className="stat-box">
             <span className="stat-label">Earnings Date</span>
-            <span className="stat-value" style={{ color: 'var(--accent)' }}>{ticker.stats.earningsDate || 'N/A'}</span>
+            <span className="stat-value" style={{ color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              {ticker.stats.earningsDate || 'N/A'}
+              {ticker.stats.earningsDate && ticker.stats.earningsTime === 'BMO' && (
+                <span title="Before Market Open" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                  <Sun size={14} color="#f59e0b" style={{ flexShrink: 0 }} />
+                </span>
+              )}
+              {ticker.stats.earningsDate && ticker.stats.earningsTime === 'AMC' && (
+                <span title="After Market Close" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                  <Moon size={14} color="#a5b4fc" style={{ flexShrink: 0 }} />
+                </span>
+              )}
+            </span>
           </div>
           <div style={{ background: 'var(--surface-subtle)' }} className="stat-box">
             <span className="stat-label">IPO Date</span>

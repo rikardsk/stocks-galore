@@ -1,6 +1,7 @@
 import yfinance as yf
 import pandas as pd
 import json
+import datetime
 
 def debug_ticker(symbol):
     ticker = yf.Ticker(symbol)
@@ -18,10 +19,14 @@ def debug_ticker(symbol):
     try:
         info = ticker.info
         keys = list(info.keys())
-        print(keys[:20])
         for k in keys:
             if 'earnings' in k.lower() or 'date' in k.lower():
-                print(f"{k}: {info[k]}")
+                val = info[k]
+                if 'timestamp' in k.lower() and isinstance(val, (int, float)):
+                    dt_utc = datetime.datetime.fromtimestamp(val, datetime.timezone.utc)
+                    print(f"{k}: {val} -> {dt_utc.strftime('%Y-%m-%d %H:%M:%S UTC')}")
+                else:
+                    print(f"{k}: {val}")
     except Exception as e:
         print(f"Info error: {e}")
 
@@ -29,3 +34,7 @@ if __name__ == "__main__":
     debug_ticker("AAPL")
     debug_ticker("MSFT")
     debug_ticker("TSLA")
+    debug_ticker("JPM")
+    debug_ticker("PEP")
+
+

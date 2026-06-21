@@ -1,7 +1,8 @@
 import unittest
 import pandas as pd
 import numpy as np
-from main import calculate_stats
+from main import calculate_stats, get_earnings_time
+
 
 class TestSMACrossovers(unittest.TestCase):
     def test_crossover_sma20_sma50(self):
@@ -95,5 +96,21 @@ class TestSMACrossovers(unittest.TestCase):
         self.assertFalse(stats.get('crossover_sma10_above'))
         self.assertTrue(stats.get('crossover_sma10_below'))
 
+class TestEarningsTime(unittest.TestCase):
+    def test_earnings_time_bmo(self):
+        # 1784032200 corresponds to 2026-07-14 12:30:00 UTC (hour 12)
+        info = {'earningsTimestamp': 1784032200}
+        self.assertEqual(get_earnings_time(info), "BMO")
+        
+    def test_earnings_time_amc(self):
+        # 1785441600 corresponds to 2026-07-30 20:00:00 UTC (hour 20)
+        info = {'earningsTimestampStart': 1785441600}
+        self.assertEqual(get_earnings_time(info), "AMC")
+        
+    def test_earnings_time_na(self):
+        info = {'longName': 'No Timestamp'}
+        self.assertEqual(get_earnings_time(info), "N/A")
+
 if __name__ == '__main__':
     unittest.main()
+

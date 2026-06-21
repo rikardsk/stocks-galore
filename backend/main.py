@@ -242,6 +242,20 @@ def get_earnings_date(ticker: yf.Ticker, info: Dict) -> str:
         
     return "N/A"
 
+def get_earnings_time(info: Dict) -> str:
+    """Determine if earnings are Before Market Open (BMO) or After Market Close (AMC)."""
+    for key in ['earningsTimestamp', 'earningsTimestampStart', 'earningsTimestampEnd']:
+        ts = info.get(key)
+        if not ts or ts <= 0:
+            continue
+        try:
+            dt = datetime.datetime.fromtimestamp(ts, datetime.timezone.utc)
+            return "BMO" if dt.hour < 16 else "AMC"
+        except:
+            pass
+    return "N/A"
+
+
 def get_ex_dividend_date(ticker: yf.Ticker, info: Dict) -> str:
     """Attempt to get next/most recent ex-dividend date."""
     # 1. Try info.exDividendDate
@@ -315,6 +329,7 @@ async def get_stock(symbol: str):
         stats = calculate_stats(symbol, info, hist)
         if stats:
             stats['earningsDate'] = get_earnings_date(ticker, info)
+            stats['earningsTime'] = get_earnings_time(info)
             stats['exDividendDate'] = get_ex_dividend_date(ticker, info)
             stats['dividendDate'] = get_pay_date(ticker, info)
             stats['ipoDate'] = get_ipo_date(symbol, info)
@@ -417,6 +432,7 @@ async def get_batch(symbols: str = Query(..., description="Comma-separated symbo
             stats = calculate_stats(symbol, info, hist)
             if stats:
                 stats['earningsDate'] = get_earnings_date(ticker, info)
+                stats['earningsTime'] = get_earnings_time(info)
                 stats['exDividendDate'] = get_ex_dividend_date(ticker, info)
                 stats['dividendDate'] = get_pay_date(ticker, info)
                 stats['ipoDate'] = get_ipo_date(symbol, info)

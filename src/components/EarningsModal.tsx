@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { X, Calendar, Briefcase, Star, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, Calendar, Briefcase, Star, ChevronLeft, ChevronRight, Sun, Moon } from 'lucide-react';
 import type { Ticker } from '../types';
 
 interface EarningsModalProps {
@@ -422,14 +422,28 @@ const TickerRow: React.FC<{ ticker: Ticker; dayDateStr: string; onSelectTicker: 
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px', flexWrap: 'wrap' }}>
           {isEarnings && (
-            <span style={{ 
-              fontSize: '8px', 
-              color: 'var(--accent)', 
-              background: 'rgba(99, 102, 241, 0.1)', 
-              padding: '1px 4px', 
-              borderRadius: '4px', 
-              fontWeight: 700 
-            }}>EARNINGS</span>
+            <span 
+              title={
+                ticker.stats.earningsTime === 'BMO' ? 'Before Market Open' :
+                ticker.stats.earningsTime === 'AMC' ? 'After Market Close' :
+                'Earnings Date'
+              }
+              style={{ 
+                fontSize: '8px', 
+                color: 'var(--accent)', 
+                background: 'rgba(99, 102, 241, 0.1)', 
+                padding: '2px 5px', 
+                borderRadius: '4px', 
+                fontWeight: 700,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+            >
+              {ticker.stats.earningsTime === 'BMO' && <Sun size={10} color="#f59e0b" style={{ flexShrink: 0 }} />}
+              {ticker.stats.earningsTime === 'AMC' && <Moon size={10} color="#a5b4fc" style={{ flexShrink: 0 }} />}
+              EARNINGS
+            </span>
           )}
           {isExDiv && (
             <span style={{ 
