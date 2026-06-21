@@ -4,6 +4,7 @@
 ## Later maybe
 - Check code quality and fix errors...
 - Send e-mail as option to notifications instead of push-notifications. This shold be a global setting.
+~~- In the deep dive modal can you show all the list names that the company is included in. ~~
 ~~- In the settings modal could you do a toggle button to turn off all notifications and also make some distinction in the button bar that notifications are turned off~~
 ~~- In the analytics modal can you toggle buttons for each diagram to show/hide them~~
 ~~- In the analytics modal can you add a barchart showing dividend yield distribution, 1%, 2%, 3%, 4%, 5%, 6+%~~
