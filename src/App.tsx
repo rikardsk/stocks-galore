@@ -2140,6 +2140,7 @@ const App: React.FC = () => {
           setAlerts(storage.getAlerts());
         }}
         theme={theme}
+        lists={lists}
       />
 
       <NotificationsModal 

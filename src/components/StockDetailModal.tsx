@@ -4,7 +4,7 @@ import {
   Line, XAxis, YAxis, CartesianGrid, Tooltip, 
   ResponsiveContainer, Area, Bar, ComposedChart, ReferenceLine
 } from 'recharts';
-import type { Ticker, StockAlert, TickerNotification } from '../types';
+import type { Ticker, StockAlert, TickerNotification, StockList } from '../types';
 import { formatPrice, getCurrencySymbol } from '../types';
 
 interface StockDetailModalProps {
@@ -22,6 +22,7 @@ interface StockDetailModalProps {
   onDeleteAlert: (id: string) => void;
   onUpdateAlert: (updated: StockAlert) => void;
   theme: 'dark' | 'light';
+  lists: StockList[];
 }
 
 const TIMEFRAMES = [
@@ -68,9 +69,21 @@ const Candlestick = (props: CandlestickProps) => {
 
 export const StockDetailModal: React.FC<StockDetailModalProps> = ({ 
   ticker, isOpen, onClose, onToggleOwned, onToggleWatchlist, onUpdateBadges, onUpdateNotes, isWatchlisted, 
-  alerts, notifications = [], onAddAlert, onDeleteAlert
+  alerts, notifications = [], onAddAlert, onDeleteAlert, lists
 }) => {
   const [notifTypeFilter, setNotifTypeFilter] = useState<'All' | 'Price' | '%' | 'Crossover' | 'Earnings'>('All');
+
+  const includedLists = useMemo(() => {
+    if (!ticker || !lists) return [];
+    return lists
+      .filter(l => l.id !== 'today' && l.tickers.some(t => t.symbol === ticker.symbol))
+      .sort((a, b) => {
+        const aSpecial = a.isProtected ? 1 : 0;
+        const bSpecial = b.isProtected ? 1 : 0;
+        if (aSpecial !== bSpecial) return bSpecial - aSpecial;
+        return a.name.localeCompare(b.name);
+      });
+  }, [lists, ticker]);
 
   const getNotificationTypeDisplay = (n: TickerNotification): 'Price' | '%' | 'Crossover' | 'Earnings' | 'Other' => {
     const msg = n.message.toLowerCase();
@@ -755,6 +768,46 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
 
         {/* Notes & Badges & Description */}
         <div className="detail-description" style={{ background: 'var(--surface-inset)' }}>
+          {/* Included in Lists Section */}
+          <div style={{ marginBottom: '24px' }}>
+            <h3 style={{ color: 'var(--text-primary)', fontSize: '14px', marginBottom: '12px' }}>Included in Lists</h3>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              {includedLists.map(list => (
+                <span 
+                  key={list.id} 
+                  style={{
+                    padding: '4px 10px',
+                    borderRadius: '100px',
+                    border: `1px solid ${list.isArchived ? 'var(--text-secondary)' : (list.color || 'var(--border-color)')}`,
+                    background: 'var(--surface-subtle)',
+                    color: list.isArchived ? 'var(--text-secondary)' : 'var(--text-primary)',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    opacity: list.isArchived ? 0.7 : 1
+                  }}
+                >
+                  <span style={{ 
+                    width: '6px', 
+                    height: '6px', 
+                    borderRadius: '50%', 
+                    background: list.isArchived ? 'var(--text-secondary)' : (list.color || 'var(--text-secondary)'),
+                    flexShrink: 0
+                  }} />
+                  {list.name}
+                  {list.isArchived && <span style={{ fontSize: '10px', fontWeight: 500, opacity: 0.8 }}>(Archived)</span>}
+                </span>
+              ))}
+              {includedLists.length === 0 && (
+                <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                  This stock is not included in any list.
+                </span>
+              )}
+            </div>
+          </div>
+
           <div style={{ marginBottom: '24px' }}>
             <h3 style={{ color: 'var(--text-primary)', fontSize: '14px', marginBottom: '12px' }}>Custom Notes</h3>
             <textarea
