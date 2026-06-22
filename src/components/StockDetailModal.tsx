@@ -135,6 +135,7 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [badges, setBadges] = useState<string[]>([]);
   const [newBadge, setNewBadge] = useState('');
+  const [showAllTags, setShowAllTags] = useState(false);
   
   // Alert input state
   const [newAlertVal, setNewAlertVal] = useState('');
@@ -187,7 +188,12 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
   };
 
   const toggleQuickBadge = (badge: string) => {
-    const opposing = badge === 'EARNINGS BEAT' ? 'EARNINGS MISS' : (badge === 'EARNINGS MISS' ? 'EARNINGS BEAT' : null);
+    const opposing = 
+      badge === 'EARNINGS BEAT' ? 'EARNINGS MISS' : 
+      badge === 'EARNINGS MISS' ? 'EARNINGS BEAT' : 
+      badge === 'LOW DEBT' ? 'HIGH DEBT' :
+      badge === 'HIGH DEBT' ? 'LOW DEBT' :
+      null;
     let updated = [...badges];
     
     if (updated.includes(badge)) {
@@ -360,6 +366,25 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
     if (!ticker) return [];
     return alerts.filter(a => a.symbol === ticker.symbol && a.metric === 'price');
   }, [alerts, ticker]);
+
+  const allOtherTags = useMemo(() => {
+    const defaultTags = new Set(['EARNINGS BEAT', 'EARNINGS MISS', 'ALERT', 'NOTE', 'NOT PROFITABLE']);
+    const extraPredefined = ['LOW DEBT', 'HIGH DEBT', 'DIVIDEND', 'GROWTH'];
+    const tags = new Set<string>(extraPredefined);
+    
+    lists?.forEach(list => {
+      list.tickers?.forEach(t => {
+        t.badges?.forEach(badge => {
+          const normalized = badge.trim().toUpperCase();
+          if (!defaultTags.has(normalized)) {
+            tags.add(normalized);
+          }
+        });
+      });
+    });
+    
+    return Array.from(tags).sort();
+  }, [lists]);
 
   if (!isOpen || !ticker) return null;
 
@@ -851,7 +876,7 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
           <div style={{ marginBottom: '24px' }}>
             <h3 style={{ color: 'var(--text-primary)', fontSize: '14px', marginBottom: '12px' }}>Custom Badges</h3>
             
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
               <button 
                 onClick={() => toggleQuickBadge('EARNINGS BEAT')}
                 style={{ 
@@ -912,7 +937,72 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
               >
                 Not profitable
               </button>
+              <button 
+                onClick={() => setShowAllTags(!showAllTags)}
+                style={{ 
+                  background: showAllTags ? 'var(--accent)' : 'var(--surface-subtle)', 
+                  color: showAllTags ? 'white' : 'var(--text-secondary)',
+                  border: '1px solid ' + (showAllTags ? 'var(--accent)' : 'var(--border-color)'),
+                  padding: '6px 16px', borderRadius: '100px', fontSize: '12px', fontWeight: 700, cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                {showAllTags ? 'Show Less' : 'Show All'}
+              </button>
             </div>
+
+            {showAllTags && (
+              <div style={{ 
+                display: 'flex', 
+                flexWrap: 'wrap', 
+                gap: '8px', 
+                marginBottom: '16px', 
+                padding: '12px', 
+                background: 'var(--surface-subtle)', 
+                borderRadius: '8px',
+                border: '1px solid var(--border-color)',
+                animation: 'fadeIn 0.2s ease-out'
+              }}>
+                {allOtherTags.map(tag => {
+                  const isSelected = badges.includes(tag);
+                  let activeBg = 'var(--accent)';
+                  let borderCol = 'var(--accent)';
+                  
+                  if (tag === 'LOW DEBT' || tag === 'DIVIDEND' || tag === 'GROWTH') {
+                    activeBg = '#10b981';
+                    borderCol = '#10b981';
+                  } else if (tag === 'HIGH DEBT') {
+                    activeBg = '#ef4444';
+                    borderCol = '#ef4444';
+                  }
+
+                  return (
+                    <button
+                      key={tag}
+                      onClick={() => toggleQuickBadge(tag)}
+                      style={{
+                        background: isSelected ? activeBg : 'var(--surface-modal)',
+                        color: isSelected ? 'white' : 'var(--text-secondary)',
+                        border: '1px solid ' + (isSelected ? borderCol : 'var(--border-color)'),
+                        padding: '6px 16px',
+                        borderRadius: '100px',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      {tag.toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}
+                    </button>
+                  );
+                })}
+                {allOtherTags.length === 0 && (
+                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                    No other tags found.
+                  </span>
+                )}
+              </div>
+            )}
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
               {badges.map((badge, idx) => (
@@ -1122,6 +1212,7 @@ export const StockDetailModal: React.FC<StockDetailModalProps> = ({
 
           .loader-mini { width: 12px; height: 12px; border: 2px solid var(--surface-hover); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
           @keyframes spin { to { transform: rotate(360deg); } }
+          @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
         `}</style>
       </div>
     </div>
