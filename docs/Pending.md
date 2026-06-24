@@ -4,6 +4,7 @@
 ## Later maybe
 - Check code quality and fix errors...
 - Send e-mail as option to notifications instead of push-notifications. This shold be a global setting.
+- In the deep down modal, right after custom badges, could you add a toggle button "show all", that shows all the rest tags as shortcut buttons too.
 ~~- In the deep dive modal can you show all the list names that the company is included in. ~~
 ~~- In the settings modal could you do a toggle button to turn off all notifications and also make some distinction in the button bar that notifications are turned off~~
 ~~- In the analytics modal can you toggle buttons for each diagram to show/hide them~~
